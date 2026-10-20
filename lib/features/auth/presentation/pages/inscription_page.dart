@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:gestion_immo_mobile/core/validation/identifiant_validator.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.dart';
@@ -99,7 +100,8 @@ class _InscriptionPageState extends State<InscriptionPage> {
               ChampMotDePasse(
                   controleur: _mdp,
                   nouveau: true,
-                  validator: validerMotDePasse),
+                  validator: (v) =>
+                      IdentifiantValidator.motDePasse(v).erreurFormulaire),
               const SizedBox(height: AppTheme.espaceLg),
               ChampMotDePasse(
                 controleur: _confirmation,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:gestion_immo_mobile/core/validation/identifiant_validator.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/widgets/actions.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
@@ -68,7 +69,8 @@ class _ChangerMotDePassePageState extends State<ChangerMotDePassePage> {
                     controleur: _mdp,
                     libelle: 'Nouveau mot de passe',
                     nouveau: true,
-                    validator: validerMotDePasse),
+                    validator: (v) =>
+                        IdentifiantValidator.motDePasse(v).erreurFormulaire),
                 const SizedBox(height: AppTheme.espaceLg),
                 ChampMotDePasse(
                   controleur: _confirmation,

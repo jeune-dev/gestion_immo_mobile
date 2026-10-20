@@ -90,16 +90,6 @@ class AuthCadre extends StatelessWidget {
   }
 }
 
-/// Règle de mot de passe de l'API : 8 caractères, une majuscule, une minuscule, un chiffre.
-String? validerMotDePasse(String? v) {
-  final s = v ?? '';
-  if (s.length < 8) return '8 caractères minimum';
-  if (!RegExp(r'(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(s)) {
-    return 'Une majuscule, une minuscule et un chiffre';
-  }
-  return null;
-}
-
 class ChampMotDePasse extends StatefulWidget {
   final TextEditingController controleur;
   final String libelle;

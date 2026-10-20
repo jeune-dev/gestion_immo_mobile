@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:gestion_immo_mobile/core/validation/identifiant_validator.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
@@ -184,9 +185,9 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
     final v = (s ?? '').trim();
     if (c.obligatoire && v.isEmpty) return 'Obligatoire';
     if (v.isEmpty) return null;
-    if (c.type == TypeChamp.email &&
-        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v)) {
-      return 'E-mail invalide';
+    if (c.type == TypeChamp.email) {
+      final erreur = IdentifiantValidator.email(v).erreurFormulaire;
+      if (erreur != null) return erreur;
     }
     if (c.type == TypeChamp.entier ||
         c.type == TypeChamp.montant ||

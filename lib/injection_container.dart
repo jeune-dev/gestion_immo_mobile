@@ -1,5 +1,7 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
 
+import 'core/connection/network_info.dart';
 import 'core/network/api_client.dart';
 import 'core/services/auth_event_bus.dart';
 import 'core/services/file_attente_service.dart';
@@ -328,6 +330,8 @@ Future<void> init() async {
   // CORE
   //================================================
 
+  // Connexion réseau de l'appareil
+  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(Connectivity()));
   sl.registerLazySingleton(() => TokenService());
   sl.registerLazySingleton(() {
     final api = ApiClient(session: sl());

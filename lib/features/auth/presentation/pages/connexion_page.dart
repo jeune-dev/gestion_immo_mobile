@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:gestion_immo_mobile/core/validation/identifiant_validator.dart';
 import 'package:gestion_immo_mobile/core/routes/app_router.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
@@ -105,9 +106,8 @@ class _ConnexionPageState extends State<ConnexionPage> {
                             _secours ? 'Code de secours' : 'Code à 6 chiffres'),
                     validator: (v) => _secours
                         ? ((v ?? '').trim().isEmpty ? 'Obligatoire' : null)
-                        : (RegExp(r'^\d{6}$').hasMatch((v ?? '').trim())
-                            ? null
-                            : '6 chiffres'),
+                        : IdentifiantValidator.code(v, longueur: 6)
+                            .erreurFormulaire,
                   ),
                 const SizedBox(height: AppTheme.espaceMd),
                 BoutonAuth(
