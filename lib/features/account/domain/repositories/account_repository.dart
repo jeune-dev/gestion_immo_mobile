@@ -7,7 +7,7 @@ abstract class AccountRepository {
   Future<Either<Failure, void>> modifierProfil(Map<String, dynamic> corps);
   Future<Either<Failure, List<SessionAppareil>>> sessions();
   Future<Either<Failure, void>> revoquerSession(String id);
-  Future<Either<Failure, void>> revoquerToutes();
+  Future<Either<Failure, void>> revoquerAutres();
   Future<Either<Failure, SecretMfa>> initialiserMfa(String motDePasse);
 
   /// Active la double authentification ; renvoie les codes de secours (à n'afficher qu'une fois).

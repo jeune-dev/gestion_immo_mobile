@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:gestion_immo_mobile/core/validation/identifiant_validator.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.dart';
@@ -61,9 +62,8 @@ class _ActivationPageState extends State<ActivationPage> {
                 maxLength: 8,
                 decoration:
                     const InputDecoration(labelText: "Code d'invitation"),
-                validator: (v) => RegExp(r'^\d{8}$').hasMatch((v ?? '').trim())
-                    ? null
-                    : '8 chiffres',
+                validator: (v) =>
+                    IdentifiantValidator.code(v, longueur: 8).erreurFormulaire,
               ),
               TextFormField(
                 controller: _telephone,
@@ -79,7 +79,8 @@ class _ActivationPageState extends State<ActivationPage> {
                   controleur: _mdp,
                   libelle: 'Choisissez un mot de passe',
                   nouveau: true,
-                  validator: validerMotDePasse),
+                  validator: (v) =>
+                      IdentifiantValidator.motDePasse(v).erreurFormulaire),
               const SizedBox(height: AppTheme.espaceLg),
               ChampMotDePasse(
                 controleur: _confirmation,

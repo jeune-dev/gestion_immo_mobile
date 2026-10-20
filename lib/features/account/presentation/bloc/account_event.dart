@@ -7,7 +7,7 @@ class RevoquerSessionEvent extends AccountEvent {
   RevoquerSessionEvent(this.id);
 }
 
-class RevoquerToutesSessionsEvent extends AccountEvent {}
+class RevoquerAutresSessionsEvent extends AccountEvent {}
 
 /// Première étape de la double authentification : la clé TOTP.
 class InitialiserMfaEvent extends AccountEvent {

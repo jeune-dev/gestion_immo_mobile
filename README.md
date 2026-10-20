@@ -14,7 +14,7 @@ flutter run
 
 L'URL de l'API est lue dans `.env` (`API_URL`). Sur l'émulateur Android,
 `localhost` est remplacé automatiquement par `10.0.2.2` (la machine hôte). Sur un
-téléphone réel, mettez l'adresse IP du Mac (`http://192.168.x.x:5010/api/v1`) et
+téléphone réel, mettez l'adresse IP du Mac (`http://192.168.x.x:3000/api/v1`) et
 lancez l'API avec `HOST=0.0.0.0`. En production, `--dart-define=API_URL=https://…`
 prend le pas sur le `.env`.
 

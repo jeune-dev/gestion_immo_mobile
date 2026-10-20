@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:gestion_immo_mobile/core/validation/identifiant_validator.dart';
 import 'package:gestion_immo_mobile/core/routes/app_router.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/theme/statuts.dart';
@@ -99,15 +100,15 @@ class _FormulaireState extends State<_Formulaire> {
                       autofillHints: const [AutofillHints.oneTimeCode],
                       decoration: const InputDecoration(labelText: 'Code reçu'),
                       validator: (v) =>
-                          RegExp(r'^\d{6}$').hasMatch((v ?? '').trim())
-                              ? null
-                              : '6 chiffres',
+                          IdentifiantValidator.code(v, longueur: 6)
+                              .erreurFormulaire,
                     ),
                     ChampMotDePasse(
                         controleur: _mdp,
                         libelle: 'Nouveau mot de passe',
                         nouveau: true,
-                        validator: validerMotDePasse),
+                        validator: (v) => IdentifiantValidator.motDePasse(v)
+                            .erreurFormulaire),
                     const SizedBox(height: AppTheme.espaceLg),
                     ChampMotDePasse(
                       controleur: _confirmation,

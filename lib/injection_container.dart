@@ -1,5 +1,7 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
 
+import 'core/connection/network_info.dart';
 import 'core/network/api_client.dart';
 import 'core/services/auth_event_bus.dart';
 import 'core/services/file_attente_service.dart';
@@ -56,7 +58,7 @@ import 'features/account/domain/usecases/initialiser_mfa.dart';
 import 'features/account/domain/usecases/modifier_profil.dart';
 import 'features/account/domain/usecases/regenerer_codes_secours.dart';
 import 'features/account/domain/usecases/revoquer_session.dart';
-import 'features/account/domain/usecases/revoquer_toutes_sessions.dart';
+import 'features/account/domain/usecases/revoquer_autres_sessions.dart';
 import 'features/account/presentation/bloc/account_bloc.dart';
 
 // Patrimoine
@@ -328,6 +330,8 @@ Future<void> init() async {
   // CORE
   //================================================
 
+  // Connexion réseau de l'appareil
+  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(Connectivity()));
   sl.registerLazySingleton(() => TokenService());
   sl.registerLazySingleton(() {
     final api = ApiClient(session: sl());
@@ -426,7 +430,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ModifierProfil(sl()));
   sl.registerLazySingleton(() => GetSessions(sl()));
   sl.registerLazySingleton(() => RevoquerSession(sl()));
-  sl.registerLazySingleton(() => RevoquerToutesSessions(sl()));
+  sl.registerLazySingleton(() => RevoquerAutresSessions(sl()));
   sl.registerLazySingleton(() => InitialiserMfa(sl()));
   sl.registerLazySingleton(() => ActiverMfa(sl()));
   sl.registerLazySingleton(() => DesactiverMfa(sl()));
@@ -435,7 +439,7 @@ Future<void> init() async {
     () => AccountBloc(
       getSessions: sl(),
       revoquerSession: sl(),
-      revoquerToutesSessions: sl(),
+      revoquerAutresSessions: sl(),
       initialiserMfa: sl(),
       activerMfa: sl(),
       desactiverMfa: sl(),

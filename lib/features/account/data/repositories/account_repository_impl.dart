@@ -53,9 +53,9 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<Either<Failure, void>> revoquerToutes() async {
+  Future<Either<Failure, void>> revoquerAutres() async {
     try {
-      final resultat = await remoteDataSource.revoquerToutes();
+      final resultat = await remoteDataSource.revoquerAutres();
       return Right(resultat);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
