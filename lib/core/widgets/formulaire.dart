@@ -1,33 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../theme/app_theme.dart';
-import '../format.dart';
-import '../referentiels.dart';
-import '../services.dart';
+import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
+import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
+import 'package:gestion_immo_mobile/core/utils/format.dart';
 import 'actions.dart';
 
-enum TypeChamp { texte, multiligne, montant, entier, decimal, date, selection, interrupteur, telephone, email, motDePasse, entite }
+enum TypeChamp {
+  texte,
+  multiligne,
+  montant,
+  entier,
+  decimal,
+  date,
+  selection,
+  interrupteur,
+  telephone,
+  email,
+  motDePasse,
+  entite
+}
 
 /// Description d'un champ : le formulaire gère la saisie, la conversion des types
 /// et n'envoie que les champs décrits (jamais de champ inventé, contrat § 4).
 class Champ {
-  const Champ(
-    this.nom,
-    this.libelle, {
-    this.type = TypeChamp.texte,
-    this.obligatoire = false,
-    this.referentiel,
-    this.options,
-    this.indice,
-    this.min,
-    this.max,
-    this.maxLongueur,
-    this.entite,
-    this.nullable = false,
-    this.visible,
-  });
-
   final String nom;
   final String libelle;
   final TypeChamp type;
@@ -44,17 +40,42 @@ class Champ {
   final int? maxLongueur;
 
   /// Sélection d'une entité de l'API (immeuble, appartement, locataire, bail…).
-  final SourceEntite? entite;
+  final SourceEntite<dynamic>? entite;
 
   /// Envoyé à `null` quand il est vidé (pour effacer une valeur).
   final bool nullable;
 
   /// Affichage conditionnel selon les autres valeurs saisies.
   final bool Function(Map<String, dynamic> valeurs)? visible;
+
+  const Champ(
+    this.nom,
+    this.libelle, {
+    this.type = TypeChamp.texte,
+    this.obligatoire = false,
+    this.referentiel,
+    this.options,
+    this.indice,
+    this.min,
+    this.max,
+    this.maxLongueur,
+    this.entite,
+    this.nullable = false,
+    this.visible,
+  });
 }
 
 /// Formulaire plein écran. [envoyer] reçoit le corps prêt à poster.
 class EcranFormulaire extends StatefulWidget {
+  final String titre;
+  final List<Champ> champs;
+  final Map<String, dynamic> initial;
+
+  final Future<dynamic> Function(Map<String, dynamic> corps) envoyer;
+  final String libelleEnvoi;
+  final Widget? intro;
+  final String? messageSucces;
+
   const EcranFormulaire({
     super.key,
     required this.titre,
@@ -66,17 +87,10 @@ class EcranFormulaire extends StatefulWidget {
     this.messageSucces,
   });
 
-  final String titre;
-  final List<Champ> champs;
-  final Map<String, dynamic> initial;
-  final Future<dynamic> Function(Map<String, dynamic> corps) envoyer;
-  final String libelleEnvoi;
-  final Widget? intro;
-  final String? messageSucces;
-
   /// Ouvre le formulaire ; renvoie le résultat de [envoyer] si l'envoi a réussi.
   static Future<T?> ouvrir<T>(BuildContext context, EcranFormulaire f) =>
-      Navigator.of(context).push<T>(MaterialPageRoute(builder: (_) => f, fullscreenDialog: true));
+      Navigator.of(context).push<T>(
+          MaterialPageRoute(builder: (_) => f, fullscreenDialog: true));
 
   @override
   State<EcranFormulaire> createState() => _EcranFormulaireState();
@@ -95,7 +109,8 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
       for (final c in widget.champs)
         c.nom: switch (c.type) {
           TypeChamp.interrupteur => widget.initial[c.nom] == true,
-          TypeChamp.date => (widget.initial[c.nom] as String?)?.substring(0, 10),
+          TypeChamp.date =>
+            (widget.initial[c.nom] as String?)?.substring(0, 10),
           _ => widget.initial[c.nom],
         },
     };
@@ -121,13 +136,17 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
         case TypeChamp.entier:
           sortie = v is int ? v : int.tryParse('${v ?? ''}'.trim());
         case TypeChamp.decimal:
-          sortie = v is num ? v : num.tryParse('${v ?? ''}'.trim().replaceAll(',', '.'));
+          sortie = v is num
+              ? v
+              : num.tryParse('${v ?? ''}'.trim().replaceAll(',', '.'));
         default:
           final s = v == null ? '' : '$v'.trim();
           sortie = s.isEmpty ? null : s;
       }
       if (sortie == null) {
-        if (c.nullable || (initiale != null && initiale != '')) corps[c.nom] = null;
+        if (c.nullable || (initiale != null && initiale != '')) {
+          corps[c.nom] = null;
+        }
       } else {
         corps[c.nom] = sortie;
       }
@@ -138,7 +157,11 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
   Future<void> _valider() async {
     if (!_form.currentState!.validate()) return;
     for (final c in widget.champs.where(_visible)) {
-      if (c.obligatoire && (c.type == TypeChamp.selection || c.type == TypeChamp.entite || c.type == TypeChamp.date) && _valeurs[c.nom] == null) {
+      if (c.obligatoire &&
+          (c.type == TypeChamp.selection ||
+              c.type == TypeChamp.entite ||
+              c.type == TypeChamp.date) &&
+          _valeurs[c.nom] == null) {
         return afficherErreur(context, '« ${c.libelle} » est obligatoire');
       }
     }
@@ -146,7 +169,9 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
     try {
       final r = await widget.envoyer(_corps());
       if (!mounted) return;
-      if (widget.messageSucces != null) afficherSucces(context, widget.messageSucces!);
+      if (widget.messageSucces != null) {
+        afficherSucces(context, widget.messageSucces!);
+      }
       Navigator.of(context).pop(r ?? true);
     } catch (e) {
       if (mounted) afficherErreurApi(context, e);
@@ -159,9 +184,16 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
     final v = (s ?? '').trim();
     if (c.obligatoire && v.isEmpty) return 'Obligatoire';
     if (v.isEmpty) return null;
-    if (c.type == TypeChamp.email && !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v)) return 'E-mail invalide';
-    if (c.type == TypeChamp.entier || c.type == TypeChamp.montant || c.type == TypeChamp.decimal) {
-      final n = c.type == TypeChamp.montant ? lireMontant(v) : num.tryParse(v.replaceAll(',', '.'));
+    if (c.type == TypeChamp.email &&
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v)) {
+      return 'E-mail invalide';
+    }
+    if (c.type == TypeChamp.entier ||
+        c.type == TypeChamp.montant ||
+        c.type == TypeChamp.decimal) {
+      final n = c.type == TypeChamp.montant
+          ? lireMontant(v)
+          : num.tryParse(v.replaceAll(',', '.'));
       if (n == null) return 'Nombre invalide';
       if (c.min != null && n < c.min!) return 'Minimum ${c.min}';
       if (c.max != null && n > c.max!) return 'Maximum ${c.max}';
@@ -171,7 +203,8 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
 
   Widget _champ(Champ c) {
     final libelle = '${c.libelle}${c.obligatoire ? ' *' : ''}';
-    final deco = InputDecoration(labelText: libelle, helperText: c.indice, helperMaxLines: 3);
+    final deco = InputDecoration(
+        labelText: libelle, helperText: c.indice, helperMaxLines: 3);
     switch (c.type) {
       case TypeChamp.interrupteur:
         return SwitchListTile(
@@ -184,12 +217,19 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
       case TypeChamp.selection:
         final options = c.options ?? refs.options(c.referentiel ?? '');
         return DropdownButtonFormField<String>(
-          initialValue: options.any((o) => o.code == _valeurs[c.nom]) ? _valeurs[c.nom] as String : null,
+          initialValue: options.any((o) => o.code == _valeurs[c.nom])
+              ? _valeurs[c.nom] as String
+              : null,
           decoration: deco,
           isExpanded: true,
           items: [
-            if (!c.obligatoire) const DropdownMenuItem<String>(value: null, child: Text('—')),
-            for (final o in options) DropdownMenuItem(value: o.code, child: Text(o.label, overflow: TextOverflow.ellipsis)),
+            if (!c.obligatoire)
+              const DropdownMenuItem<String>(value: null, child: Text('—')),
+            for (final o in options)
+              DropdownMenuItem(
+                value: o.code,
+                child: Text(o.label, overflow: TextOverflow.ellipsis),
+              ),
           ],
           onChanged: (v) => setState(() => _valeurs[c.nom] = v),
         );
@@ -208,14 +248,16 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
             if (d != null) setState(() => _valeurs[c.nom] = versApi(d));
           },
           child: InputDecorator(
-            decoration: deco.copyWith(suffixIcon: const Icon(Icons.calendar_today, size: 18)),
+            decoration: deco.copyWith(
+                suffixIcon: const Icon(Icons.calendar_today, size: 18)),
             child: Text(v == null ? 'Choisir une date' : date(v)),
           ),
         );
       case TypeChamp.entite:
         return InkWell(
           onTap: () async {
-            final choix = await choisirEntite(context, c.entite!, titre: c.libelle);
+            final choix =
+                await choisirEntite(context, c.entite!, titre: c.libelle);
             if (choix != null) {
               setState(() {
                 _valeurs[c.nom] = choix.id;
@@ -235,13 +277,15 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
                     )
                   : const Icon(Icons.arrow_drop_down),
             ),
-            child: Text(_libellesEntites[c.nom] ?? (_valeurs[c.nom] == null ? 'Choisir' : 'Sélectionné')),
+            child: Text(_libellesEntites[c.nom] ??
+                (_valeurs[c.nom] == null ? 'Choisir' : 'Sélectionné')),
           ),
         );
       default:
         final clavier = switch (c.type) {
           TypeChamp.montant || TypeChamp.entier => TextInputType.number,
-          TypeChamp.decimal => const TextInputType.numberWithOptions(decimal: true),
+          TypeChamp.decimal =>
+            const TextInputType.numberWithOptions(decimal: true),
           TypeChamp.telephone => TextInputType.phone,
           TypeChamp.email => TextInputType.emailAddress,
           TypeChamp.multiligne => TextInputType.multiline,
@@ -254,7 +298,8 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
               : c.type == TypeChamp.montant && initial is num
                   ? nombre(initial)
                   : '$initial',
-          decoration: deco.copyWith(suffixText: c.type == TypeChamp.montant ? 'FCFA' : null),
+          decoration: deco.copyWith(
+              suffixText: c.type == TypeChamp.montant ? 'FCFA' : null),
           keyboardType: clavier,
           obscureText: c.type == TypeChamp.motDePasse,
           maxLines: c.type == TypeChamp.multiligne ? 5 : 1,
@@ -262,7 +307,8 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
           maxLength: c.maxLongueur,
           inputFormatters: [
             if (c.type == TypeChamp.montant) _SeparateurMilliers(),
-            if (c.type == TypeChamp.entier) FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
+            if (c.type == TypeChamp.entier)
+              FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
           ],
           validator: (s) => _valider1(c, s),
           onChanged: (s) => _valeurs[c.nom] = s,
@@ -280,14 +326,23 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
           child: ListView(
             padding: const EdgeInsets.all(AppTheme.espaceLg),
             children: [
-              if (widget.intro != null) ...[widget.intro!, const SizedBox(height: AppTheme.espaceLg)],
+              if (widget.intro != null) ...[
+                widget.intro!,
+                const SizedBox(height: AppTheme.espaceLg)
+              ],
               for (final c in widget.champs.where(_visible))
-                Padding(padding: const EdgeInsets.only(bottom: AppTheme.espaceLg), child: _champ(c)),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppTheme.espaceLg),
+                  child: _champ(c),
+                ),
               const SizedBox(height: AppTheme.espaceSm),
               FilledButton(
                 onPressed: _envoi ? null : _valider,
                 child: _envoi
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(widget.libelleEnvoi),
               ),
             ],
@@ -301,10 +356,14 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
 /// Saisie des montants avec séparateur de milliers (« 350 000 »).
 class _SeparateurMilliers extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue ancien, TextEditingValue nouveau) {
+  TextEditingValue formatEditUpdate(
+      TextEditingValue ancien, TextEditingValue nouveau) {
     final n = lireMontant(nouveau.text);
     if (n == null) return const TextEditingValue();
     final t = nombre(n);
-    return TextEditingValue(text: t, selection: TextSelection.collapsed(offset: t.length));
+    return TextEditingValue(
+      text: t,
+      selection: TextSelection.collapsed(offset: t.length),
+    );
   }
 }

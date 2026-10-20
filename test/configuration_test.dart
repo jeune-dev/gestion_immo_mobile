@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gestion_immo_mobile/core/api/api_client.dart';
-import 'package:gestion_immo_mobile/core/format.dart';
+import 'package:gestion_immo_mobile/core/config/env.dart';
+import 'package:gestion_immo_mobile/core/utils/format.dart';
 
 void main() {
   test("l'URL de l'API vient du .env", () {
     dotenv.loadFromString(envString: File('.env').readAsStringSync());
-    expect(urlApiParDefaut(), dotenv.get('API_URL'));
-    expect(urlApiParDefaut(), endsWith('/api/v1'));
+    expect(Env.baseUrl, dotenv.get('API_URL'));
+    expect(Env.baseUrl, endsWith('/api/v1'));
   });
 
   test('montants FCFA de la charte', () {
