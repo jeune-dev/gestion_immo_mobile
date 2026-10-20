@@ -170,13 +170,16 @@ class ApiClient {
 
   /// Lecture. Hors ligne, renvoie la dernière réponse connue (si [cache]).
   Future<T> get<T>(String chemin,
-      {Map<String, dynamic>? query, bool cache = true}) async {
+      {Map<String, dynamic>? query,
+      bool cache = true,
+      Map<String, String>? headers}) async {
     final q = _nettoyer(query);
     final cle =
         'cache:$chemin?${q == null ? '' : Uri(queryParameters: q.map((k, v) => MapEntry(k, '$v'))).query}';
     try {
       final data = await _executer<dynamic>(
-          () => _dio.get<dynamic>(chemin, queryParameters: q));
+          () => _dio.get<dynamic>(chemin,
+              queryParameters: q, options: Options(headers: headers)));
       horsLigne.value = false;
       if (cache) unawaited(_memoriser(cle, data));
       return data as T;

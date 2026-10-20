@@ -75,20 +75,22 @@ class SessionsPage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final ok = await confirmer(
-                        context,
-                        titre: 'Déconnecter les autres appareils',
-                        message: 'Toutes les autres sessions seront fermées.',
-                        danger: true,
-                      );
-                      if (ok != null) bloc.add(RevoquerToutesSessionsEvent());
-                    },
-                    icon: const Icon(Icons.phonelink_erase),
-                    label: const Text('Déconnecter tous les autres appareils'),
-                  ),
+                  if (sessions.any((s) => !s.courante)) ...[
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final ok = await confirmer(
+                          context,
+                          titre: 'Déconnecter les autres appareils',
+                          message: 'Toutes les autres sessions seront fermées.',
+                          danger: true,
+                        );
+                        if (ok != null) bloc.add(RevoquerAutresSessionsEvent());
+                      },
+                      icon: const Icon(Icons.phonelink_erase),
+                      label: const Text('Déconnecter tous les autres appareils'),
+                    ),
+                  ],
                 ],
               ),
             ),

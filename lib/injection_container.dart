@@ -58,7 +58,7 @@ import 'features/account/domain/usecases/initialiser_mfa.dart';
 import 'features/account/domain/usecases/modifier_profil.dart';
 import 'features/account/domain/usecases/regenerer_codes_secours.dart';
 import 'features/account/domain/usecases/revoquer_session.dart';
-import 'features/account/domain/usecases/revoquer_toutes_sessions.dart';
+import 'features/account/domain/usecases/revoquer_autres_sessions.dart';
 import 'features/account/presentation/bloc/account_bloc.dart';
 
 // Patrimoine
@@ -430,7 +430,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ModifierProfil(sl()));
   sl.registerLazySingleton(() => GetSessions(sl()));
   sl.registerLazySingleton(() => RevoquerSession(sl()));
-  sl.registerLazySingleton(() => RevoquerToutesSessions(sl()));
+  sl.registerLazySingleton(() => RevoquerAutresSessions(sl()));
   sl.registerLazySingleton(() => InitialiserMfa(sl()));
   sl.registerLazySingleton(() => ActiverMfa(sl()));
   sl.registerLazySingleton(() => DesactiverMfa(sl()));
@@ -439,7 +439,7 @@ Future<void> init() async {
     () => AccountBloc(
       getSessions: sl(),
       revoquerSession: sl(),
-      revoquerToutesSessions: sl(),
+      revoquerAutresSessions: sl(),
       initialiserMfa: sl(),
       activerMfa: sl(),
       desactiverMfa: sl(),

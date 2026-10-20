@@ -5,7 +5,7 @@ import '../../domain/usecases/get_sessions.dart';
 import '../../domain/usecases/initialiser_mfa.dart';
 import '../../domain/usecases/regenerer_codes_secours.dart';
 import '../../domain/usecases/revoquer_session.dart';
-import '../../domain/usecases/revoquer_toutes_sessions.dart';
+import '../../domain/usecases/revoquer_autres_sessions.dart';
 import 'account_event.dart';
 import 'account_state.dart';
 
@@ -13,7 +13,7 @@ import 'account_state.dart';
 class AccountBloc extends Bloc<AccountEvent, AccountState> {
   final GetSessions getSessions;
   final RevoquerSession revoquerSession;
-  final RevoquerToutesSessions revoquerToutesSessions;
+  final RevoquerAutresSessions revoquerAutresSessions;
   final InitialiserMfa initialiserMfa;
   final ActiverMfa activerMfa;
   final DesactiverMfa desactiverMfa;
@@ -22,7 +22,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   AccountBloc({
     required this.getSessions,
     required this.revoquerSession,
-    required this.revoquerToutesSessions,
+    required this.revoquerAutresSessions,
     required this.initialiserMfa,
     required this.activerMfa,
     required this.desactiverMfa,
@@ -30,7 +30,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   }) : super(AccountInitial()) {
     on<LoadSessions>((_, emit) => _chargerSessions(emit));
     on<RevoquerSessionEvent>(_onRevoquerSession);
-    on<RevoquerToutesSessionsEvent>(_onRevoquerToutesSessions);
+    on<RevoquerAutresSessionsEvent>(_onRevoquerAutresSessions);
     on<InitialiserMfaEvent>(_onInitialiserMfa);
     on<ActiverMfaEvent>(_onActiverMfa);
     on<DesactiverMfaEvent>(_onDesactiverMfa);
@@ -51,11 +51,11 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     );
   }
 
-  Future<void> _onRevoquerToutesSessions(
-    RevoquerToutesSessionsEvent event,
+  Future<void> _onRevoquerAutresSessions(
+    RevoquerAutresSessionsEvent event,
     Emitter<AccountState> emit,
   ) async {
-    final result = await revoquerToutesSessions();
+    final result = await revoquerAutresSessions();
     await result.fold(
       (failure) async => emit(AccountActionError(failure)),
       (_) async {
