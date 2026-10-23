@@ -30,7 +30,8 @@ class CategoriesPage extends StatelessWidget {
             ? const {}
             : {'name': existant.nom, 'cash_group': existant.groupeCaisse},
         champs: const [
-          Champ('name', 'Nom', obligatoire: true, maxLongueur: 100),
+          Champ('name', 'Nom',
+              obligatoire: true, minLongueur: 2, maxLongueur: 100),
           Champ('cash_group', 'Groupe de caisse',
               type: TypeChamp.selection,
               referentiel: 'groupe_caisse_sortie',

@@ -52,12 +52,15 @@ class MoyensPaiementPage extends StatelessWidget {
           Champ('account_number', 'Numéro de réception',
               type: TypeChamp.telephone, visible: (v) => v['mode'] == 'preuve'),
           Champ('master_key', 'Clé principale PayDunya',
+              minLongueur: 8,
               visible: (v) =>
                   v['mode'] == 'integre' && v['provider'] == 'paydunya'),
           Champ('private_key', 'Clé privée PayDunya',
+              minLongueur: 8,
               visible: (v) =>
                   v['mode'] == 'integre' && v['provider'] == 'paydunya'),
           Champ('token', 'Jeton PayDunya',
+              minLongueur: 8,
               visible: (v) =>
                   v['mode'] == 'integre' && v['provider'] == 'paydunya'),
           Champ(
@@ -72,9 +75,11 @@ class MoyensPaiementPage extends StatelessWidget {
                 v['mode'] == 'integre' && v['provider'] == 'paydunya',
           ),
           Champ('api_key', 'Clé API',
+              minLongueur: 8,
               visible: (v) =>
                   v['mode'] == 'integre' && v['provider'] != 'paydunya'),
           Champ('webhook_secret', 'Secret du webhook',
+              minLongueur: 8,
               visible: (v) =>
                   v['mode'] == 'integre' && v['provider'] != 'paydunya'),
           const Champ('is_active', 'Actif', type: TypeChamp.interrupteur),

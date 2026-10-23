@@ -95,7 +95,10 @@ class PaiementDetailPage extends StatelessWidget {
             'Les échéances concernées sont rouvertes et les quittances annulées.'),
         champs: const [
           Champ('reason', 'Motif',
-              type: TypeChamp.multiligne, obligatoire: true, maxLongueur: 500),
+              type: TypeChamp.multiligne,
+              obligatoire: true,
+              minLongueur: 3,
+              maxLongueur: 500),
           Champ('method', 'Moyen du remboursement',
               type: TypeChamp.selection, referentiel: 'mode_paiement'),
         ],

@@ -55,6 +55,15 @@ class _FormulaireState extends State<_Formulaire> {
   }
 
   @override
+  void dispose() {
+    _identifiant.dispose();
+    _code.dispose();
+    _mdp.dispose();
+    _confirmation.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocConsumer<MotDePasseOublieBloc, MotDePasseOublieState>(
       listener: (context, state) {

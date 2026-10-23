@@ -123,7 +123,8 @@ class AbonnementPage extends StatelessWidget {
 
   Future<void> _ouvrirPaiement(
       BuildContext context, LienPaiementAbonnementLoaded state) async {
-    await launchUrl(Uri.parse(state.url), mode: LaunchMode.externalApplication);
+    await ouvrirLien(context, state.url,
+        mode: LaunchMode.externalApplication);
     if (context.mounted) {
       afficherSucces(context,
           'Après le paiement, revenez ici : votre abonnement sera mis à jour automatiquement.');
@@ -280,7 +281,7 @@ class AbonnementPage extends StatelessWidget {
                       ],
                     ),
                     onTap: p.statut == 'initie' && p.checkoutUrl != null
-                        ? () => launchUrl(Uri.parse(p.checkoutUrl!),
+                        ? () => ouvrirLien(context, p.checkoutUrl!,
                             mode: LaunchMode.externalApplication)
                         : null,
                   ),

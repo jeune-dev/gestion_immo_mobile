@@ -71,6 +71,16 @@ class _InscriptionPageState extends State<InscriptionPage> {
       );
 
   @override
+  void dispose() {
+    for (final c in _c.values) {
+      c.dispose();
+    }
+    _mdp.dispose();
+    _confirmation.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AuthCadre(
       retour: true,

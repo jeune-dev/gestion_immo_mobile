@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/errors/messages.dart';
@@ -34,6 +35,27 @@ void afficherErreur(BuildContext context, String message) {
 
 /// Affiche le message de l'API tel quel (contrat § 0). Un 402 propose le
 /// renouvellement : l'espace est en lecture seule tant que l'abonnement est échu.
+/// Ouvre un lien (page de paiement, appel…) et prévient quand le téléphone
+/// ne peut pas l'ouvrir, au lieu d'échouer en silence. Renvoie `true` si ouvert.
+Future<bool> ouvrirLien(BuildContext context, String lien,
+    {LaunchMode mode = LaunchMode.platformDefault}) async {
+  final uri = Uri.tryParse(lien);
+  var ouvert = false;
+  try {
+    ouvert = uri != null && await launchUrl(uri, mode: mode);
+  } catch (_) {
+    ouvert = false;
+  }
+  if (!ouvert && context.mounted) {
+    afficherErreur(context, 'Impossible d’ouvrir ce lien sur ce téléphone.');
+  }
+  return ouvert;
+}
+
+/// Appel téléphonique (espaces retirés du numéro).
+Future<bool> appeler(BuildContext context, String? telephone) =>
+    ouvrirLien(context, 'tel:${(telephone ?? '').replaceAll(' ', '')}');
+
 void afficherErreurApi(BuildContext context, Object e) {
   if (erreurAbonnement(e)) {
     showDialog<void>(
@@ -112,59 +134,108 @@ Future<String?> confirmer(
   int minMotif = 3,
   bool masque = false,
 }) {
-  final ctrl = TextEditingController();
   return showDialog<String>(
     context: context,
-    builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setState) {
-        final invalide =
-            motif && motifObligatoire && ctrl.text.trim().length < minMotif;
-        final cs = Theme.of(ctx).colorScheme;
-        return AlertDialog(
-          title: Text(titre),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (message.isNotEmpty) Text(message),
-              if (motif) ...[
-                const SizedBox(height: AppTheme.espaceLg),
-                TextField(
-                  controller: ctrl,
-                  autofocus: true,
-                  obscureText: masque,
-                  minLines: masque ? 1 : 2,
-                  maxLines: masque ? 1 : 4,
-                  maxLength: 1000,
-                  decoration: InputDecoration(
-                    labelText: '$libelleMotif${motifObligatoire ? ' *' : ''}',
-                    helperText: motifObligatoire
-                        ? '$minMotif caractères minimum'
-                        : null,
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Annuler')),
-            FilledButton(
-              style: danger
-                  ? FilledButton.styleFrom(
-                      backgroundColor: cs.error, foregroundColor: cs.onError)
-                  : null,
-              onPressed:
-                  invalide ? null : () => Navigator.pop(ctx, ctrl.text.trim()),
-              child: Text(action),
-            ),
-          ],
-        );
-      },
+    builder: (_) => _Confirmation(
+      titre: titre,
+      message: message,
+      action: action,
+      danger: danger,
+      motif: motif,
+      motifObligatoire: motifObligatoire,
+      libelleMotif: libelleMotif,
+      minMotif: minMotif,
+      masque: masque,
     ),
   );
+}
+
+/// Boîte de [confirmer] : elle possède le champ du motif et le libère.
+class _Confirmation extends StatefulWidget {
+  final String titre;
+  final String message;
+  final String action;
+  final bool danger;
+  final bool motif;
+  final bool motifObligatoire;
+  final String libelleMotif;
+  final int minMotif;
+  final bool masque;
+
+  const _Confirmation({
+    required this.titre,
+    required this.message,
+    required this.action,
+    required this.danger,
+    required this.motif,
+    required this.motifObligatoire,
+    required this.libelleMotif,
+    required this.minMotif,
+    required this.masque,
+  });
+
+  @override
+  State<_Confirmation> createState() => _ConfirmationState();
+}
+
+class _ConfirmationState extends State<_Confirmation> {
+  final ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext ctx) {
+    final w = widget;
+    final invalide =
+        w.motif && w.motifObligatoire && ctrl.text.trim().length < w.minMotif;
+    final cs = Theme.of(ctx).colorScheme;
+    return AlertDialog(
+      title: Text(w.titre),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (w.message.isNotEmpty) Text(w.message),
+          if (w.motif) ...[
+            const SizedBox(height: AppTheme.espaceLg),
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              obscureText: w.masque,
+              minLines: w.masque ? 1 : 2,
+              maxLines: w.masque ? 1 : 4,
+              maxLength: 1000,
+              decoration: InputDecoration(
+                labelText: '${w.libelleMotif}${w.motifObligatoire ? ' *' : ''}',
+                helperText: w.motifObligatoire
+                    ? '${w.minMotif} caractères minimum'
+                    : null,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler')),
+        FilledButton(
+          style: w.danger
+              ? FilledButton.styleFrom(
+                  backgroundColor: cs.error, foregroundColor: cs.onError)
+              : null,
+          onPressed:
+              invalide ? null : () => Navigator.pop(ctx, ctrl.text.trim()),
+          child: Text(w.action),
+        ),
+      ],
+    );
+  }
 }
 
 /// Télécharge un PDF de l'API (avec le jeton) puis l'ouvre avec le lecteur du

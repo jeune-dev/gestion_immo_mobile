@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
@@ -114,7 +113,7 @@ class ArtisanDetailPage extends StatelessWidget {
               if (a.telephone != null) ...[
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
-                  onPressed: () => launchUrl(Uri.parse('tel:${a.telephone}')),
+                  onPressed: () => appeler(context, a.telephone),
                   icon: const Icon(Icons.call_outlined),
                   label: const Text('Appeler'),
                 ),

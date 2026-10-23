@@ -323,7 +323,7 @@ class _DetailState extends State<_Detail> {
                         danger: true,
                         action: 'Supprimer',
                       );
-                      if (ok == null) return;
+                      if (ok == null || !mounted) return;
                       setState(_saisies.clear);
                       _bloc.add(SupprimerEtatDesLieuxEvent(widget.id));
                     },

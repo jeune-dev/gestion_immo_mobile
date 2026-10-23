@@ -58,7 +58,7 @@ class PaiementPage extends StatelessWidget {
               builder: (ctx, setState) => OutlinedButton.icon(
                 onPressed: () async {
                   final p = await choisirPhoto(ctx);
-                  if (p != null) setState(() => photo = p.path);
+                  if (p != null && ctx.mounted) setState(() => photo = p.path);
                 },
                 icon: Icon(
                     photo == null ? Icons.add_a_photo_outlined : Icons.check),
@@ -71,7 +71,13 @@ class PaiementPage extends StatelessWidget {
         ),
         champs: const [
           Champ('provider_transaction_id', 'Numéro de transaction',
-              obligatoire: true, maxLongueur: 100),
+              obligatoire: true,
+              minLongueur: 4,
+              maxLongueur: 100,
+              format: (
+                r'^[A-Za-z0-9_\-./]+$',
+                'Lettres, chiffres et . _ - / uniquement, sans espace'
+              )),
           Champ('amount', 'Montant envoyé',
               type: TypeChamp.montant, obligatoire: true, min: 1),
           Champ('payer_phone', 'Numéro qui a payé', type: TypeChamp.telephone),
@@ -115,7 +121,8 @@ class PaiementPage extends StatelessWidget {
             state is PaiementLocataireError,
         builder: (context, state) {
           if (state is PaiementLocataireLoaded) {
-            return _buildFiche(context, state.moyens);
+            return _buildFiche(context, state.moyens,
+                paiementEnCours: state.paiementEnCours);
           }
           return VueChargement(
             titre: 'Payer',
@@ -137,7 +144,8 @@ class PaiementPage extends StatelessWidget {
   ) async {
     final url = state.demande.checkoutUrl;
     if (url != null) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      await ouvrirLien(context, url,
+          mode: LaunchMode.externalApplication);
     }
     if (!context.mounted) return;
     await Navigator.of(context).pushReplacement(
@@ -150,7 +158,8 @@ class PaiementPage extends StatelessWidget {
     );
   }
 
-  Widget _buildFiche(BuildContext context, MoyensPaiementLocataire m) {
+  Widget _buildFiche(BuildContext context, MoyensPaiementLocataire m,
+      {bool paiementEnCours = false}) {
     final bloc = context.read<PaiementLocataireBloc>();
     return Scaffold(
       appBar: AppBar(title: const Text('Payer mon loyer')),
@@ -179,9 +188,16 @@ class PaiementPage extends StatelessWidget {
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(52)),
-                  onPressed: () => bloc.add(PayerEnLigneEvent(
-                      bailId, echeance.id, echeance.reste, w)),
-                  icon: const Icon(Icons.phone_iphone),
+                  onPressed: paiementEnCours
+                      ? null
+                      : () => bloc.add(PayerEnLigneEvent(
+                          bailId, echeance.id, echeance.reste, w)),
+                  icon: paiementEnCours
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.phone_iphone),
                   label: Text('Payer avec ${refs.libelle('portefeuille', w)}'),
                 ),
               ),

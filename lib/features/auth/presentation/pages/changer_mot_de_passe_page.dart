@@ -40,6 +40,14 @@ class _ChangerMotDePassePageState extends State<ChangerMotDePassePage> {
   }
 
   @override
+  void dispose() {
+    _actuel.dispose();
+    _mdp.dispose();
+    _confirmation.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listenWhen: (a, b) => b.succes != null && a.version != b.version,

@@ -74,6 +74,7 @@ class _DemandesPageState extends State<DemandesPage>
               obligatoire: true),
           const Champ('title', 'En quelques mots',
               obligatoire: true,
+              minLongueur: 2,
               maxLongueur: 150,
               indice: 'Ex. Fuite sous l’évier'),
           const Champ('description', 'Description',

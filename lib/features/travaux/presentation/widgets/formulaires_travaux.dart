@@ -54,6 +54,7 @@ Future<Travaux?> formulaireTravaux(BuildContext context, {Travaux? existant}) {
               entite: sourceImmeubles()),
         const Champ('title', 'Intitulé',
             obligatoire: true,
+            minLongueur: 2,
             maxLongueur: 150,
             indice: 'Ex. Fuite salle de bain'),
         const Champ('category', 'Catégorie',

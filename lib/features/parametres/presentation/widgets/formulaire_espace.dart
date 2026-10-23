@@ -30,7 +30,7 @@ Future<void> modifierEspaceBailleur(BuildContext context) async {
       },
       champs: const [
         Champ('display_name', 'Nom affiché',
-            obligatoire: true, maxLongueur: 150),
+            obligatoire: true, minLongueur: 2, maxLongueur: 150),
         Champ('company_name', 'Société', maxLongueur: 150),
         Champ('phone', 'Téléphone', type: TypeChamp.telephone),
         Champ('email', 'E-mail', type: TypeChamp.email),

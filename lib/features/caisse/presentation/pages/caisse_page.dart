@@ -46,6 +46,7 @@ class _CaissePageState extends State<CaissePage> {
         champs: [
           const Champ('label', 'Libellé',
               obligatoire: true,
+              minLongueur: 2,
               maxLongueur: 200,
               indice: 'Ex. location de la terrasse'),
           const Champ('amount', 'Montant',
@@ -66,7 +67,7 @@ class _CaissePageState extends State<CaissePage> {
         },
       ),
     );
-    if (r != null) _rafraichir();
+    if (r != null && mounted) _rafraichir();
   }
 
   @override

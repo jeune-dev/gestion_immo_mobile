@@ -99,11 +99,20 @@ class ApiClient {
       final r = await appel();
       return _deballer<T>(r.data);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401 &&
-          rejouable &&
-          session.accessToken != null) {
+      // Sans jeton d'accès (démarrage hors ligne), le refresh token du coffre
+      // suffit à rouvrir la session.
+      if (e.response?.statusCode == 401 && rejouable) {
         if (await renouveler()) return _executer<T>(appel, rejouable: false);
-        onSessionExpiree?.call();
+        // Refus du serveur : `renouveler` a vidé le coffre, la session est finie.
+        if (await session.lireRefresh() == null) {
+          onSessionExpiree?.call();
+        } else {
+          // Serveur injoignable pendant le renouvellement : la session est
+          // gardée (et le cache de lecture prend le relais).
+          throw const ApiException(
+              'Impossible de renouveler la session pour le moment. Vérifiez votre connexion.',
+              code: 'RESEAU');
+        }
       }
       throw await _normaliser(e);
     }

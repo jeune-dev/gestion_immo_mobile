@@ -127,7 +127,8 @@ class EspaceLocataireRemoteDataSourceImpl
         Map<String, dynamic>.from(r['methods'] as Map));
   }
 
-  /// Idempotency-Key OBLIGATOIRE : un double toucher ne crée qu'une demande.
+  /// Idempotency-Key OBLIGATOIRE (une par envoi). Le double toucher est
+  /// bloqué en amont par `PaiementLocataireBloc`.
   @override
   Future<DemandePaiement> payer(
       {String? echeanceId,

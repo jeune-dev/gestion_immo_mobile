@@ -40,6 +40,13 @@ class Champ {
   final num? max;
   final int? maxLongueur;
 
+  /// Longueur minimale d'une saisie libre (la même que le schéma de l'API).
+  final int? minLongueur;
+
+  /// Format attendu d'une saisie libre : (expression régulière, message affiché
+  /// s'il n'est pas respecté).
+  final (String, String)? format;
+
   /// Sélection d'une entité de l'API (immeuble, appartement, locataire, bail…).
   final SourceEntite<dynamic>? entite;
 
@@ -60,6 +67,8 @@ class Champ {
     this.min,
     this.max,
     this.maxLongueur,
+    this.minLongueur,
+    this.format,
     this.entite,
     this.nullable = false,
     this.visible,
@@ -110,8 +119,7 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
       for (final c in widget.champs)
         c.nom: switch (c.type) {
           TypeChamp.interrupteur => widget.initial[c.nom] == true,
-          TypeChamp.date =>
-            (widget.initial[c.nom] as String?)?.substring(0, 10),
+          TypeChamp.date => _dateInitiale(widget.initial[c.nom]),
           _ => widget.initial[c.nom],
         },
     };
@@ -121,7 +129,16 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
     }
   }
 
+  /// « AAAA-MM-JJ » depuis une date ou une date-heure de l'API (null si illisible).
+  static String? _dateInitiale(dynamic v) {
+    final d = v is String ? DateTime.tryParse(v) : null;
+    return d == null ? null : versApi(d);
+  }
+
   bool _visible(Champ c) => c.visible == null || c.visible!(_valeurs);
+
+  /// Un champ affiché sous condition peut dépendre d'une saisie libre.
+  late final bool _conditionnel = widget.champs.any((c) => c.visible != null);
 
   Map<String, dynamic> _corps() {
     final corps = <String, dynamic>{};
@@ -185,6 +202,11 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
     final v = (s ?? '').trim();
     if (c.obligatoire && v.isEmpty) return 'Obligatoire';
     if (v.isEmpty) return null;
+    if (c.minLongueur != null && v.length < c.minLongueur!) {
+      return '${c.minLongueur} caractères minimum';
+    }
+    final format = c.format;
+    if (format != null && !RegExp(format.$1).hasMatch(v)) return format.$2;
     if (c.type == TypeChamp.email) {
       final erreur = IdentifiantValidator.email(v).erreurFormulaire;
       if (erreur != null) return erreur;
@@ -238,15 +260,19 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
         final v = _valeurs[c.nom] as String?;
         return InkWell(
           onTap: () async {
-            final init = v == null ? DateTime.now() : DateTime.parse(v);
+            final init = (v == null ? null : DateTime.tryParse(v)) ??
+                DateTime.now();
             final d = await showDatePicker(
               context: context,
               initialDate: init,
-              firstDate: DateTime(2000),
+              // Bornes larges : une date initiale hors bornes fait échouer le sélecteur
+              firstDate: DateTime(1900),
               lastDate: DateTime(2100),
               locale: const Locale('fr'),
             );
-            if (d != null) setState(() => _valeurs[c.nom] = versApi(d));
+            if (d != null && mounted) {
+              setState(() => _valeurs[c.nom] = versApi(d));
+            }
           },
           child: InputDecorator(
             decoration: deco.copyWith(
@@ -259,7 +285,7 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
           onTap: () async {
             final choix =
                 await choisirEntite(context, c.entite!, titre: c.libelle);
-            if (choix != null) {
+            if (choix != null && mounted) {
               setState(() {
                 _valeurs[c.nom] = choix.id;
                 _libellesEntites[c.nom] = choix.libelle;
@@ -312,7 +338,10 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
               FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
           ],
           validator: (s) => _valider1(c, s),
-          onChanged: (s) => _valeurs[c.nom] = s,
+          onChanged: (s) {
+            _valeurs[c.nom] = s;
+            if (_conditionnel) setState(() {});
+          },
         );
     }
   }
@@ -362,9 +391,18 @@ class _SeparateurMilliers extends TextInputFormatter {
     final n = lireMontant(nouveau.text);
     if (n == null) return const TextEditingValue();
     final t = nombre(n);
+    // Le curseur garde le même nombre de chiffres à sa droite : une
+    // correction au milieu du montant ne le renvoie pas à la fin.
+    final fin = nouveau.selection.end.clamp(0, nouveau.text.length);
+    var aDroite = RegExp(r'\d').allMatches(nouveau.text.substring(fin)).length;
+    var position = t.length;
+    while (aDroite > 0 && position > 0) {
+      position--;
+      if (RegExp(r'\d').hasMatch(t[position])) aDroite--;
+    }
     return TextEditingValue(
       text: t,
-      selection: TextSelection.collapsed(offset: t.length),
+      selection: TextSelection.collapsed(offset: position),
     );
   }
 }

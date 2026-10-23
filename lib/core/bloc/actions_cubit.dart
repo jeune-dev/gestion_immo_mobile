@@ -35,6 +35,8 @@ class ActionsCubit extends Cubit<EtatActions> {
       {String? succes}) async {
     emit(EtatActions(enCours: true, version: state.version));
     final r = await action;
+    // Écran fermé pendant l'action : émettre lèverait une StateError
+    if (isClosed) return r.isRight();
     emit(
       r.fold(
           (f) => EtatActions(failure: f, version: state.version + 1),

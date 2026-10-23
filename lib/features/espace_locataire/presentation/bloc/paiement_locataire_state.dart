@@ -9,7 +9,10 @@ class PaiementLocataireLoading extends PaiementLocataireState {}
 
 class PaiementLocataireLoaded extends PaiementLocataireState {
   final MoyensPaiementLocataire moyens;
-  PaiementLocataireLoaded(this.moyens);
+
+  /// Demande de paiement en vol : les boutons « Payer » sont désactivés.
+  final bool paiementEnCours;
+  PaiementLocataireLoaded(this.moyens, {this.paiementEnCours = false});
 }
 
 /// Échec de la lecture : l'écran affiche l'erreur et « Réessayer ».

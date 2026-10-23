@@ -48,6 +48,10 @@ class PaginationState<T> extends Equatable {
 /// pages suivantes au défilement, rechargement complet.
 class PaginationCubit<T> extends Cubit<PaginationState<T>> {
   ChargeurPage<T> _charger;
+
+  /// Incrémenté à chaque rechargement : la réponse d'un chargement plus ancien
+  /// (autre filtre, page suivante en vol) est ignorée au lieu d'être mélangée.
+  int _generation = 0;
   PaginationCubit(this._charger) : super(PaginationState<T>());
 
   /// Nouveau chargeur (filtre changé) puis rechargement depuis la première page.
@@ -57,19 +61,22 @@ class PaginationCubit<T> extends Cubit<PaginationState<T>> {
   }
 
   Future<void> recharger() async {
+    if (isClosed) return;
+    _generation++;
     emit(PaginationState<T>(enCours: true));
     await _charge(1, remplacer: true);
   }
 
   Future<void> suivante() async {
-    if (state.enCours || !state.aSuite) return;
+    if (isClosed || state.enCours || !state.aSuite) return;
     emit(state.copyWith(enCours: true, effacerErreur: true));
     await _charge(state.page + 1);
   }
 
   Future<void> _charge(int page, {bool remplacer = false}) async {
+    final generation = _generation;
     final r = await _charger(page);
-    if (isClosed) return;
+    if (isClosed || generation != _generation) return;
     r.fold(
       (f) => emit(state.copyWith(enCours: false, failure: f)),
       (p) => emit(PaginationState<T>(

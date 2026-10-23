@@ -9,6 +9,7 @@ class PaiementLocataireBloc
     extends Bloc<PaiementLocataireEvent, PaiementLocataireState> {
   final GetMoyensPaiementLocataire getMoyensPaiementLocataire;
   final PayerEnLigne payerEnLigne;
+  bool _paiementEnCours = false;
 
   PaiementLocataireBloc({
     required this.getMoyensPaiementLocataire,
@@ -36,17 +37,28 @@ class PaiementLocataireBloc
     await _relire(event.bailId, emit);
   }
 
+  /// Une seule demande à la fois : un double toucher créerait deux paiements
+  /// PayDunya (chaque envoi porte sa propre `Idempotency-Key`).
   Future<void> _onPayerEnLigne(
     PayerEnLigneEvent event,
     Emitter<PaiementLocataireState> emit,
   ) async {
+    final fiche = state;
+    if (_paiementEnCours || fiche is! PaiementLocataireLoaded) return;
+    _paiementEnCours = true;
+    emit(PaiementLocataireLoaded(fiche.moyens, paiementEnCours: true));
     final result = await payerEnLigne(
       echeanceId: event.echeanceId,
       portefeuille: event.portefeuille,
       montant: event.montant,
     );
     result.fold(
-      (failure) => emit(PaiementLocataireActionError(failure)),
+      (failure) {
+        _paiementEnCours = false;
+        emit(PaiementLocataireActionError(failure));
+        emit(PaiementLocataireLoaded(fiche.moyens));
+      },
+      // Succès : l'écran est remplacé par le suivi, les boutons restent bloqués
       (demande) => emit(DemandePaiementLoaded(demande)),
     );
   }
@@ -65,7 +77,8 @@ class PaiementLocataireBloc
             ? PaiementLocataireActionError(failure)
             : PaiementLocataireError(failure),
       ),
-      (moyens) => emit(PaiementLocataireLoaded(moyens)),
+      (moyens) => emit(PaiementLocataireLoaded(moyens,
+          paiementEnCours: _paiementEnCours)),
     );
   }
 }

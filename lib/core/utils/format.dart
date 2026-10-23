@@ -21,7 +21,11 @@ int entier(dynamic v) => v is num ? v.round() : int.tryParse('$v') ?? 0;
 
 DateTime? _lire(String? v) {
   if (v == null || v.isEmpty) return null;
-  return DateTime.tryParse(v)?.toUtc();
+  final d = DateTime.tryParse(v);
+  if (d == null) return null;
+  // « AAAA-MM-JJ » est une date calendaire, sans fuseau : la convertir en UTC
+  // la décalerait d'un jour sur un appareil à l'est de Dakar (ex. Paris).
+  return d.isUtc ? d : DateTime.utc(d.year, d.month, d.day, d.hour, d.minute);
 }
 
 /// « AAAA-MM-JJ » → « 05/09/2026 » ; date-heure ISO → date à Dakar (UTC).

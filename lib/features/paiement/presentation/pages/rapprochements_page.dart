@@ -89,6 +89,7 @@ class _RapprochementsPageState extends State<RapprochementsPage> {
             Champ('note', 'Motif',
                 type: TypeChamp.multiligne,
                 obligatoire: true,
+                minLongueur: 3,
                 maxLongueur: 1000),
             Champ('refund_method', 'Moyen du remboursement',
                 type: TypeChamp.selection, referentiel: 'mode_paiement'),

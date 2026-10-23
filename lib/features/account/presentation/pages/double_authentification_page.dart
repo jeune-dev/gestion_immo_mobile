@@ -146,7 +146,7 @@ class _Contenu extends StatelessWidget {
                     "1. Ajoutez la clé à votre application d'authentification :"),
                 const SizedBox(height: 8),
                 FilledButton.tonalIcon(
-                  onPressed: () => launchUrl(Uri.parse(secret.otpauthUrl),
+                  onPressed: () => ouvrirLien(context, secret.otpauthUrl,
                       mode: LaunchMode.externalApplication),
                   icon: const Icon(Icons.open_in_new),
                   label: const Text("Ouvrir l'application d'authentification"),

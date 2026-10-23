@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:gestion_immo_mobile/core/widgets/actions.dart';
+
 import 'package:gestion_immo_mobile/core/theme/statuts.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
 import 'package:gestion_immo_mobile/core/widgets/base.dart';
@@ -106,7 +108,7 @@ class _SuiviTransactionPageState extends State<SuiviTransactionPage>
               const SizedBox(height: 24),
               if (!(t?.termine ?? false) && widget.checkoutUrl != null)
                 OutlinedButton(
-                  onPressed: () => launchUrl(Uri.parse(widget.checkoutUrl!),
+                  onPressed: () => ouvrirLien(context, widget.checkoutUrl!,
                       mode: LaunchMode.externalApplication),
                   child: const Text('Rouvrir la page de paiement'),
                 ),
@@ -128,7 +130,8 @@ class _SuiviTransactionPageState extends State<SuiviTransactionPage>
 /// Ouvre la page de paiement puis l'écran de suivi.
 Future<void> ouvrirPaiement(
     BuildContext context, String transactionId, String checkoutUrl) async {
-  await launchUrl(Uri.parse(checkoutUrl), mode: LaunchMode.externalApplication);
+  await ouvrirLien(context, checkoutUrl,
+      mode: LaunchMode.externalApplication);
   if (!context.mounted) return;
   await Navigator.of(context).push(
     MaterialPageRoute(

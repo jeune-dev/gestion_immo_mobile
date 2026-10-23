@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
@@ -216,7 +215,7 @@ class _LocataireDetailViewState extends State<_LocataireDetailView> {
           runSpacing: AppTheme.espaceSm,
           children: [
             OutlinedButton.icon(
-              onPressed: () => launchUrl(Uri.parse('tel:${t.telephone}')),
+              onPressed: () => appeler(context, t.telephone),
               icon: const Icon(Icons.call_outlined),
               label: const Text('Appeler'),
             ),

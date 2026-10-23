@@ -64,6 +64,15 @@ class _RepartitionState extends State<_Repartition> {
   }
 
   @override
+  void dispose() {
+    for (final c in _valeurs.values) {
+      c.dispose();
+    }
+    _unite.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final bloc = context.read<RepartitionBloc>();
     final factureId = widget.facture.id;

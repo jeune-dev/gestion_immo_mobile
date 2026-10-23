@@ -69,6 +69,12 @@ class _ConversationState extends State<_Conversation> {
   final _texte = TextEditingController();
 
   @override
+  void dispose() {
+    _texte.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final bloc = context.read<ConversationBloc>();
     return BlocConsumer<ConversationBloc, ConversationState>(

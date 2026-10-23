@@ -47,8 +47,8 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 
-# Configuration locale (copier .env.example)
-.env
+# Configuration locale (copier config/.env.example en config/.env)
+/config/.env
 /build.nosync/
 /build
 /build 2/

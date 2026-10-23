@@ -1,10 +1,15 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'package:gestion_immo_mobile/core/connection/network_info.dart';
 import 'package:gestion_immo_mobile/core/routes/app_router.dart';
 import 'package:gestion_immo_mobile/core/services/file_attente_service.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
@@ -15,8 +20,15 @@ import 'package:gestion_immo_mobile/injection_container.dart' as di;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Configuration (.env) AVANT le premier accès aux services : l'URL de l'API en dépend
-  await dotenv.load(fileName: '.env', isOptional: true);
+  // Inter est embarquée (assets/fonts/) : aucun téléchargement depuis Google
+  GoogleFonts.config.allowRuntimeFetching = false;
+  LicenseRegistry.addLicense(() async* {
+    final ofl = await rootBundle.loadString('assets/fonts/OFL.txt');
+    yield LicenseEntryWithLineBreaks(['google_fonts'], ofl);
+  });
+  // Configuration (config/.env, facultatif) AVANT le premier accès aux services :
+  // l'URL de l'API en dépend
+  await dotenv.load(fileName: 'config/.env', isOptional: true);
   await initializeDateFormatting('fr');
   await di.init();
   await di.sl<FileAttenteService>().charger();
@@ -41,15 +53,21 @@ class _GestionImmoAppState extends State<GestionImmoApp>
     with WidgetsBindingObserver {
   final _auth = di.sl<AuthBloc>()..add(AuthDemarree());
   late final _router = AppRouter.creer(_auth);
+  late final StreamSubscription<bool> _reseau;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Retour du réseau : les opérations créées hors ligne partent sans attendre
+    _reseau = di.sl<NetworkInfo>().onChange.listen((connecte) {
+      if (connecte) _synchroniser();
+    });
   }
 
   @override
   void dispose() {
+    _reseau.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _auth.close();
     super.dispose();
@@ -58,9 +76,11 @@ class _GestionImmoAppState extends State<GestionImmoApp>
   /// Retour au premier plan : on tente de synchroniser les opérations créées hors ligne.
   @override
   void didChangeAppLifecycleState(AppLifecycleState etat) {
-    if (etat == AppLifecycleState.resumed && _auth.state.connecte) {
-      di.sl<FileAttenteService>().synchroniser();
-    }
+    if (etat == AppLifecycleState.resumed) _synchroniser();
+  }
+
+  void _synchroniser() {
+    if (_auth.state.connecte) di.sl<FileAttenteService>().synchroniser();
   }
 
   @override

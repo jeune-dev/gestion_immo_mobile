@@ -43,6 +43,15 @@ class _ActivationPageState extends State<ActivationPage> {
   }
 
   @override
+  void dispose() {
+    _code.dispose();
+    _telephone.dispose();
+    _mdp.dispose();
+    _confirmation.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AuthCadre(
       retour: true,
