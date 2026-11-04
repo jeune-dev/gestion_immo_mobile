@@ -85,12 +85,18 @@ class _DetailState extends State<_Detail> {
           Champ(
             'water_meter',
             'Compteur d’eau (m³)',
+            min: 0,
+            max: 999999999,
+            decimales: 3,
             type: TypeChamp.decimal,
             nullable: true,
           ),
           Champ(
             'electricity_meter',
             'Compteur d’électricité (kWh)',
+            min: 0,
+            max: 999999999,
+            decimales: 3,
             type: TypeChamp.decimal,
             nullable: true,
           ),
@@ -129,30 +135,35 @@ class _DetailState extends State<_Detail> {
     bool obligatoire = true,
   }) {
     final ctrl = TextEditingController(text: initial ?? '');
+    String? erreur;
     return showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(titre),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          maxLength: maxLongueur,
-          decoration: InputDecoration(labelText: libelle),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, majDialogue) => AlertDialog(
+          title: Text(titre),
+          content: TextField(
+            controller: ctrl,
+            autofocus: true,
+            maxLength: maxLongueur,
+            decoration: InputDecoration(labelText: libelle, errorText: erreur),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final v = ctrl.text.trim();
+                if (obligatoire && v.isEmpty) {
+                  return majDialogue(() => erreur = 'Obligatoire');
+                }
+                Navigator.pop(ctx, v);
+              },
+              child: const Text('Enregistrer'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final v = ctrl.text.trim();
-              if (obligatoire && v.isEmpty) return;
-              Navigator.pop(ctx, v);
-            },
-            child: const Text('Enregistrer'),
-          ),
-        ],
       ),
     );
   }

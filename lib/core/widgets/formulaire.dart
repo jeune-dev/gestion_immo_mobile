@@ -14,6 +14,9 @@ import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 enum TypeChamp {
   texte,
+
+  /// Prénom ou nom : lettres, espaces, apostrophes et tirets.
+  nom,
   multiligne,
   montant,
   entier,
@@ -52,6 +55,30 @@ class Champ {
   /// s'il n'est pas respecté).
   final (String, String)? format;
 
+  /// Nombre décimal strictement supérieur à 0.
+  final bool positif;
+
+  /// Nombre de décimales accepté (même précision que l'API).
+  final int? decimales;
+
+  /// Date : argent déjà reçu ou dépensé, jamais dans le futur.
+  final bool pasDansLeFutur;
+
+  /// Date : aujourd'hui ou plus tard.
+  final bool pasDansLePasse;
+
+  /// Date : pas avant cette date (AAAA-MM-JJ).
+  final String? dateMin;
+
+  /// Date : pas avant la valeur de cet autre champ.
+  final String? apresChamp;
+
+  /// Avec [apresChamp] : strictement après (une date égale est refusée).
+  final bool apresStrict;
+
+  /// Obligatoire selon les autres valeurs saisies.
+  final bool Function(Map<String, dynamic> valeurs)? obligatoireSi;
+
   /// Sélection d'une entité de l'API (immeuble, appartement, locataire, bail…).
   final SourceEntite<dynamic>? entite;
 
@@ -82,6 +109,14 @@ class Champ {
     this.maxLongueur,
     this.minLongueur,
     this.format,
+    this.positif = false,
+    this.decimales,
+    this.pasDansLeFutur = false,
+    this.pasDansLePasse = false,
+    this.dateMin,
+    this.apresChamp,
+    this.apresStrict = false,
+    this.obligatoireSi,
     this.entite,
     this.nullable = false,
     this.visible,
@@ -91,6 +126,9 @@ class Champ {
   });
 }
 
+/// Plafond des montants de l'API (1 000 milliards de FCFA).
+const _montantMax = 1000000000000;
+
 /// Formulaire plein écran. [envoyer] reçoit le corps prêt à poster.
 class EcranFormulaire extends StatefulWidget {
   final String titre;
@@ -98,6 +136,9 @@ class EcranFormulaire extends StatefulWidget {
   final Map<String, dynamic> initial;
 
   final Future<dynamic> Function(Map<String, dynamic> corps) envoyer;
+
+  /// Contrôle portant sur plusieurs champs : renvoie le message d'erreur, ou null.
+  final String? Function(Map<String, dynamic> corps)? controle;
   final String libelleEnvoi;
   final Widget? intro;
   final String? messageSucces;
@@ -107,6 +148,7 @@ class EcranFormulaire extends StatefulWidget {
     required this.titre,
     required this.champs,
     required this.envoyer,
+    this.controle,
     this.initial = const {},
     this.libelleEnvoi = 'Enregistrer',
     this.intro,
@@ -128,6 +170,13 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
   late final Map<String, dynamic> _valeurs;
   final Map<String, String> _libellesEntites = {};
   bool _envoi = false;
+
+  /// Après un premier envoi refusé, les messages suivent la saisie.
+  bool _soumis = false;
+
+  /// Erreurs des champs sans `validator` (date, entité).
+  final Map<String, String> _erreurs = {};
+  final Map<String, GlobalKey> _cles = {};
 
   @override
   void initState() {
@@ -170,6 +219,12 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
           sortie = v is int ? v : lireMontant('${v ?? ''}');
         case TypeChamp.entier:
           sortie = v is int ? v : int.tryParse('${v ?? ''}'.trim());
+        case TypeChamp.telephone:
+          sortie = IdentifiantValidator.telephone('${v ?? ''}').valeur;
+          if (sortie == '') sortie = null;
+        case TypeChamp.email:
+          final s = '${v ?? ''}'.trim().toLowerCase();
+          sortie = s.isEmpty ? null : s;
         case TypeChamp.decimal:
           sortie = v is num
               ? v
@@ -190,16 +245,26 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
   }
 
   Future<void> _valider() async {
-    if (!_form.currentState!.validate()) return;
-    for (final c in widget.champs.where(_visible)) {
-      if (c.obligatoire &&
-          (c.type == TypeChamp.selection ||
-              c.type == TypeChamp.entite ||
-              c.type == TypeChamp.date) &&
-          _valeurs[c.nom] == null) {
-        return afficherErreur(context, '« ${c.libelle} » est obligatoire');
-      }
+    setState(() {
+      _soumis = true;
+      _erreurs
+        ..clear()
+        ..addAll({
+          for (final c in widget.champs.where(_visible))
+            if (_erreurHorsTexte(c) case final String erreur) c.nom: erreur,
+        });
+    });
+    final invalides = _form.currentState!.validateGranularly();
+    if (invalides.isNotEmpty || _erreurs.isNotEmpty) {
+      _montrerPremiereErreur([
+        for (final f in invalides) f.context,
+        for (final nom in _erreurs.keys)
+          if (_cles[nom]?.currentContext case final BuildContext c) c,
+      ]);
+      return;
     }
+    final erreur = widget.controle?.call(_corps());
+    if (erreur != null) return afficherErreur(context, erreur);
     setState(() => _envoi = true);
     try {
       final r = await widget.envoyer(_corps());
@@ -215,10 +280,72 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
     }
   }
 
+  bool _requis(Champ c) =>
+      c.obligatoire || (c.obligatoireSi?.call(_valeurs) ?? false);
+
+  /// Fait défiler jusqu'au champ en erreur le plus haut de l'écran.
+  void _montrerPremiereErreur(List<BuildContext> champs) {
+    if (champs.isEmpty) return;
+    double hauteur(BuildContext c) {
+      final r = c.findRenderObject();
+      return r is RenderBox && r.attached
+          ? r.localToGlobal(Offset.zero).dy
+          : double.infinity;
+    }
+
+    final premier = champs.reduce((a, b) => hauteur(a) <= hauteur(b) ? a : b);
+    Scrollable.ensureVisible(
+      premier,
+      alignment: 0.2,
+      duration: const Duration(milliseconds: 200),
+    );
+  }
+
+  /// Contrôle d'une date ou d'une entité, qui n'ont pas de zone de saisie.
+  String? _erreurHorsTexte(Champ c) {
+    if (c.type != TypeChamp.date && c.type != TypeChamp.entite) return null;
+    final v = _valeurs[c.nom] as String?;
+    if (v == null || v.isEmpty) return _requis(c) ? 'Obligatoire' : null;
+    if (c.type == TypeChamp.entite) return null;
+    final jour = aujourdhui();
+    if (c.pasDansLeFutur && v.compareTo(jour) > 0) {
+      return 'Ne peut pas être dans le futur';
+    }
+    if (c.pasDansLePasse && v.compareTo(jour) < 0) {
+      return "Ne peut pas être antérieure à aujourd'hui";
+    }
+    final min = c.dateMin;
+    if (min != null && v.compareTo(min) < 0) {
+      return 'Ne peut pas être avant le ${date(min)}';
+    }
+    final nomAutre = c.apresChamp;
+    final autre = nomAutre == null ? null : _valeurs[nomAutre] as String?;
+    if (autre != null) {
+      final ecart = v.compareTo(autre);
+      if (ecart < 0 || (c.apresStrict && ecart == 0)) {
+        final libelle = widget.champs
+            .firstWhere((x) => x.nom == nomAutre)
+            .libelle;
+        return c.apresStrict
+            ? 'Doit être après « $libelle »'
+            : 'Ne peut pas être avant « $libelle »';
+      }
+    }
+    return null;
+  }
+
   String? _valider1(Champ c, String? s) {
     final v = (s ?? '').trim();
-    if (c.obligatoire && v.isEmpty) return 'Obligatoire';
+    if (_requis(c) && v.isEmpty) return 'Obligatoire';
     if (v.isEmpty) return null;
+    if (c.type == TypeChamp.nom) {
+      final erreur = IdentifiantValidator.nom(v).erreurFormulaire;
+      if (erreur != null) return erreur;
+    }
+    if (c.type == TypeChamp.telephone) {
+      final erreur = IdentifiantValidator.telephone(v).erreurFormulaire;
+      if (erreur != null) return erreur;
+    }
     if (c.minLongueur != null && v.length < c.minLongueur!) {
       return '${c.minLongueur} caractères minimum';
     }
@@ -235,19 +362,32 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
           ? lireMontant(v)
           : num.tryParse(v.replaceAll(',', '.'));
       if (n == null) return 'Nombre invalide';
-      if (c.min != null && n < c.min!) return 'Minimum ${c.min}';
-      if (c.max != null && n > c.max!) return 'Maximum ${c.max}';
+      final estMontant = c.type == TypeChamp.montant;
+      final max = estMontant ? (c.max ?? _montantMax) : c.max;
+      String affiche(num x) => estMontant ? montant(x) : '$x';
+      if (c.min != null && n < c.min!) return 'Minimum ${affiche(c.min!)}';
+      if (max != null && n > max) return 'Maximum ${affiche(max)}';
+      if (c.positif && n <= 0) return 'Doit être supérieur à 0';
+      final decimales = c.decimales;
+      if (decimales != null) {
+        final partie = v.replaceAll(',', '.').split('.');
+        if (partie.length > 1 && partie[1].length > decimales) {
+          return '$decimales décimales maximum';
+        }
+      }
     }
     return null;
   }
 
   Widget _champ(Champ c) {
-    final libelle = '${c.libelle}${c.obligatoire ? ' *' : ''}';
+    final libelle = '${c.libelle}${_requis(c) ? ' *' : ''}';
     final deco = InputDecoration(
       labelText: libelle,
       helperText: c.indice,
       helperMaxLines: 3,
       prefixIcon: c.icone == null ? null : Icon(c.icone),
+      errorText: _erreurs[c.nom],
+      errorMaxLines: 2,
       // Compteur réservé aux longs textes : il encombre les champs courts.
       counterText: c.type == TypeChamp.multiligne ? null : '',
     );
@@ -271,12 +411,13 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
               ? _valeurs[c.nom] as String
               : null,
           decoration: deco,
+          validator: (v) => _requis(c) && v == null ? 'Obligatoire' : null,
           isExpanded: true,
           isDense: true,
           style: styleValeur,
           icon: const Icon(Icons.keyboard_arrow_down),
           items: [
-            if (!c.obligatoire)
+            if (!_requis(c))
               const DropdownMenuItem<String>(value: null, child: Text('—')),
             for (final o in options)
               DropdownMenuItem(
@@ -289,19 +430,32 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
       case TypeChamp.date:
         final v = _valeurs[c.nom] as String?;
         return InkWell(
+          key: _cles.putIfAbsent(c.nom, GlobalKey.new),
           onTap: () async {
-            final init =
-                (v == null ? null : DateTime.tryParse(v)) ?? DateTime.now();
+            final maintenant = DateTime.now();
+            final jour = DateTime(
+              maintenant.year,
+              maintenant.month,
+              maintenant.day,
+            );
+            final premier = c.pasDansLePasse ? jour : DateTime(1900);
+            final dernier = c.pasDansLeFutur ? jour : DateTime(2100);
+            var init = (v == null ? null : DateTime.tryParse(v)) ?? jour;
+            // Une date initiale hors bornes fait échouer le sélecteur.
+            if (init.isBefore(premier)) init = premier;
+            if (init.isAfter(dernier)) init = dernier;
             final d = await showDatePicker(
               context: context,
               initialDate: init,
-              // Bornes larges : une date initiale hors bornes fait échouer le sélecteur
-              firstDate: DateTime(1900),
-              lastDate: DateTime(2100),
+              firstDate: premier,
+              lastDate: dernier,
               locale: const Locale('fr'),
             );
             if (d != null && mounted) {
-              setState(() => _valeurs[c.nom] = versApi(d));
+              setState(() {
+                _valeurs[c.nom] = versApi(d);
+                _erreurs.remove(c.nom);
+              });
             }
           },
           child: InputDecorator(
@@ -318,6 +472,7 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
         );
       case TypeChamp.entite:
         return InkWell(
+          key: _cles.putIfAbsent(c.nom, GlobalKey.new),
           onTap: () async {
             final choix = await choisirEntite(
               context,
@@ -327,13 +482,14 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
             if (choix != null && mounted) {
               setState(() {
                 _valeurs[c.nom] = choix.id;
+                _erreurs.remove(c.nom);
                 _libellesEntites[c.nom] = choix.libelle;
               });
             }
           },
           child: InputDecorator(
             decoration: deco.copyWith(
-              suffixIcon: _valeurs[c.nom] != null && !c.obligatoire
+              suffixIcon: _valeurs[c.nom] != null && !_requis(c)
                   ? IconButton(
                       icon: const Icon(Icons.close, size: 18),
                       onPressed: () => setState(() {
@@ -374,6 +530,10 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
             suffixText: c.type == TypeChamp.montant ? 'FCFA' : null,
           ),
           keyboardType: clavier,
+          textCapitalization: c.type == TypeChamp.nom
+              ? TextCapitalization.words
+              : TextCapitalization.none,
+          autocorrect: c.type != TypeChamp.email && c.type != TypeChamp.nom,
           obscureText: c.type == TypeChamp.motDePasse,
           maxLines: c.type == TypeChamp.multiligne ? 5 : 1,
           minLines: c.type == TypeChamp.multiligne ? 3 : 1,
@@ -381,12 +541,21 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
           inputFormatters: [
             if (c.type == TypeChamp.montant) _SeparateurMilliers(),
             if (c.type == TypeChamp.entier)
-              FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
+              FilteringTextInputFormatter.allow(
+                RegExp((c.min ?? 0) < 0 ? r'-?\d*' : r'\d'),
+              ),
+            if (c.type == TypeChamp.decimal)
+              FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
+            if (c.type == TypeChamp.telephone)
+              FilteringTextInputFormatter.allow(RegExp(r'[\d\s+().-]')),
           ],
           validator: (s) => _valider1(c, s),
           onChanged: (s) {
             _valeurs[c.nom] = s;
-            if (_conditionnel) setState(() {});
+            if (_conditionnel ||
+                widget.champs.any((x) => x.obligatoireSi != null)) {
+              setState(() {});
+            }
           },
         );
     }
@@ -472,6 +641,9 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
       ),
       body: Form(
         key: _form,
+        autovalidateMode: _soumis
+            ? AutovalidateMode.onUserInteraction
+            : AutovalidateMode.disabled,
         child: ListView(
           padding: const EdgeInsets.all(AppTheme.espaceLg),
           children: [

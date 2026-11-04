@@ -54,13 +54,15 @@ android {
 
     buildTypes {
         release {
-            // Sans key.properties (poste de développement), `flutter run --release`
-            // reste possible avec la clé de debug — refusée par le Play Store.
+            // Sans key.properties, la clé de debug n'est permise que sur demande
+            // explicite (ALLOW_DEBUG_SIGNING=true) : une version à publier échoue.
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
-            } else {
+            } else if (System.getenv("ALLOW_DEBUG_SIGNING") == "true") {
                 logger.warn("android/key.properties absent : APK de release signée avec la clé de DEBUG.")
                 signingConfigs.getByName("debug")
+            } else {
+                null
             }
         }
     }
@@ -74,4 +76,16 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+// Notifications push : actives une fois android/app/google-services.json déposé.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
+gradle.taskGraph.whenReady {
+    val publication = allTasks.any { it.name == "assembleRelease" || it.name == "bundleRelease" }
+    if (publication && !keystorePropertiesFile.exists() && System.getenv("ALLOW_DEBUG_SIGNING") != "true") {
+        throw GradleException("android/key.properties est requis pour signer une version de publication.")
+    }
 }

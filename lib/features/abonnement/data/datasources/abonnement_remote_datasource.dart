@@ -45,14 +45,15 @@ class AbonnementRemoteDataSourceImpl implements AbonnementRemoteDataSource {
     required int mois,
     String? portefeuille,
   }) async {
+    final corps = {
+      'plan_code': planCode,
+      'months': mois,
+      if (portefeuille != null) 'wallet': portefeuille,
+    };
     final r = await api.post<Map<String, dynamic>>(
       ApiEndpoints.abonnementSouscrire,
-      body: {
-        'plan_code': planCode,
-        'months': mois,
-        if (portefeuille != null) 'wallet': portefeuille,
-      },
-      idempotence: nouvelleCle(),
+      body: corps,
+      idempotence: cleStable(ApiEndpoints.abonnementSouscrire, corps),
     );
     return r['checkout_url'] as String?;
   }

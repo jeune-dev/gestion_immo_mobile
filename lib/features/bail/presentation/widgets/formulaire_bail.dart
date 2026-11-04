@@ -95,12 +95,15 @@ Future<Bail?> formulaireBail(
         const Champ(
           'end_date',
           'Date de fin',
+          apresChamp: 'start_date',
+          apresStrict: true,
           type: TypeChamp.date,
           moitie: true,
         ),
         const Champ(
           'rent_amount',
           'Loyer',
+          min: 1,
           type: TypeChamp.montant,
           indice: "Si vide : loyer de l'appartement",
           groupe: 'Loyer et paiement',
@@ -177,17 +180,21 @@ Future<bool> reviserLoyer(BuildContext context, Bail b) async {
   final r = await EcranFormulaire.ouvrir<Object>(
     context,
     EcranFormulaire(
+      controle: (c) => c['rent_amount'] == null && c['charges_amount'] == null
+          ? 'Indiquez le nouveau loyer ou les nouvelles charges.'
+          : null,
       titre: 'Réviser le loyer',
       intro: const Text(
         'Les échéances à partir de la date d’effet sont recalculées. La date ne peut pas être passée.',
       ),
       initial: {'rent_amount': b.loyer, 'charges_amount': b.charges},
-      champs: const [
-        Champ('rent_amount', 'Nouveau loyer', type: TypeChamp.montant),
+      champs: [
+        Champ('rent_amount', 'Nouveau loyer', min: 1, type: TypeChamp.montant),
         Champ('charges_amount', 'Nouvelles charges', type: TypeChamp.montant),
         Champ(
           'effective_from',
           "Date d'effet",
+          pasDansLePasse: true,
           type: TypeChamp.date,
           obligatoire: true,
         ),
@@ -209,14 +216,15 @@ Future<bool> terminerBail(BuildContext context, Bail b) async {
         "L'appartement redevient disponible. La caution sera ensuite restituée ou retenue avant la clôture.",
       ),
       initial: {'ended_on': aujourdhui()},
-      champs: const [
+      champs: [
         Champ(
           'ended_on',
           'Date de sortie',
+          dateMin: b.debut,
           type: TypeChamp.date,
           obligatoire: true,
         ),
-        Champ(
+        const Champ(
           'termination_reason',
           'Motif',
           type: TypeChamp.multiligne,

@@ -26,7 +26,11 @@ class AuthCadre extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final haut = MediaQuery.paddingOf(context).top;
     final bas = MediaQuery.paddingOf(context).bottom;
-    final compact = retour || MediaQuery.viewInsetsOf(context).bottom > 0;
+    // Petit écran : l'en-tête réduit laisse le formulaire visible sans défiler.
+    final compact =
+        retour ||
+        MediaQuery.viewInsetsOf(context).bottom > 0 ||
+        MediaQuery.sizeOf(context).height < 780;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -52,7 +56,7 @@ class AuthCadre extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.fromLTRB(
                       AppTheme.espaceXl,
-                      haut + (compact ? AppTheme.espaceSm : AppTheme.espaceLg),
+                      haut + AppTheme.espaceSm,
                       AppTheme.espaceXl,
                       AppTheme.rayonFeuille + AppTheme.espaceLg,
                     ),
@@ -157,15 +161,15 @@ class _EnTeteMarque extends StatelessWidget {
       children: [
         _PastilleLogo(
           rayon: AppTheme.rayonFeuille,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Image.asset(
             'assets/images/logo_kerimmo.png',
-            width: 176,
+            width: 120,
             semanticLabel: 'Kërimmo',
             filterQuality: FilterQuality.medium,
           ),
         ),
-        const SizedBox(height: AppTheme.espaceMd),
+        const SizedBox(height: AppTheme.espaceSm),
         const Text(
           'Gérez, suivez, valorisez votre patrimoine',
           textAlign: TextAlign.center,
@@ -208,17 +212,59 @@ class _PastilleLogo extends StatelessWidget {
   );
 }
 
+/// Libellé au-dessus d'un champ : l'exemple reste visible avant la saisie.
+class LibelleChamp extends StatelessWidget {
+  final String texte;
+
+  /// Mention discrète après le libellé, ex. « facultatif ».
+  final String? mention;
+  const LibelleChamp(this.texte, {super.key, this.mention});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.espaceXs),
+      child: Text.rich(
+        TextSpan(
+          text: texte,
+          style: TextStyle(
+            color: p.texte,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+          children: [
+            if (mention != null)
+              TextSpan(
+                text: '  $mention',
+                style: TextStyle(
+                  color: p.texteSecondaire,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class ChampMotDePasse extends StatefulWidget {
   final TextEditingController controleur;
   final String libelle;
   final String? Function(String?)? validator;
   final bool nouveau;
+
+  /// Libellé affiché au-dessus du champ par la page : l'indication reste visible dedans.
+  final String? indication;
   const ChampMotDePasse({
     super.key,
     required this.controleur,
     this.libelle = 'Mot de passe',
     this.validator,
     this.nouveau = false,
+    this.indication,
   });
 
   @override
@@ -237,10 +283,12 @@ class _ChampMotDePasseState extends State<ChampMotDePasse> {
         widget.nouveau ? AutofillHints.newPassword : AutofillHints.password,
       ],
       decoration: InputDecoration(
-        labelText: widget.libelle,
+        labelText: widget.indication == null ? widget.libelle : null,
+        hintText: widget.indication,
         prefixIcon: const Icon(Icons.lock_outline),
         helperMaxLines: 2,
-        helperText: widget.nouveau
+        errorMaxLines: 2,
+        helperText: widget.nouveau && widget.indication == null
             ? '8 caractères, avec majuscule, minuscule et chiffre'
             : null,
         suffixIcon: IconButton(

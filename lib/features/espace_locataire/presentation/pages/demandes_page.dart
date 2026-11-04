@@ -95,6 +95,7 @@ class _DemandesPageState extends State<DemandesPage>
           const Champ(
             'description',
             'Description',
+            minLongueur: 2,
             type: TypeChamp.multiligne,
             obligatoire: true,
             maxLongueur: 5000,

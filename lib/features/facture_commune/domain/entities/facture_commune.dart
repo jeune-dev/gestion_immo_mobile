@@ -87,15 +87,24 @@ class FactureCommune extends Equatable {
 class ApercuRepartition extends Equatable {
   final List<LigneRepartition> lignes;
   final num? totalRefacture;
+
+  /// Part déjà couverte par les provisions de charges appelées sur la période.
+  final num? provisionsDeduites;
   final num? partProprietaire;
   const ApercuRepartition({
     required this.lignes,
     this.totalRefacture,
+    this.provisionsDeduites,
     this.partProprietaire,
   });
 
   @override
-  List<Object?> get props => [lignes, totalRefacture, partProprietaire];
+  List<Object?> get props => [
+    lignes,
+    totalRefacture,
+    provisionsDeduites,
+    partProprietaire,
+  ];
 }
 
 /// Factures en brouillon à répartir (bandeau de la liste).

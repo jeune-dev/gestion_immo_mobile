@@ -23,6 +23,26 @@ class TableauDeBordModel {
       encaisses: nombreOuNull(l['encaisses']),
       revenus: nombreOuNull((d['revenus'] as Map?)?['total']),
       impayes: nombreOuNull(l['impayes']),
+      chargesImpayees: nombreOuNull(d['charges_impayees']),
+      tauxVacance: nombreOuNull(p['taux_vacance']),
+      cautionsDetenues: nombreOuNull(d['cautions_detenues']),
+      appartementsCouteux: listeJson(d['appartement_le_plus_couteux'])
+          .map(
+            (a) => AppartementCouteux(
+              '${a['apartment_number'] ?? ''}',
+              a['building_name'] as String?,
+              nombreOuNull(a['depenses']),
+            ),
+          )
+          .toList(),
+      aujourdHui: listeJson(d['aujourd_hui'])
+          .map(
+            (e) => EvenementDuJour(
+              '${e['libelle'] ?? ''}',
+              nombreOuNull(e['montant']),
+            ),
+          )
+          .toList(),
       depenses: nombreOuNull(d['depenses']),
       resultat: nombreOuNull(d['resultat']),
       preuvesAValider: entier(t['preuves_a_valider']),

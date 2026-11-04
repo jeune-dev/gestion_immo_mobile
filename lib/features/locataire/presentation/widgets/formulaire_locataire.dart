@@ -9,8 +9,20 @@ import 'package:gestion_immo_mobile/features/locataire/domain/usecases/modifier_
 import 'package:gestion_immo_mobile/injection_container.dart' as di;
 
 const _champsCommuns = [
-  Champ('first_name', 'Prénom', obligatoire: true, maxLongueur: 80),
-  Champ('last_name', 'Nom', obligatoire: true, maxLongueur: 80),
+  Champ(
+    'first_name',
+    'Prénom',
+    type: TypeChamp.nom,
+    obligatoire: true,
+    maxLongueur: 80,
+  ),
+  Champ(
+    'last_name',
+    'Nom',
+    type: TypeChamp.nom,
+    obligatoire: true,
+    maxLongueur: 80,
+  ),
   Champ(
     'phone',
     'Téléphone',

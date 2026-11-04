@@ -56,6 +56,7 @@ class ApercuRepartitionModel extends ApercuRepartition {
   const ApercuRepartitionModel({
     required super.lignes,
     super.totalRefacture,
+    super.provisionsDeduites,
     super.partProprietaire,
   });
 
@@ -63,6 +64,7 @@ class ApercuRepartitionModel extends ApercuRepartition {
       ApercuRepartitionModel(
         lignes: listeJson(json['lines']).map(_ligne).toList(),
         totalRefacture: nombreOuNull(json['recharged_total']),
+        provisionsDeduites: nombreOuNull(json['provision_deducted_total']),
         partProprietaire: nombreOuNull(json['owner_share']),
       );
 }

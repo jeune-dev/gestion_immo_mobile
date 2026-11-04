@@ -84,6 +84,8 @@ Future<Appartement?> formulaireAppartement(
         const Champ(
           'surface',
           'Surface (m²)',
+          positif: true,
+          decimales: 2,
           type: TypeChamp.decimal,
           max: 100000,
         ),
@@ -97,6 +99,9 @@ Future<Appartement?> formulaireAppartement(
         const Champ(
           'charge_coefficient',
           'Coefficient de charges',
+          positif: true,
+          decimales: 4,
+          max: 1000000,
           type: TypeChamp.decimal,
           indice: 'Utilisé pour répartir les factures communes « selon coefficient » (1 par défaut).',
         ),

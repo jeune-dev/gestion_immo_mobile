@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
+import 'package:gestion_immo_mobile/core/services/coffre_local.dart';
 
 /// Opération créée hors ligne, en attente d'envoi (cahier des charges § 34–35).
 class OperationEnAttente {
@@ -58,11 +59,18 @@ class FileAttenteService extends ChangeNotifier {
   bool synchronisation = false;
   bool echec = false;
 
-  FileAttenteService(this._api);
+  final CoffreLocal _coffre;
+
+  FileAttenteService(this._api, [CoffreLocal? coffre])
+    : _coffre = coffre ?? CoffreLocal();
 
   Future<void> charger() async {
     final p = await SharedPreferences.getInstance();
-    final brut = p.getString(_cle);
+    final stocke = p.getString(_cle);
+    // Ancien format en clair : repris tel quel, puis réécrit chiffré.
+    final brut = stocke == null || !CoffreLocal.estChiffre(stocke)
+        ? stocke
+        : await _coffre.dechiffrer(stocke);
     operations
       ..clear()
       ..addAll(
@@ -74,6 +82,7 @@ class FileAttenteService extends ChangeNotifier {
                 ),
               ),
       );
+    if (stocke != null && !CoffreLocal.estChiffre(stocke)) await _sauver();
     notifyListeners();
   }
 
@@ -81,7 +90,9 @@ class FileAttenteService extends ChangeNotifier {
     final p = await SharedPreferences.getInstance();
     await p.setString(
       _cle,
-      jsonEncode(operations.map((o) => o.toJson()).toList()),
+      await _coffre.chiffrer(
+        jsonEncode(operations.map((o) => o.toJson()).toList()),
+      ),
     );
     notifyListeners();
   }

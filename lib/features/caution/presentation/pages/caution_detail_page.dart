@@ -47,13 +47,14 @@ class CautionDetailPage extends StatelessWidget {
           'amount': versement ? c.resteAVerser : c.solde,
         },
         intro: versement ? null : Text('Solde détenu : ${montant(c.solde)}'),
-        champs: const [
+        champs: [
           Champ(
             'amount',
             'Montant',
             type: TypeChamp.montant,
             obligatoire: true,
             min: 1,
+            max: versement ? c.resteAVerser : c.solde,
           ),
           Champ(
             'method',
@@ -62,8 +63,14 @@ class CautionDetailPage extends StatelessWidget {
             referentiel: 'mode_paiement',
             obligatoire: true,
           ),
-          Champ('occurred_on', 'Date', type: TypeChamp.date, obligatoire: true),
-          Champ('reference', 'Référence', maxLongueur: 64),
+          const Champ(
+            'occurred_on',
+            'Date',
+            type: TypeChamp.date,
+            obligatoire: true,
+            pasDansLeFutur: true,
+          ),
+          const Champ('reference', 'Référence', maxLongueur: 64),
         ],
         messageSucces: versement
             ? 'Versement enregistré'
@@ -81,7 +88,11 @@ class CautionDetailPage extends StatelessWidget {
   }
 
   /// Retenue : un motif ET au moins un justificatif sont exigés (§ 55.4).
-  Future<void> _retenue(BuildContext context, VoidCallback recharger) async {
+  Future<void> _retenue(
+    BuildContext context,
+    Caution c,
+    VoidCallback recharger,
+  ) async {
     final photo = await choisirPhoto(context);
     if (photo == null || !context.mounted) return;
     final docId = await executer(
@@ -98,22 +109,23 @@ class CautionDetailPage extends StatelessWidget {
           'Justificatif joint. Le locataire est informé et peut contester la retenue.',
         ),
         initial: {'occurred_on': aujourdhui()},
-        champs: const [
+        champs: [
           Champ(
             'amount',
             'Montant retenu',
             type: TypeChamp.montant,
             obligatoire: true,
             min: 1,
+            max: c.solde,
           ),
-          Champ(
+          const Champ(
             'reason',
             'Motif',
             type: TypeChamp.selection,
             referentiel: 'motif_retenue',
             obligatoire: true,
           ),
-          Champ(
+          const Champ(
             'description',
             'Explication',
             type: TypeChamp.multiligne,
@@ -122,7 +134,7 @@ class CautionDetailPage extends StatelessWidget {
             maxLongueur: 2000,
             indice: '5 caractères minimum',
           ),
-          Champ('occurred_on', 'Date', type: TypeChamp.date),
+          const Champ('occurred_on', 'Date', type: TypeChamp.date),
         ],
         libelleEnvoi: 'Enregistrer la retenue',
         messageSucces: 'Retenue enregistrée',
@@ -266,8 +278,11 @@ class CautionDetailPage extends StatelessWidget {
                 ),
               if (c.bailTermine && c.solde > 0) ...[
                 OutlinedButton.icon(
-                  onPressed: () =>
-                      _retenue(context, () => bloc.add(RafraichirCaution(id))),
+                  onPressed: () => _retenue(
+                    context,
+                    c,
+                    () => bloc.add(RafraichirCaution(id)),
+                  ),
                   icon: const Icon(Icons.remove),
                   label: const Text('Retenue justifiée'),
                 ),

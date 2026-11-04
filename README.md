@@ -74,3 +74,18 @@ lib/features/espace_locataire/   écrans propres au locataire (payer, loyer, dem
 - Notifications push FCM : ajouter `firebase_messaging` + fichiers de configuration
   Firebase, puis `POST /compte/appareils` avec le jeton (route déjà prévue côté API).
 - Icône et écran de lancement définitifs.
+
+## Notifications push
+
+Elles restent inactives tant que l'application n'est pas construite avec
+`--dart-define=PUSH_ACTIVE=true`. Pour les activer :
+
+1. déposer `android/app/google-services.json` et `ios/Runner/GoogleService-Info.plist` ;
+2. activer la capacité « Push Notifications » et la clé APNs côté iOS ;
+3. construire avec le `--dart-define` ci-dessus.
+
+## Version publiée
+
+`API_URL` doit être en `https://`, sinon l'application refuse de démarrer. Sur Android,
+`android/key.properties` est obligatoire (`ALLOW_DEBUG_SIGNING=true` autorise la clé de
+debug pour un essai local).

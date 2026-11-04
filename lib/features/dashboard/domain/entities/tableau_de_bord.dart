@@ -64,6 +64,27 @@ class DepenseCategorie extends Equatable {
   List<Object?> get props => [nom, total];
 }
 
+/// Appartement parmi les plus coûteux sur 12 mois.
+class AppartementCouteux extends Equatable {
+  final String numero;
+  final String? immeuble;
+  final num? depenses;
+  const AppartementCouteux(this.numero, this.immeuble, this.depenses);
+
+  @override
+  List<Object?> get props => [numero, immeuble, depenses];
+}
+
+/// Événement du jour (paiement, incident, travaux, dépense).
+class EvenementDuJour extends Equatable {
+  final String libelle;
+  final num? montant;
+  const EvenementDuJour(this.libelle, this.montant);
+
+  @override
+  List<Object?> get props => [libelle, montant];
+}
+
 /// Tableau de bord « immédiatement compréhensible » (§ 6, § 48).
 class TableauDeBord extends Equatable {
   final String mois;
@@ -78,6 +99,16 @@ class TableauDeBord extends Equatable {
   /// Tout l'argent reçu dans le mois, avances sur les mois suivants comprises.
   final num? revenus;
   final num? impayes;
+
+  /// Charges refacturées en retard, comptées à part des loyers.
+  final num? chargesImpayees;
+  final num? tauxVacance;
+  final num? cautionsDetenues;
+  final List<AppartementCouteux> appartementsCouteux;
+  final List<EvenementDuJour> aujourdHui;
+
+  /// Tout ce qui est dû et échu : loyers et charges.
+  num get totalImpayes => (impayes ?? 0) + (chargesImpayees ?? 0);
   final num? depenses;
   final num? resultat;
   final int preuvesAValider;
@@ -111,6 +142,11 @@ class TableauDeBord extends Equatable {
     this.encaisses,
     this.revenus,
     this.impayes,
+    this.chargesImpayees,
+    this.tauxVacance,
+    this.cautionsDetenues,
+    this.appartementsCouteux = const [],
+    this.aujourdHui = const [],
     this.depenses,
     this.resultat,
     this.preuvesAValider = 0,
@@ -137,6 +173,11 @@ class TableauDeBord extends Equatable {
     encaisses,
     revenus,
     impayes,
+    chargesImpayees,
+    tauxVacance,
+    cautionsDetenues,
+    appartementsCouteux,
+    aujourdHui,
     depenses,
     resultat,
     preuvesAValider,

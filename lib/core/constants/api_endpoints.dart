@@ -21,6 +21,7 @@ class ApiEndpoints {
   static const compteMotDePasse = '/compte/mot-de-passe';
   static const compteSessions = '/compte/sessions';
   static String compteSession(String id) => '/compte/sessions/$id';
+  static const compteAppareils = '/compte/appareils';
   static const mfaInitialiser = '/compte/mfa/initialiser';
   static const mfaActiver = '/compte/mfa/activer';
   static const mfaDesactiver = '/compte/mfa/desactiver';

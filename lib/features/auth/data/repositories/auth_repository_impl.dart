@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:gestion_immo_mobile/core/services/push_service.dart';
 import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 import 'package:flutter/foundation.dart';
 
@@ -17,12 +18,14 @@ class AuthRepositoryImpl implements AuthRepository {
   final ApiClient api;
   final TokenService jetons;
   final FileAttenteService fileAttente;
+  final PushService? push;
 
   AuthRepositoryImpl({
     required this.remoteDataSource,
     required this.api,
     required this.jetons,
     required this.fileAttente,
+    this.push,
   });
 
   static const _appareil = 'Application mobile';
@@ -170,6 +173,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> deconnecter() async {
+    await push?.arreter();
     try {
       await remoteDataSource.deconnecter(await jetons.lireRefresh());
     } catch (_) {

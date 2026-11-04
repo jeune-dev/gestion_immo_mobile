@@ -19,6 +19,13 @@ class Env {
     var url = definie.isNotEmpty
         ? definie
         : (dotenv.maybeGet('API_URL') ?? 'http://localhost:3000/api/v1');
+    // Une version publiée sans adresse HTTPS viserait localhost ou enverrait les
+    // jetons en clair : on préfère un échec immédiat.
+    if (kReleaseMode && !url.startsWith('https://')) {
+      throw StateError(
+        'API_URL doit être en https:// pour une version publiée (--dart-define=API_URL=https://…).',
+      );
+    }
     if (!kIsWeb && Platform.isAndroid) {
       url = url.replaceFirst(
         RegExp(r'//(localhost|127\.0\.0\.1)'),

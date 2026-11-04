@@ -160,15 +160,16 @@ class EspaceLocataireRemoteDataSourceImpl
     required String portefeuille,
     int? montant,
   }) async {
+    final corps = {
+      if (echeanceId != null) 'rent_schedule_id': echeanceId,
+      if (chargeId != null) 'charge_id': chargeId,
+      'wallet': portefeuille,
+      if (montant != null) 'amount': montant,
+    };
     final r = await api.post<Map<String, dynamic>>(
       ApiEndpoints.locPaiements,
-      body: {
-        if (echeanceId != null) 'rent_schedule_id': echeanceId,
-        if (chargeId != null) 'charge_id': chargeId,
-        'wallet': portefeuille,
-        if (montant != null) 'amount': montant,
-      },
-      idempotence: nouvelleCle(),
+      body: corps,
+      idempotence: cleStable(ApiEndpoints.locPaiements, corps),
     );
     return DemandePaiement(
       transactionId: '${(r['transaction'] as Map)['id']}',
@@ -182,7 +183,7 @@ class EspaceLocataireRemoteDataSourceImpl
         ApiEndpoints.locPreuves,
         cheminFichier: capture,
         champs: champs,
-        idempotence: nouvelleCle(),
+        idempotence: cleStable(ApiEndpoints.locPreuves, '$champs|$capture'),
       );
 
   @override

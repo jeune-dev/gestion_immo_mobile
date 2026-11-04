@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,7 +12,9 @@ import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.d
 import 'package:gestion_immo_mobile/features/auth/presentation/widgets/auth_cadre.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/widgets/erreur_auth.dart';
 
-/// Connexion (§ 5) par téléphone ou e-mail, puis code de double authentification si actif.
+enum _TypeIdentifiant { email, telephone }
+
+/// Connexion (§ 5) par e-mail ou téléphone, puis code de double authentification si actif.
 class ConnexionPage extends StatefulWidget {
   const ConnexionPage({super.key});
 
@@ -21,7 +24,9 @@ class ConnexionPage extends StatefulWidget {
 
 class _ConnexionPageState extends State<ConnexionPage> {
   final _form = GlobalKey<FormState>();
-  final _identifiant = TextEditingController();
+  final _email = TextEditingController();
+  final _telephone = TextEditingController();
+  _TypeIdentifiant _type = _TypeIdentifiant.email;
   final _motDePasse = TextEditingController();
   final _code = TextEditingController();
   bool _secours = false;
@@ -34,10 +39,22 @@ class _ConnexionPageState extends State<ConnexionPage> {
 
   @override
   void dispose() {
-    _identifiant.dispose();
+    _email.dispose();
+    _telephone.dispose();
     _motDePasse.dispose();
     _code.dispose();
     super.dispose();
+  }
+
+  /// Valeur normalisée du champ affiché (le formulaire vient de la valider).
+  String _identifiantSaisi() => _type == _TypeIdentifiant.email
+      ? IdentifiantValidator.email(_email.text).valeur!.toLowerCase()
+      : IdentifiantValidator.telephone(_telephone.text).valeur!;
+
+  void _choisir(_TypeIdentifiant type) {
+    if (type == _type) return;
+    effacerErreurAuth(context);
+    setState(() => _type = type);
   }
 
   void _envoyer({required bool mfa}) {
@@ -46,7 +63,7 @@ class _ConnexionPageState extends State<ConnexionPage> {
     if (!mfa) {
       bloc.add(
         ConnexionDemandee(
-          identifiant: _identifiant.text,
+          identifiant: _identifiantSaisi(),
           motDePasse: _motDePasse.text,
         ),
       );
@@ -77,24 +94,61 @@ class _ConnexionPageState extends State<ConnexionPage> {
               children: [
                 const ErreurAuth(),
                 if (!mfa) ...[
-                  TextFormField(
-                    controller: _identifiant,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    autofillHints: const [
-                      AutofillHints.username,
-                      AutofillHints.telephoneNumber,
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: 'Téléphone ou e-mail',
-                      hintText: '77 123 45 67',
-                      prefixIcon: Icon(Icons.person_outline),
-                    ),
-                    validator: (v) =>
-                        (v ?? '').trim().isEmpty ? 'Obligatoire' : null,
-                  ),
+                  _ChoixIdentifiant(type: _type, onChoix: _choisir),
                   const SizedBox(height: AppTheme.espaceMd),
-                  ChampMotDePasse(controleur: _motDePasse),
+                  LibelleChamp(
+                    _type == _TypeIdentifiant.email ? 'E-mail' : 'Téléphone',
+                  ),
+                  if (_type == _TypeIdentifiant.email)
+                    TextFormField(
+                      key: const ValueKey('connexion-email'),
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autocorrect: false,
+                      autofillHints: const [
+                        AutofillHints.username,
+                        AutofillHints.email,
+                      ],
+                      decoration: const InputDecoration(
+                        hintText: 'exemple@email.com',
+                        prefixIcon: Icon(Icons.mail_outline),
+                      ),
+                      validator: (v) => IdentifiantValidator.email(
+                        v,
+                        obligatoire: true,
+                      ).erreurFormulaire,
+                    )
+                  else
+                    TextFormField(
+                      key: const ValueKey('connexion-telephone'),
+                      controller: _telephone,
+                      keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [
+                        AutofillHints.username,
+                        AutofillHints.telephoneNumber,
+                      ],
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[\d\s+().-]'),
+                        ),
+                      ],
+                      decoration: const InputDecoration(
+                        hintText: '77 123 45 67',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
+                      validator: (v) => IdentifiantValidator.telephone(
+                        v,
+                        obligatoire: true,
+                      ).erreurFormulaire,
+                    ),
+                  const SizedBox(height: AppTheme.espaceMd),
+                  const LibelleChamp('Mot de passe'),
+                  ChampMotDePasse(
+                    controleur: _motDePasse,
+                    indication: 'Votre mot de passe',
+                  ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -146,21 +200,32 @@ class _ConnexionPageState extends State<ConnexionPage> {
                     child: const Text('Retour'),
                   ),
                 ] else ...[
-                  const SizedBox(height: AppTheme.espaceXl),
-                  const _SeparateurAcces(),
                   const SizedBox(height: AppTheme.espaceLg),
-                  _ChoixAcces(
-                    icone: Icons.apartment_outlined,
-                    titre: 'Je suis propriétaire',
-                    detail: 'Créer mon compte',
-                    onTap: () => context.push(AppRouter.inscription),
-                  ),
-                  const SizedBox(height: AppTheme.espaceSm),
-                  _ChoixAcces(
-                    icone: Icons.key_outlined,
-                    titre: 'Je suis locataire',
-                    detail: "J'ai un code d'invitation",
-                    onTap: () => context.push(AppRouter.activation),
+                  const _SeparateurAcces(),
+                  const SizedBox(height: AppTheme.espaceMd),
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _ChoixAcces(
+                            icone: Icons.apartment_outlined,
+                            titre: 'Je suis propriétaire',
+                            detail: 'Créer mon compte',
+                            onTap: () => context.push(AppRouter.inscription),
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.espaceSm),
+                        Expanded(
+                          child: _ChoixAcces(
+                            icone: Icons.key_outlined,
+                            titre: 'Je suis locataire',
+                            detail: "J'ai un code d'invitation",
+                            onTap: () => context.push(AppRouter.activation),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ],
@@ -172,6 +237,65 @@ class _ConnexionPageState extends State<ConnexionPage> {
   }
 }
 
+/// Choix du mode de connexion : l'onglet actif porte la couleur principale.
+class _ChoixIdentifiant extends StatelessWidget {
+  final _TypeIdentifiant type;
+  final ValueChanged<_TypeIdentifiant> onChoix;
+  const _ChoixIdentifiant({required this.type, required this.onChoix});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final cs = Theme.of(context).colorScheme;
+    Widget onglet(_TypeIdentifiant valeur, String libelle) {
+      final actif = valeur == type;
+      return Expanded(
+        child: Semantics(
+          button: true,
+          selected: actif,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => onChoix(valeur),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: actif ? cs.primary : Colors.transparent,
+                borderRadius: BorderRadius.circular(AppTheme.rayonPetit),
+              ),
+              child: Text(
+                libelle,
+                style: TextStyle(
+                  color: actif ? cs.onPrimary : p.texteSecondaire,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: p.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppTheme.rayon),
+      ),
+      child: Row(
+        children: [
+          onglet(_TypeIdentifiant.email, 'E-mail'),
+          const SizedBox(width: 4),
+          onglet(_TypeIdentifiant.telephone, 'Téléphone'),
+        ],
+      ),
+    );
+  }
+}
+
 class _SeparateurAcces extends StatelessWidget {
   const _SeparateurAcces();
 
@@ -179,13 +303,17 @@ class _SeparateurAcces extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     children: [
       const Expanded(child: Divider()),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.espaceMd),
-        child: Text(
-          'Pas encore de compte ?',
-          style: TextStyle(
-            color: context.palette.texteSecondaire,
-            fontSize: 13,
+      Flexible(
+        flex: 3,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.espaceMd),
+          child: Text(
+            'Pas encore de compte ?',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: context.palette.texteSecondaire,
+              fontSize: 13,
+            ),
           ),
         ),
       ),
@@ -223,38 +351,32 @@ class _ChoixAcces extends StatelessWidget {
             borderRadius: rayon,
             border: Border.all(color: p.bordure),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: p.primaireTeinte,
                   borderRadius: BorderRadius.circular(AppTheme.rayonPetit),
                 ),
-                child: Icon(icone, color: cs.primary, size: 22),
+                child: Icon(icone, color: cs.primary, size: 20),
               ),
-              const SizedBox(width: AppTheme.espaceMd),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      titre,
-                      style: TextStyle(
-                        color: p.texte,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      detail,
-                      style: TextStyle(color: p.texteSecondaire, fontSize: 13),
-                    ),
-                  ],
+              const SizedBox(height: AppTheme.espaceSm),
+              Text(
+                titre,
+                style: TextStyle(
+                  color: p.texte,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              Icon(Icons.chevron_right, color: p.texteDiscret),
+              const SizedBox(height: 2),
+              Text(
+                detail,
+                style: TextStyle(color: p.texteSecondaire, fontSize: 12),
+              ),
             ],
           ),
         ),

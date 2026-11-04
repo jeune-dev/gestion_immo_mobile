@@ -109,6 +109,7 @@ class CautionLocatairePage extends StatelessWidget {
                                       message: 'Expliquez pourquoi vous contestez (10 caractères minimum). La caution passe en litige.',
                                       motif: true,
                                       minMotif: 10,
+                                      maxMotif: 4000,
                                       libelleMotif: 'Votre message',
                                       action: 'Contester',
                                     );

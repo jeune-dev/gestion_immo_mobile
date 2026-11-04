@@ -66,12 +66,18 @@ class MoyensPaiementPage extends StatelessWidget {
             'account_number',
             'Numéro de réception',
             type: TypeChamp.telephone,
+            obligatoireSi: (v) => existant == null && v['mode'] == 'preuve',
             visible: (v) => v['mode'] == 'preuve',
           ),
           Champ(
             'master_key',
             'Clé principale PayDunya',
             minLongueur: 8,
+            maxLongueur: 256,
+            obligatoireSi: (v) =>
+                existant == null &&
+                v['mode'] == 'integre' &&
+                v['provider'] == 'paydunya',
             visible: (v) =>
                 v['mode'] == 'integre' && v['provider'] == 'paydunya',
           ),
@@ -79,6 +85,11 @@ class MoyensPaiementPage extends StatelessWidget {
             'private_key',
             'Clé privée PayDunya',
             minLongueur: 8,
+            maxLongueur: 256,
+            obligatoireSi: (v) =>
+                existant == null &&
+                v['mode'] == 'integre' &&
+                v['provider'] == 'paydunya',
             visible: (v) =>
                 v['mode'] == 'integre' && v['provider'] == 'paydunya',
           ),
@@ -86,6 +97,11 @@ class MoyensPaiementPage extends StatelessWidget {
             'token',
             'Jeton PayDunya',
             minLongueur: 8,
+            maxLongueur: 256,
+            obligatoireSi: (v) =>
+                existant == null &&
+                v['mode'] == 'integre' &&
+                v['provider'] == 'paydunya',
             visible: (v) =>
                 v['mode'] == 'integre' && v['provider'] == 'paydunya',
           ),
@@ -104,6 +120,11 @@ class MoyensPaiementPage extends StatelessWidget {
             'api_key',
             'Clé API',
             minLongueur: 8,
+            maxLongueur: 512,
+            obligatoireSi: (v) =>
+                existant == null &&
+                v['mode'] == 'integre' &&
+                v['provider'] != 'paydunya',
             visible: (v) =>
                 v['mode'] == 'integre' && v['provider'] != 'paydunya',
           ),
@@ -111,6 +132,11 @@ class MoyensPaiementPage extends StatelessWidget {
             'webhook_secret',
             'Secret du webhook',
             minLongueur: 8,
+            maxLongueur: 512,
+            obligatoireSi: (v) =>
+                existant == null &&
+                v['mode'] == 'integre' &&
+                v['provider'] != 'paydunya',
             visible: (v) =>
                 v['mode'] == 'integre' && v['provider'] != 'paydunya',
           ),

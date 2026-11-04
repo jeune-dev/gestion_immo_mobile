@@ -192,18 +192,19 @@ class DashboardPage extends StatelessWidget {
                                   ),
                                   ChiffreCle(
                                     libelle: 'Encaissé',
-                                    valeur: montant(d.revenus ?? d.encaisses),
+                                    valeur: montant(d.revenus),
                                     icone: Icons.check_circle_outline,
                                     ton: TonStatut.succes,
-                                    sous:
-                                        'dont ${montant(d.encaisses)} pour ce mois',
+                                    sous: 'Reçu ce mois-ci, tout compris',
                                   ),
                                   ChiffreCle(
                                     libelle: 'Impayés',
-                                    valeur: montant(d.impayes),
+                                    valeur: montant(d.totalImpayes),
                                     icone: Icons.error_outline,
                                     ton: TonStatut.danger,
-                                    sous: 'Tous mois confondus',
+                                    sous: (d.chargesImpayees ?? 0) > 0
+                                        ? 'dont ${montant(d.chargesImpayees)} de charges'
+                                        : 'Tous mois confondus',
                                     onTap: () => _ouvrir(
                                       context,
                                       const EcheancesPage(impayes: true),
@@ -215,6 +216,19 @@ class DashboardPage extends StatelessWidget {
                                     icone: Icons.receipt_long_outlined,
                                     ton: TonStatut.neutre,
                                     sous: 'Résultat ${montant(d.resultat)}',
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppTheme.espaceMd),
+                              Section(
+                                children: [
+                                  Ligne(
+                                    'Cautions détenues',
+                                    montant(d.cautionsDetenues),
+                                  ),
+                                  Ligne(
+                                    'Logements vacants',
+                                    pourcent(d.tauxVacance),
                                   ),
                                 ],
                               ),
@@ -242,6 +256,36 @@ class DashboardPage extends StatelessWidget {
                                   children: [
                                     for (final c in d.depensesParCategorie)
                                       Ligne(c.nom, montant(c.total)),
+                                  ],
+                                ),
+                                const SizedBox(height: AppTheme.espaceLg),
+                              ],
+                              if (d.appartementsCouteux.isNotEmpty) ...[
+                                _Titre('Appartements les plus coûteux'),
+                                Section(
+                                  children: [
+                                    for (final a in d.appartementsCouteux)
+                                      Ligne(
+                                        a.immeuble == null
+                                            ? a.numero
+                                            : '${a.immeuble} · ${a.numero}',
+                                        montant(a.depenses),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppTheme.espaceLg),
+                              ],
+                              if (d.aujourdHui.isNotEmpty) ...[
+                                _Titre("Aujourd'hui"),
+                                Section(
+                                  children: [
+                                    for (final e in d.aujourdHui)
+                                      Ligne(
+                                        e.libelle,
+                                        e.montant == null
+                                            ? ''
+                                            : montant(e.montant),
+                                      ),
                                   ],
                                 ),
                               ],

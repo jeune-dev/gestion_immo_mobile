@@ -9,6 +9,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'package:gestion_immo_mobile/core/services/push_service.dart';
 import 'package:gestion_immo_mobile/features/notifications/presentation/compteur_notifications.dart';
 import 'package:gestion_immo_mobile/core/connection/network_info.dart';
 import 'package:gestion_immo_mobile/core/routes/app_router.dart';
@@ -17,6 +18,7 @@ import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.dart';
+import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_state.dart';
 import 'package:gestion_immo_mobile/injection_container.dart' as di;
 
 Future<void> main() async {
@@ -56,11 +58,15 @@ class _GestionImmoAppState extends State<GestionImmoApp>
   final _auth = di.sl<AuthBloc>()..add(AuthDemarree());
   late final _router = AppRouter.creer(_auth);
   late final StreamSubscription<bool> _reseau;
+  late final StreamSubscription<AuthState> _session;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _session = _auth.stream.listen((etat) {
+      if (etat.connecte) di.sl<PushService>().demarrer();
+    });
     // Retour du réseau : les opérations créées hors ligne partent sans attendre
     _reseau = di.sl<NetworkInfo>().onChange.listen((connecte) {
       if (connecte) _synchroniser();
@@ -70,6 +76,7 @@ class _GestionImmoAppState extends State<GestionImmoApp>
   @override
   void dispose() {
     _reseau.cancel();
+    _session.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _auth.close();
     super.dispose();

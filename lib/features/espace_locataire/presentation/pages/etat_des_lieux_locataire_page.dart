@@ -93,6 +93,7 @@ class EtatDesLieuxLocatairePage extends StatelessWidget {
                             titre: "Contester l'état des lieux",
                             message: 'Expliquez précisément ce qui ne correspond pas (10 caractères minimum).',
                             motif: true,
+                            maxMotif: 2000,
                             libelleMotif: 'Votre commentaire',
                             minMotif: 10,
                             danger: true,

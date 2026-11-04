@@ -70,6 +70,7 @@ class _CaissePageState extends State<CaissePage> {
           const Champ(
             'occurred_on',
             'Date',
+            pasDansLeFutur: true,
             type: TypeChamp.date,
             obligatoire: true,
           ),

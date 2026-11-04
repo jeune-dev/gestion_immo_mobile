@@ -74,12 +74,17 @@ Future<bool> encaisser(
         const Champ(
           'paid_on',
           'Date du paiement',
+          pasDansLeFutur: true,
           type: TypeChamp.date,
           obligatoire: true,
         ),
         const Champ(
           'reference',
           'Référence (facultatif)',
+          format: (
+            r'^[A-Za-z0-9_\-./]+$',
+            'Lettres, chiffres et . _ - / uniquement, sans espace',
+          ),
           maxLongueur: 40,
           indice: 'N° de reçu, de chèque ou de transaction',
         ),

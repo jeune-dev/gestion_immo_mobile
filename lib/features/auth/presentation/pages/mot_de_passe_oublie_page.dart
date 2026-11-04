@@ -153,7 +153,7 @@ class _FormulaireState extends State<_Formulaire> {
                         labelText: 'Téléphone ou e-mail',
                       ),
                       validator: (v) =>
-                          (v ?? '').trim().isEmpty ? 'Obligatoire' : null,
+                          IdentifiantValidator.identifiant(v).erreurFormulaire,
                     ),
                   if (etape == EtapeReinitialisation.code)
                     TextFormField(

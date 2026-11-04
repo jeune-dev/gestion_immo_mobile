@@ -65,6 +65,7 @@ class IncidentDetailPage extends StatelessWidget {
           : 'Ajoutez une note pour le locataire (facultatif).',
       motif: true,
       motifObligatoire: motif,
+      maxMotif: 2000,
       libelleMotif: motif ? 'Motif' : 'Note',
       danger: motif,
     );

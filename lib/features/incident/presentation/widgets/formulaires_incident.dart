@@ -70,7 +70,7 @@ Future<bool> planifierTravaux(BuildContext context, Incident i) async {
       titre: 'Planifier des travaux',
       initial: {'title': i.titre, 'priority': 'normale', 'status': 'valide'},
       champs: [
-        const Champ('title', 'Intitulé', maxLongueur: 150),
+        const Champ('title', 'Intitulé', minLongueur: 2, maxLongueur: 150),
         const Champ(
           'category',
           'Catégorie',

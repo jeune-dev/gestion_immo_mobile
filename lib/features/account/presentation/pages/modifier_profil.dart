@@ -30,6 +30,7 @@ Future<void> modifierProfil(BuildContext context) async {
         const Champ(
           'first_name',
           'Prénom',
+          type: TypeChamp.nom,
           obligatoire: true,
           maxLongueur: 80,
           groupe: 'Mes informations',
@@ -38,6 +39,7 @@ Future<void> modifierProfil(BuildContext context) async {
         const Champ(
           'last_name',
           'Nom',
+          type: TypeChamp.nom,
           obligatoire: true,
           maxLongueur: 80,
           moitie: true,

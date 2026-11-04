@@ -18,6 +18,8 @@ class LogoKerimmo extends StatelessWidget {
     child: Image.asset(
       asset,
       width: largeur,
+      // Hauteur réservée : la pastille garde sa taille pendant le chargement.
+      height: largeur / 2.5,
       fit: BoxFit.contain,
       filterQuality: FilterQuality.medium,
     ),

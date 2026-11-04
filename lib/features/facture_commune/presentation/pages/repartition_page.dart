@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
@@ -42,6 +43,32 @@ class _RepartitionState extends State<_Repartition> {
   bool _initialise = false;
 
   String get _methode => widget.facture.methodeRepartition ?? '';
+
+  /// Contrôle des lignes saisies avant l'aperçu et la répartition.
+  /// Mêmes bornes que l'API ; la somme personnalisée doit tomber juste.
+  String? _erreurLignes() {
+    if (_choisis.isEmpty) return 'Choisissez au moins un appartement';
+    if (!widget.facture.parLigne) return null;
+    var somme = 0;
+    for (final id in _choisis) {
+      final texte = _valeurs[id]!.text.trim();
+      if (texte.isEmpty) return 'Renseignez chaque appartement sélectionné';
+      if (_methode == 'consommation') {
+        final n = num.tryParse(texte.replaceAll(',', '.'));
+        if (n == null || n < 0 || n > 1000000000) {
+          return 'Consommation invalide : $texte';
+        }
+      } else if (_methode == 'personnalise') {
+        final n = lireMontant(texte);
+        if (n == null) return 'Montant invalide : $texte';
+        somme += n;
+      }
+    }
+    if (_methode == 'personnalise' && somme != widget.facture.montant) {
+      return 'La somme saisie (${montant(somme)}) doit être égale au total de la facture (${montant(widget.facture.montant)}).';
+    }
+    return null;
+  }
 
   Map<String, dynamic> _corps() {
     final ids = _choisis.toList();
@@ -154,6 +181,13 @@ class _RepartitionState extends State<_Repartition> {
                                           const TextInputType.numberWithOptions(
                                             decimal: true,
                                           ),
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          _methode == 'consommation'
+                                              ? RegExp(r'[\d.,]')
+                                              : RegExp(r'\d'),
+                                        ),
+                                      ],
                                       decoration: InputDecoration(
                                         isDense: true,
                                         labelText: _methode == 'consommation'
@@ -175,17 +209,18 @@ class _RepartitionState extends State<_Repartition> {
                       FilledButton(
                         onPressed: enCours
                             ? null
-                            : () => _choisis.isEmpty
-                                  ? afficherErreur(
-                                      context,
-                                      'Choisissez au moins un appartement',
-                                    )
-                                  : bloc.add(
-                                      PrevisualiserRepartitionEvent(
-                                        factureId,
-                                        _corps(),
-                                      ),
-                                    ),
+                            : () {
+                                final erreur = _erreurLignes();
+                                if (erreur != null) {
+                                  return afficherErreur(context, erreur);
+                                }
+                                bloc.add(
+                                  PrevisualiserRepartitionEvent(
+                                    factureId,
+                                    _corps(),
+                                  ),
+                                );
+                              },
                         child: const Text('Prévisualiser'),
                       )
                     else ...[
@@ -209,6 +244,11 @@ class _RepartitionState extends State<_Repartition> {
                                   'Refacturé aux locataires',
                                   montant(a.totalRefacture),
                                 ),
+                                if ((a.provisionsDeduites ?? 0) > 0)
+                                  Ligne(
+                                    'Couvert par les provisions',
+                                    montant(a.provisionsDeduites),
+                                  ),
                                 Ligne(
                                   'À la charge du propriétaire',
                                   montant(a.partProprietaire),

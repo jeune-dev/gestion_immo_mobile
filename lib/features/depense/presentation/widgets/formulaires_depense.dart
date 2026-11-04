@@ -77,6 +77,7 @@ Future<bool> nouvelleDepense(
         const Champ(
           'spent_on',
           'Date',
+          pasDansLeFutur: true,
           type: TypeChamp.date,
           obligatoire: true,
         ),

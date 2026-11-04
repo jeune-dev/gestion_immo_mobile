@@ -1,3 +1,4 @@
+import 'package:gestion_immo_mobile/core/services/push_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
 
@@ -342,6 +343,7 @@ Future<void> init() async {
     return api;
   });
   sl.registerLazySingleton(() => ReferentielsService(sl()));
+  sl.registerLazySingleton(() => PushService(sl()));
   sl.registerLazySingleton(() => FileAttenteService(sl()));
 
   //================================================
@@ -357,6 +359,7 @@ Future<void> init() async {
       api: sl(),
       jetons: sl(),
       fileAttente: sl(),
+      push: sl(),
     ),
   );
   sl.registerLazySingleton(() => RestaurerSession(sl()));

@@ -9,10 +9,30 @@ import 'package:uuid/uuid.dart';
 import 'package:gestion_immo_mobile/core/config/env.dart';
 import 'package:gestion_immo_mobile/core/constants/api_endpoints.dart';
 import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
+import 'package:gestion_immo_mobile/core/services/coffre_local.dart';
 import 'package:gestion_immo_mobile/core/services/token_service.dart';
 
 /// Clé d'idempotence : un UUID neuf par action utilisateur (contrat § 0).
 String nouvelleCle() => const Uuid().v4();
+
+const _dureeIntention = Duration(minutes: 10);
+final _intentions = <String, ({String cle, DateTime creeLe})>{};
+
+/// Même clé pour la même demande répétée peu après (nouvel essai après une
+/// coupure, retour sur l'écran) : le serveur rejoue sa réponse au lieu de créer
+/// un doublon. À réserver aux actions qui n'ont aucune raison d'être refaites à l'identique.
+String cleStable(String chemin, Object? corps) {
+  final maintenant = DateTime.now();
+  _intentions.removeWhere(
+    (_, v) => maintenant.difference(v.creeLe) > _dureeIntention,
+  );
+  return _intentions
+      .putIfAbsent(
+        '$chemin|$corps',
+        () => (cle: nouvelleCle(), creeLe: maintenant),
+      )
+      .cle;
+}
 
 /// Client de l'API (contrat § 0) :
 /// - enveloppe `{ success, message, data }` : renvoie `data` ;
@@ -21,6 +41,7 @@ String nouvelleCle() => const Uuid().v4();
 /// - lectures mises en cache pour la consultation hors ligne (cahier des charges § 34).
 class ApiClient {
   final TokenService session;
+  final CoffreLocal _coffre;
   final Dio _dio;
 
   /// Appelé quand la session ne peut plus être renouvelée (retour à la connexion).
@@ -33,17 +54,22 @@ class ApiClient {
 
   Completer<bool>? _renouvellement;
 
-  ApiClient({required this.session, String? baseUrl, Dio? dio})
-    : _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              baseUrl: baseUrl ?? Env.baseUrl,
-              connectTimeout: const Duration(seconds: 15),
-              receiveTimeout: const Duration(seconds: 30),
-              headers: {'Accept': 'application/json'},
-            ),
-          ) {
+  ApiClient({
+    required this.session,
+    String? baseUrl,
+    Dio? dio,
+    CoffreLocal? coffre,
+  }) : _coffre = coffre ?? CoffreLocal(),
+       _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               baseUrl: baseUrl ?? Env.baseUrl,
+               connectTimeout: const Duration(seconds: 15),
+               receiveTimeout: const Duration(seconds: 30),
+               headers: {'Accept': 'application/json'},
+             ),
+           ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -213,9 +239,10 @@ class ApiClient {
       if (e.estReseau && cache) {
         final p = await SharedPreferences.getInstance();
         final brut = p.getString(cle);
-        if (brut != null) {
+        final clair = brut == null ? null : await _coffre.dechiffrer(brut);
+        if (clair != null) {
           horsLigne.value = true;
-          return jsonDecode(brut) as T;
+          return jsonDecode(clair) as T;
         }
       }
       rethrow;
@@ -225,7 +252,7 @@ class ApiClient {
   Future<void> _memoriser(String cle, dynamic data) async {
     try {
       final p = await SharedPreferences.getInstance();
-      await p.setString(cle, jsonEncode(data));
+      await p.setString(cle, await _coffre.chiffrer(jsonEncode(data)));
     } catch (_) {
       // Le cache est une commodité : son échec ne bloque rien
     }

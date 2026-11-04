@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:gestion_immo_mobile/core/validation/identifiant_validator.dart';
@@ -35,7 +36,7 @@ class _ActivationPageState extends State<ActivationPage> {
     context.read<AuthBloc>().add(
       ActivationDemandee({
         'code': _code.text.trim(),
-        'phone': _telephone.text.trim(),
+        'phone': IdentifiantValidator.telephone(_telephone.text).valeur!,
         'password': _mdp.text,
         'password_confirmation': _confirmation.text,
       }),
@@ -69,6 +70,7 @@ class _ActivationPageState extends State<ActivationPage> {
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.next,
                 maxLength: 8,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
                   labelText: "Code d'invitation",
                   hintText: '8 chiffres',
@@ -84,13 +86,18 @@ class _ActivationPageState extends State<ActivationPage> {
                 keyboardType: TextInputType.phone,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.telephoneNumber],
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[\d\s+().-]')),
+                ],
                 decoration: const InputDecoration(
                   labelText: 'Téléphone',
                   hintText: '77 123 45 67',
                   prefixIcon: Icon(Icons.phone_outlined),
                 ),
-                validator: (v) =>
-                    (v ?? '').trim().isEmpty ? 'Obligatoire' : null,
+                validator: (v) => IdentifiantValidator.telephone(
+                  v,
+                  obligatoire: true,
+                ).erreurFormulaire,
               ),
               const SizedBox(height: AppTheme.espaceMd),
               ChampMotDePasse(

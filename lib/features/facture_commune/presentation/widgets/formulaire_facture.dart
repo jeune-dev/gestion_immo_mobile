@@ -48,6 +48,7 @@ List<Champ> _champsFacture() => [
   const Champ(
     'period_end',
     'Fin de période',
+    apresChamp: 'period_start',
     type: TypeChamp.date,
     obligatoire: true,
   ),

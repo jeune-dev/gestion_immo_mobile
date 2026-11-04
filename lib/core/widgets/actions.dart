@@ -142,6 +142,7 @@ Future<String?> confirmer(
   bool motifObligatoire = true,
   String libelleMotif = 'Motif',
   int minMotif = 3,
+  int maxMotif = 500,
   bool masque = false,
 }) {
   return showDialog<String>(
@@ -155,6 +156,7 @@ Future<String?> confirmer(
       motifObligatoire: motifObligatoire,
       libelleMotif: libelleMotif,
       minMotif: minMotif,
+      maxMotif: maxMotif,
       masque: masque,
     ),
   );
@@ -170,6 +172,7 @@ class _Confirmation extends StatefulWidget {
   final bool motifObligatoire;
   final String libelleMotif;
   final int minMotif;
+  final int maxMotif;
   final bool masque;
 
   const _Confirmation({
@@ -181,6 +184,7 @@ class _Confirmation extends StatefulWidget {
     required this.motifObligatoire,
     required this.libelleMotif,
     required this.minMotif,
+    required this.maxMotif,
     required this.masque,
   });
 
@@ -218,7 +222,7 @@ class _ConfirmationState extends State<_Confirmation> {
               obscureText: w.masque,
               minLines: w.masque ? 1 : 2,
               maxLines: w.masque ? 1 : 4,
-              maxLength: 1000,
+              maxLength: w.maxMotif,
               decoration: InputDecoration(
                 labelText: '${w.libelleMotif}${w.motifObligatoire ? ' *' : ''}',
                 helperText: w.motifObligatoire
@@ -384,6 +388,13 @@ class _SelecteurState extends State<_Selecteur> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
+                maxLength: 100,
+                buildCounter: (
+                  _, {
+                  required currentLength,
+                  required isFocused,
+                  maxLength,
+                }) => null,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.search),
                   hintText: 'Rechercher',
