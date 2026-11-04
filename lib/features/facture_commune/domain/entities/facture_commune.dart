@@ -9,8 +9,12 @@ class LigneRepartition extends Equatable {
   final String? explication;
   final num? montant;
 
-  const LigneRepartition(
-      {this.logementNumero, this.locataire, this.explication, this.montant});
+  const LigneRepartition({
+    this.logementNumero,
+    this.locataire,
+    this.explication,
+    this.montant,
+  });
 
   @override
   List<Object?> get props => [logementNumero, locataire, explication, montant];
@@ -61,22 +65,22 @@ class FactureCommune extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        typeCharge,
-        immeubleId,
-        immeubleNom,
-        fournisseur,
-        numeroFacture,
-        montant,
-        debutPeriode,
-        finPeriode,
-        dateLimite,
-        methodeRepartition,
-        refacturer,
-        notes,
-        statut,
-        repartition,
-      ];
+    id,
+    typeCharge,
+    immeubleId,
+    immeubleNom,
+    fournisseur,
+    numeroFacture,
+    montant,
+    debutPeriode,
+    finPeriode,
+    dateLimite,
+    methodeRepartition,
+    refacturer,
+    notes,
+    statut,
+    repartition,
+  ];
 }
 
 /// Aperçu calculé par l'API avant validation de la répartition.
@@ -84,8 +88,11 @@ class ApercuRepartition extends Equatable {
   final List<LigneRepartition> lignes;
   final num? totalRefacture;
   final num? partProprietaire;
-  const ApercuRepartition(
-      {required this.lignes, this.totalRefacture, this.partProprietaire});
+  const ApercuRepartition({
+    required this.lignes,
+    this.totalRefacture,
+    this.partProprietaire,
+  });
 
   @override
   List<Object?> get props => [lignes, totalRefacture, partProprietaire];
@@ -113,6 +120,9 @@ class ChargeRefacturee extends Equatable {
   final int montantPaye;
   final String? statut;
 
+  /// Calcul de la quote-part (détail locataire uniquement, § 28).
+  final CalculCharge? calcul;
+
   int get reste => montant - montantPaye;
   bool get payable =>
       ['a_payer', 'partiellement_paye', 'en_retard'].contains(statut);
@@ -127,18 +137,65 @@ class ChargeRefacturee extends Equatable {
     this.montant = 0,
     this.montantPaye = 0,
     this.statut,
+    this.calcul,
   });
 
   @override
   List<Object?> get props => [
-        id,
-        libelle,
-        typeCharge,
-        locataire,
-        logementNumero,
-        dateEcheance,
-        montant,
-        montantPaye,
-        statut
-      ];
+    id,
+    libelle,
+    typeCharge,
+    locataire,
+    logementNumero,
+    dateEcheance,
+    montant,
+    montantPaye,
+    statut,
+    calcul,
+  ];
+}
+
+/// Explication de la part d'un locataire dans une facture commune : méthode,
+/// total de la facture, base de calcul — jamais la part d'un autre logement.
+class CalculCharge extends Equatable {
+  final String? methode;
+  final String? methodeLibelle;
+  final int totalFacture;
+  final int nbAppartements;
+  final String? fournisseur;
+  final String? numeroFacture;
+  final String? periodeDebut;
+  final String? periodeFin;
+  final num? base;
+  final num? quotePart;
+  final String? explication;
+
+  const CalculCharge({
+    this.methode,
+    this.methodeLibelle,
+    this.totalFacture = 0,
+    this.nbAppartements = 0,
+    this.fournisseur,
+    this.numeroFacture,
+    this.periodeDebut,
+    this.periodeFin,
+    this.base,
+    this.quotePart,
+    this.explication,
+  });
+
+  @override
+  List<Object?> get props => [
+    methode,
+    methodeLibelle,
+    totalFacture,
+    nbAppartements,
+    fournisseur,
+    numeroFacture,
+    periodeDebut,
+    periodeFin,
+    base,
+    quotePart,
+    explication,
+  ];
 }

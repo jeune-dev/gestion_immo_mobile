@@ -110,22 +110,22 @@ class Locataire extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        prenom,
-        nom,
-        telephone,
-        email,
-        typePiece,
-        numeroPiece,
-        notes,
-        compteActif,
-        consentementWhatsapp,
-        logementCourant,
-        invitationEnvoyee,
-        baux,
-        solde,
-        paiementsRecents,
-      ];
+    id,
+    prenom,
+    nom,
+    telephone,
+    email,
+    typePiece,
+    numeroPiece,
+    notes,
+    compteActif,
+    consentementWhatsapp,
+    logementCourant,
+    invitationEnvoyee,
+    baux,
+    solde,
+    paiementsRecents,
+  ];
 }
 
 /// Locataire créé, avec son code d'invitation s'il a été demandé.

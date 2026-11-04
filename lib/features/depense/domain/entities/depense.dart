@@ -42,23 +42,23 @@ class Depense extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        montant,
-        moyen,
-        dateDepense,
-        description,
-        statut,
-        categorieId,
-        categorieNom,
-        immeubleId,
-        immeubleNom,
-        appartementId,
-        appartementNumero,
-        artisanId,
-        artisanNom,
-        travauxTitre,
-        motifAnnulation,
-      ];
+    id,
+    montant,
+    moyen,
+    dateDepense,
+    description,
+    statut,
+    categorieId,
+    categorieNom,
+    immeubleId,
+    immeubleNom,
+    appartementId,
+    appartementNumero,
+    artisanId,
+    artisanNom,
+    travauxTitre,
+    motifAnnulation,
+  ];
 }
 
 /// Catégorie de dépense : catalogue commun ou propre au propriétaire.
@@ -71,12 +71,13 @@ class CategorieDepense extends Equatable {
   /// Catégorie du catalogue commun : ni modifiable ni désactivable.
   final bool catalogue;
 
-  const CategorieDepense(
-      {required this.id,
-      required this.nom,
-      this.groupeCaisse,
-      this.active = true,
-      this.catalogue = false});
+  const CategorieDepense({
+    required this.id,
+    required this.nom,
+    this.groupeCaisse,
+    this.active = true,
+    this.catalogue = false,
+  });
 
   @override
   List<Object?> get props => [id, nom, groupeCaisse, active, catalogue];

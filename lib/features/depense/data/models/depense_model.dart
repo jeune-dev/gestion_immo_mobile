@@ -1,4 +1,5 @@
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import '../../domain/entities/depense.dart';
 
 class DepenseModel extends Depense {
@@ -41,20 +42,22 @@ class DepenseModel extends Depense {
       appartementNumero: appartement?['number']?.toString(),
       artisanId: (json['contractor_id'] ?? artisan?['id'])?.toString(),
       artisanNom: artisan?['name'] as String?,
-      travauxTitre: ((json['workOrder'] ?? json['work_order'])
-          as Map?)?['title'] as String?,
+      travauxTitre:
+          ((json['workOrder'] ?? json['work_order']) as Map?)?['title']
+              as String?,
       motifAnnulation: json['cancel_reason'] as String?,
     );
   }
 }
 
 class CategorieDepenseModel extends CategorieDepense {
-  const CategorieDepenseModel(
-      {required super.id,
-      required super.nom,
-      super.groupeCaisse,
-      super.active,
-      super.catalogue});
+  const CategorieDepenseModel({
+    required super.id,
+    required super.nom,
+    super.groupeCaisse,
+    super.active,
+    super.catalogue,
+  });
 
   factory CategorieDepenseModel.fromJson(Map<String, dynamic> json) =>
       CategorieDepenseModel(

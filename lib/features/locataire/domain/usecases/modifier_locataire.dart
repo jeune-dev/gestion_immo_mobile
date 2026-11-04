@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
+
 import '../entities/locataire.dart';
 import '../repositories/locataire_repository.dart';
 
@@ -10,6 +11,5 @@ class ModifierLocataire {
   Future<Either<Failure, Locataire>> call(
     String id,
     Map<String, dynamic> data,
-  ) =>
-      repository.modifierLocataire(id, data);
+  ) => repository.modifierLocataire(id, data);
 }

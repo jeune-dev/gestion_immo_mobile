@@ -20,6 +20,7 @@ import 'package:gestion_immo_mobile/features/appartement/presentation/bloc/appar
 import 'package:gestion_immo_mobile/features/appartement/presentation/bloc/appartement_event.dart';
 import 'package:gestion_immo_mobile/features/appartement/presentation/bloc/appartement_state.dart';
 import 'package:gestion_immo_mobile/features/appartement/presentation/widgets/formulaire_appartement.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 class AppartementDetailPage extends StatelessWidget {
   final String id;
@@ -34,13 +35,15 @@ class AppartementDetailPage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // « Occupé » ne s'obtient QUE par l'activation d'un bail (§ 8)
-            for (final o in refs
-                .options('statut_appartement')
-                .where((o) => o.code != 'occupe'))
+            for (final o
+                in refs
+                    .options('statut_appartement')
+                    .where((o) => o.code != 'occupe'))
               ListTile(
-                  title: Text(o.label),
-                  selected: o.code == a.statut,
-                  onTap: () => Navigator.pop(ctx, o.code)),
+                title: Text(o.label),
+                selected: o.code == a.statut,
+                onTap: () => Navigator.pop(ctx, o.code),
+              ),
           ],
         ),
       ),
@@ -92,6 +95,7 @@ class AppartementDetailPage extends StatelessWidget {
     final locataire = a.locataireCourant;
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
         title: Text('Appartement ${a.numero}'),
         actions: [
           MenuActions(
@@ -114,8 +118,7 @@ class AppartementDetailPage extends StatelessWidget {
                   final ok = await confirmer(
                     context,
                     titre: 'Supprimer l’appartement',
-                    message:
-                        'Un appartement qui a un historique (baux, paiements) ne peut pas être supprimé.',
+                    message: 'Un appartement qui a un historique (baux, paiements) ne peut pas être supprimé.',
                     action: 'Supprimer',
                     danger: true,
                   );
@@ -153,18 +156,20 @@ class AppartementDetailPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
           children: [
+            EnTeteFiche(
+              surtitre: a.immeubleNom,
+              titre: 'Appartement ${a.numero}',
+              detail: '${montant(a.loyer)} de loyer',
+              statut: Statut(
+                FamilleStatut.appartement,
+                'statut_appartement',
+                a.statut,
+              ),
+            ),
+            const SizedBox(height: AppTheme.espaceLg),
             Section(
+              titre: 'Informations',
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                        child: Text(a.immeubleNom ?? '',
-                            style: Theme.of(context).textTheme.titleMedium)),
-                    Statut(FamilleStatut.appartement, 'statut_appartement',
-                        a.statut),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.espaceSm),
                 Ligne('Type', refs.libelle('type_appartement', a.type)),
                 Ligne('Étage', a.etage == null ? null : '${a.etage}'),
                 Ligne('Surface', a.surface == null ? null : '${a.surface} m²'),
@@ -180,29 +185,31 @@ class AppartementDetailPage extends StatelessWidget {
               padding: false,
               children: [
                 if (bail != null && locataire != null)
-                  ListTile(
-                    leading: CircleAvatar(child: Text(locataire.initiales)),
-                    title: Text(locataire.nomComplet),
-                    subtitle: Text(
-                        '${bail.reference ?? ''} · depuis le ${date(bail.debut)}'),
-                    trailing: const Icon(Icons.chevron_right),
+                  TuileOption(
+                    icone: Icons.assignment_outlined,
+                    titre: locataire.nomComplet,
+                    detail:
+                        '${bail.reference ?? ''} · depuis le ${date(bail.debut)}',
+                    fin: const Icon(Icons.chevron_right),
                     onTap: () =>
                         ouvrir(context, BailDetailPage(id: bail.bailId)),
                   )
                 else
                   const ListTile(title: Text('Aucun locataire actuellement')),
-                for (final h
-                    in a.historique.where((h) => h.bailId != bail?.bailId))
-                  ListTile(
-                    dense: true,
-                    title: Text(h.locataire?.nomComplet ?? '—'),
-                    subtitle: Text('${date(h.debut)} → ${date(h.fin)}'),
-                    trailing:
-                        Statut(FamilleStatut.bail, 'statut_bail', h.statut),
+                for (final h in a.historique.where(
+                  (h) => h.bailId != bail?.bailId,
+                ))
+                  TuileOption(
+                    icone: Icons.assignment_outlined,
+                    titre: h.locataire?.nomComplet ?? '—',
+                    detail: '${date(h.debut)} → ${date(h.fin)}',
+                    fin: Statut(FamilleStatut.bail, 'statut_bail', h.statut),
                     onTap: h.locataire == null
                         ? null
                         : () => ouvrir(
-                            context, LocataireDetailPage(id: h.locataire!.id)),
+                            context,
+                            LocataireDetailPage(id: h.locataire!.id),
+                          ),
                   ),
               ],
             ),
@@ -239,11 +246,11 @@ class AppartementDetailPage extends StatelessWidget {
                 if (fiche.historique.isEmpty)
                   const ListTile(title: Text('Aucun événement')),
                 for (final e in fiche.historique)
-                  ListTile(
-                    dense: true,
-                    title: Text(e.libelle),
-                    subtitle: Text(date(e.date)),
-                    trailing: e.montant == null ? null : Montant(e.montant),
+                  TuileOption(
+                    icone: Icons.assignment_outlined,
+                    titre: e.libelle,
+                    detail: date(e.date),
+                    fin: e.montant == null ? null : Montant(e.montant),
                   ),
               ],
             ),

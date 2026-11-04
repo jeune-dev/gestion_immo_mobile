@@ -1,6 +1,7 @@
 import 'package:gestion_immo_mobile/core/constants/api_endpoints.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
+
 import '../models/locataire_model.dart';
 
 abstract class LocataireRemoteDataSource {
@@ -16,7 +17,9 @@ abstract class LocataireRemoteDataSource {
     required String cle,
   });
   Future<LocataireModel> modifierLocataire(
-      String id, Map<String, dynamic> data);
+    String id,
+    Map<String, dynamic> data,
+  );
   Future<void> supprimerLocataire(String id);
   Future<InvitationModel> inviterLocataire(String id);
   Future<void> enregistrerConsentementWhatsapp(

@@ -22,23 +22,27 @@ Future<Artisan?> formulaireArtisan(BuildContext context, {Artisan? existant}) {
               'trade': existant.metier,
               'phone': existant.telephone,
               'email': existant.email,
-              'notes': existant.notes
+              'notes': existant.notes,
             },
       champs: const [
         Champ('name', 'Nom', obligatoire: true, maxLongueur: 150),
-        Champ('trade', 'Métier',
-            type: TypeChamp.selection,
-            referentiel: 'metier_artisan',
-            obligatoire: true),
+        Champ(
+          'trade',
+          'Métier',
+          type: TypeChamp.selection,
+          referentiel: 'metier_artisan',
+          obligatoire: true,
+        ),
         Champ('phone', 'Téléphone', type: TypeChamp.telephone),
         Champ('email', 'E-mail', type: TypeChamp.email),
         Champ('notes', 'Notes', type: TypeChamp.multiligne, maxLongueur: 2000),
       ],
       messageSucces: existant == null ? 'Artisan ajouté' : 'Artisan modifié',
-      envoyer: (c) async => (existant == null
-              ? await sl<CreerArtisan>()(c, cle: cle)
-              : await sl<ModifierArtisan>()(existant.id, c))
-          .ouLeve(),
+      envoyer: (c) async =>
+          (existant == null
+                  ? await sl<CreerArtisan>()(c, cle: cle)
+                  : await sl<ModifierArtisan>()(existant.id, c))
+              .ouLeve(),
     ),
   );
 }

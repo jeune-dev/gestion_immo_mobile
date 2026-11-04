@@ -9,14 +9,17 @@ class PageResultat<T> extends Equatable {
 
   bool get aSuite => page < totalPages;
 
-  const PageResultat(
-      {required this.items,
-      required this.page,
-      required this.totalPages,
-      required this.total});
+  const PageResultat({
+    required this.items,
+    required this.page,
+    required this.totalPages,
+    required this.total,
+  });
 
   factory PageResultat.depuisJson(
-      Map<String, dynamic> json, T Function(Map<String, dynamic>) convertir) {
+    Map<String, dynamic> json,
+    T Function(Map<String, dynamic>) convertir,
+  ) {
     final p = (json['pagination'] as Map?) ?? const {};
     final items = ((json['items'] as List?) ?? const [])
         .map((e) => convertir(Map<String, dynamic>.from(e as Map)))
@@ -37,8 +40,9 @@ class PageResultat<T> extends Equatable {
 extension FiltrePage<T> on PageResultat<T> {
   /// Même page, sans les éléments écartés (filtre local en complément de l'API).
   PageResultat<T> filtrer(bool Function(T) garder) => PageResultat<T>(
-      items: items.where(garder).toList(),
-      page: page,
-      totalPages: totalPages,
-      total: total);
+    items: items.where(garder).toList(),
+    page: page,
+    totalPages: totalPages,
+    total: total,
+  );
 }

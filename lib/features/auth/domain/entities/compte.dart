@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'package:gestion_immo_mobile/core/config/user_role.dart';
+
 import 'droits_abonnement.dart';
 import 'espace_proprietaire.dart';
 import 'utilisateur.dart';

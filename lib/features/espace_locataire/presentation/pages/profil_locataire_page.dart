@@ -3,17 +3,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/widgets/actions.dart';
+import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/core/widgets/navigation.dart';
-import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/pages/modifier_profil.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/pages/securite_page.dart';
+import 'package:gestion_immo_mobile/features/auth/presentation/widgets/avatar_utilisateur.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.dart';
 import 'package:gestion_immo_mobile/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:gestion_immo_mobile/features/quittance/presentation/pages/quittances_page.dart';
-import 'package:gestion_immo_mobile/features/espace_locataire/domain/usecases/consentir_whatsapp.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/caution_locataire_page.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/charges_locataire_page.dart';
+import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/whatsapp_locataire_page.dart';
+import 'package:gestion_immo_mobile/core/widgets/logo.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Profil du locataire : caution, charges, quittances, consentement WhatsApp, sécurité.
 class ProfilLocatairePage extends StatelessWidget {
@@ -22,114 +25,117 @@ class ProfilLocatairePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final u = context.select((AuthBloc b) => b.state.compte?.utilisateur);
-    final initiales =
-        '${(u?.prenom ?? '').isNotEmpty ? u!.prenom[0] : ''}${(u?.nom ?? '').isNotEmpty ? u!.nom[0] : ''}'
-            .toUpperCase();
-    Widget tuile(IconData i, String t, VoidCallback onTap, {String? sous}) =>
-        ListTile(
-          leading: Icon(i),
-          title: Text(t),
-          subtitle: sous == null ? null : Text(sous),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: onTap,
-        );
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        leading: LogoBarre.siRacine(context),
+        leadingWidth: LogoBarre.largeur,
+        title: const Text('Profil'),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.espaceLg),
         children: [
-          Card(
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: CircleAvatar(
-                  radius: 28, child: Text(initiales.isEmpty ? '?' : initiales)),
-              title: Text(u?.nomComplet ?? '—',
-                  style: Theme.of(context).textTheme.titleMedium),
-              subtitle:
-                  Text([u?.telephone, u?.email].whereType<String>().join('\n')),
-              trailing: IconButton(
-                  tooltip: 'Modifier',
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: () => modifierProfil(context)),
-            ),
-          ),
-          const SizedBox(height: AppTheme.espaceLg),
-          Card(
+          CarteMarque(
             child: Column(
               children: [
-                tuile(
-                    Icons.description_outlined,
-                    'Mes quittances',
-                    () => ouvrir(
-                        context, const QuittancesPage(espaceLocataire: true))),
-                tuile(Icons.savings_outlined, 'Ma caution',
-                    () => ouvrir(context, const CautionLocatairePage())),
-                tuile(
-                  Icons.water_drop_outlined,
-                  'Mes charges',
-                  () => ouvrir(context, const ChargesLocatairePage()),
-                  sous: 'Eau, électricité… refacturées',
+                const AvatarUtilisateur(taille: 84),
+                const SizedBox(height: AppTheme.espaceMd),
+                Text(
+                  u?.nomComplet ?? '—',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.espaceXs),
+                Text(
+                  [u?.telephone, u?.email].whereType<String>().join('  ·  '),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.espaceLg),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.transparent,
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
+                    minimumSize: const Size(0, 42),
+                  ),
+                  onPressed: () => modifierProfil(context),
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: const Text('Modifier mon profil'),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.espaceLg),
-          Card(
-            child: Column(
-              children: [
-                tuile(Icons.notifications_outlined, 'Notifications',
-                    () => ouvrir(context, const NotificationsPage())),
-                ListTile(
-                  leading: const Icon(Icons.chat_outlined),
-                  title: const Text('Relances par WhatsApp'),
-                  subtitle: const Text(
-                      'Rappels de loyer et confirmations de paiement'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    final choix = await showModalBottomSheet<bool>(
-                      context: context,
-                      builder: (ctx) => SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const ListTile(
-                                title: Text(
-                                    'Recevoir les messages WhatsApp de votre propriétaire ?')),
-                            ListTile(
-                                leading: const Icon(Icons.check),
-                                title: const Text("J'accepte"),
-                                onTap: () => Navigator.pop(ctx, true)),
-                            ListTile(
-                                leading: const Icon(Icons.close),
-                                title: const Text('Je refuse'),
-                                onTap: () => Navigator.pop(ctx, false)),
-                          ],
-                        ),
-                      ),
-                    );
-                    if (choix == null || !context.mounted) return;
-                    await reussir(
-                      context,
-                      () => sl<ConsentirWhatsapp>()(accorde: choix),
-                      succes: choix
-                          ? 'Consentement enregistré'
-                          : 'Consentement retiré',
-                    );
-                  },
+          const SizedBox(height: AppTheme.espaceXl),
+          GroupeOptions(
+            titre: 'Mon logement',
+            children: [
+              TuileOption(
+                icone: Icons.description_outlined,
+                titre: 'Mes quittances',
+                detail: 'Consulter et partager vos reçus de loyer',
+                onTap: () => ouvrir(
+                  context,
+                  const QuittancesPage(espaceLocataire: true),
                 ),
-                tuile(Icons.lock_outline, 'Sécurité',
-                    () => ouvrir(context, const SecuritePage())),
-              ],
-            ),
+              ),
+              TuileOption(
+                icone: Icons.savings_outlined,
+                titre: 'Ma caution',
+                detail: 'Montants versés et retenues',
+                onTap: () => ouvrir(context, const CautionLocatairePage()),
+              ),
+              TuileOption(
+                icone: Icons.water_drop_outlined,
+                titre: 'Mes charges',
+                detail: 'Eau, électricité… refacturées',
+                onTap: () => ouvrir(context, const ChargesLocatairePage()),
+              ),
+            ],
           ),
-          const SizedBox(height: AppTheme.espaceLg),
-          OutlinedButton.icon(
+          const SizedBox(height: AppTheme.espaceXl),
+          GroupeOptions(
+            titre: 'Préférences',
+            children: [
+              TuileOption(
+                icone: Icons.notifications_outlined,
+                titre: 'Notifications',
+                onTap: () => ouvrir(context, const NotificationsPage()),
+              ),
+              TuileOption(
+                icone: Icons.chat_outlined,
+                titre: 'Relances par WhatsApp',
+                detail: 'Rappels de loyer et confirmations',
+                onTap: () => ouvrir(context, const WhatsappLocatairePage()),
+              ),
+              TuileOption(
+                icone: Icons.lock_outline,
+                titre: 'Sécurité',
+                detail: 'Mot de passe et appareils connectés',
+                onTap: () => ouvrir(context, const SecuritePage()),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.espaceXl),
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+              minimumSize: const Size.fromHeight(48),
+            ),
             onPressed: () async {
               final ok = await confirmer(
                 context,
                 titre: 'Se déconnecter',
-                message:
-                    'Les données enregistrées sur ce téléphone seront effacées.',
+                message: 'Les données enregistrées sur ce téléphone seront effacées.',
                 action: 'Se déconnecter',
               );
               if (ok != null && context.mounted) {

@@ -1,5 +1,6 @@
 import 'package:gestion_immo_mobile/core/utils/format.dart';
 import 'package:gestion_immo_mobile/features/documents/data/models/document_model.dart';
+
 import '../../domain/entities/travaux.dart';
 
 class TravauxModel extends Travaux {
@@ -52,10 +53,14 @@ class TravauxModel extends Travaux {
         for (final phase in ['avant', 'pendant', 'apres'])
           phase: listeJson(photos[phase])
               .where((p) => p['document'] is Map)
-              .map((p) => PhotoTravaux(
+              .map(
+                (p) => PhotoTravaux(
                   id: '${p['id']}',
                   document: DocumentModel.fromJson(
-                      Map<String, dynamic>.from(p['document'] as Map))))
+                    Map<String, dynamic>.from(p['document'] as Map),
+                  ),
+                ),
+              )
               .toList(),
       },
       depenses: listeJson(json['expenses'])
@@ -69,10 +74,13 @@ class TravauxModel extends Travaux {
           )
           .toList(),
       historique: listeJson(json['events'])
-          .map((e) => EvenementTravaux(
+          .map(
+            (e) => EvenementTravaux(
               statut: e['to_status'] as String?,
               date: e['created_at'] as String?,
-              commentaire: e['comment'] as String?))
+              commentaire: e['comment'] as String?,
+            ),
+          )
           .toList(),
     );
   }

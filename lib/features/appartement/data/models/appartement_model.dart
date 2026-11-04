@@ -1,5 +1,6 @@
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import '../../domain/entities/appartement.dart';
 
 class AppartementModel extends Appartement {
@@ -53,8 +54,9 @@ class AppartementModel extends Appartement {
       statut: json['status'] as String?,
       immeubleId: (immeuble?['id'] ?? json['building_id'])?.toString(),
       immeubleNom: immeuble?['name'] as String?,
-      bailCourant:
-          bail is Map ? _occupation(Map<String, dynamic>.from(bail)) : null,
+      bailCourant: bail is Map
+          ? _occupation(Map<String, dynamic>.from(bail))
+          : null,
       locataireCourant: PersonneResume.depuis(json['current_tenant']),
       historique: listeJson(json['tenant_history']).map(_occupation).toList(),
     );
@@ -62,12 +64,13 @@ class AppartementModel extends Appartement {
 }
 
 class RentabiliteAppartementModel extends RentabiliteAppartement {
-  const RentabiliteAppartementModel(
-      {super.loyersEncaisses,
-      super.chargesRecuperees,
-      super.depenses,
-      super.resultatNet,
-      super.impayes});
+  const RentabiliteAppartementModel({
+    super.loyersEncaisses,
+    super.chargesRecuperees,
+    super.depenses,
+    super.resultatNet,
+    super.impayes,
+  });
 
   factory RentabiliteAppartementModel.fromJson(Map<String, dynamic> j) =>
       RentabiliteAppartementModel(
@@ -80,12 +83,16 @@ class RentabiliteAppartementModel extends RentabiliteAppartement {
 }
 
 class EvenementAppartementModel extends EvenementAppartement {
-  const EvenementAppartementModel(
-      {required super.libelle, super.date, super.montant});
+  const EvenementAppartementModel({
+    required super.libelle,
+    super.date,
+    super.montant,
+  });
 
   factory EvenementAppartementModel.fromJson(Map<String, dynamic> j) =>
       EvenementAppartementModel(
-          libelle: '${j['libelle'] ?? ''}',
-          date: j['date'] as String?,
-          montant: nombreOuNull(j['montant']));
+        libelle: '${j['libelle'] ?? ''}',
+        date: j['date'] as String?,
+        montant: nombreOuNull(j['montant']),
+      );
 }

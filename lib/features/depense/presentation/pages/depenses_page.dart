@@ -16,6 +16,7 @@ import 'package:gestion_immo_mobile/features/depense/domain/usecases/ajouter_jus
 import 'package:gestion_immo_mobile/features/depense/domain/usecases/annuler_depense.dart';
 import 'package:gestion_immo_mobile/features/depense/domain/usecases/get_depenses.dart';
 import 'package:gestion_immo_mobile/features/depense/presentation/widgets/formulaires_depense.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Dépenses (§ 20).
 class DepensesPage extends StatefulWidget {
@@ -35,7 +36,10 @@ class _DepensesPageState extends State<DepensesPage> {
       onReussite: () => _liste.currentState?.recharger(),
       child: Builder(
         builder: (context) => Scaffold(
-          appBar: AppBar(title: const Text('Dépenses')),
+          appBar: AppBar(
+            flexibleSpace: const FondMarque(),
+            title: const Text('Dépenses'),
+          ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () async {
               if (await nouvelleDepense(context)) {
@@ -51,7 +55,7 @@ class _DepensesPageState extends State<DepensesPage> {
                 options: [
                   ('', 'Toutes'),
                   for (final o in refs.options('statut_depense'))
-                    (o.code, o.label)
+                    (o.code, o.label),
                 ],
                 valeur: _statut,
                 onChange: (v) => setState(() => _statut = v),
@@ -63,22 +67,24 @@ class _DepensesPageState extends State<DepensesPage> {
                   vide: 'Aucune dépense',
                   iconeVide: Icons.shopping_bag_outlined,
                   charger: (page) => sl<GetDepenses>()(
-                      page: page, statut: _statut.isEmpty ? null : _statut),
-                  element: (context, d) => ListTile(
-                    title: Text(
-                        '${d.categorieNom ?? 'Dépense'} · ${d.immeubleNom ?? ''}'),
-                    subtitle: Text(
-                      [
-                        date(d.dateDepense),
-                        refs.libelle('mode_paiement', d.moyen),
-                        if (d.description != null) d.description!
-                      ].join(' · '),
-                    ),
-                    trailing: d.statut == 'annulee'
+                    page: page,
+                    statut: _statut.isEmpty ? null : _statut,
+                  ),
+                  element: (context, d) => TuileOption(
+                    icone: Icons.shopping_bag_outlined,
+                    titre:
+                        '${d.categorieNom ?? 'Dépense'} · ${d.immeubleNom ?? ''}',
+                    detail: [
+                      date(d.dateDepense),
+                      refs.libelle('mode_paiement', d.moyen),
+                      if (d.description != null) d.description!,
+                    ].join(' · '),
+                    fin: d.statut == 'annulee'
                         ? const Pastille('Annulée')
-                        : Montant(d.montant,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w600)),
+                        : Montant(
+                            d.montant,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
                     onTap: () => _detail(context, d),
                   ),
                 ),
@@ -103,8 +109,10 @@ class _DepensesPageState extends State<DepensesPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(d.categorieNom ?? 'Dépense',
-                  style: Theme.of(ctx).textTheme.titleMedium),
+              Text(
+                d.categorieNom ?? 'Dépense',
+                style: Theme.of(ctx).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               Ligne('Montant', montant(d.montant)),
               Ligne('Immeuble', d.immeubleNom ?? ''),
@@ -119,10 +127,11 @@ class _DepensesPageState extends State<DepensesPage> {
                 Ligne("Motif d'annulation", d.motifAnnulation),
               const SizedBox(height: AppTheme.espaceLg),
               SectionDocuments(
-                  type: 'expense',
-                  ajout: false,
-                  id: d.id,
-                  titre: 'Justificatifs'),
+                type: 'expense',
+                ajout: false,
+                id: d.id,
+                titre: 'Justificatifs',
+              ),
               if (d.valide) ...[
                 const SizedBox(height: AppTheme.espaceSm),
                 OutlinedButton.icon(
@@ -140,8 +149,9 @@ class _DepensesPageState extends State<DepensesPage> {
                     if (photo == null || !ctx.mounted) return;
                     Navigator.pop(ctx);
                     actions.executer(
-                        sl<AjouterJustificatifDepense>()(d.id, photo.path),
-                        succes: 'Justificatif ajouté');
+                      sl<AjouterJustificatifDepense>()(d.id, photo.path),
+                      succes: 'Justificatif ajouté',
+                    );
                   },
                   icon: const Icon(Icons.receipt_long_outlined),
                   label: const Text('Ajouter un justificatif'),
@@ -151,18 +161,21 @@ class _DepensesPageState extends State<DepensesPage> {
                     final motif = await confirmer(
                       ctx,
                       titre: 'Annuler la dépense',
-                      message:
-                          'La dépense et son mouvement de caisse seront annulés.',
+                      message: 'La dépense et son mouvement de caisse seront annulés.',
                       motif: true,
                       danger: true,
                     );
                     if (motif == null || !ctx.mounted) return;
                     Navigator.pop(ctx);
-                    actions.executer(sl<AnnulerDepense>()(d.id, motif),
-                        succes: 'Dépense annulée');
+                    actions.executer(
+                      sl<AnnulerDepense>()(d.id, motif),
+                      succes: 'Dépense annulée',
+                    );
                   },
-                  child: Text('Annuler la dépense',
-                      style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+                  child: Text(
+                    'Annuler la dépense',
+                    style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+                  ),
                 ),
               ],
               if (d.statut == 'annulee')

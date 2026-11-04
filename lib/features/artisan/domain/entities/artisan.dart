@@ -26,14 +26,14 @@ class Artisan extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        nom,
-        metier,
-        telephone,
-        email,
-        notes,
-        actif,
-        interventions,
-        totalPaye
-      ];
+    id,
+    nom,
+    metier,
+    telephone,
+    email,
+    notes,
+    actif,
+    interventions,
+    totalPaye,
+  ];
 }

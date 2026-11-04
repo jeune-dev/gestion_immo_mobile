@@ -27,8 +27,10 @@ class ReferentielsService extends ChangeNotifier {
     final brut = p.getString(_cle);
     if (brut != null) _appliquer(jsonDecode(brut) as Map<String, dynamic>);
     try {
-      final data = await _api
-          .get<Map<String, dynamic>>(ApiEndpoints.referentiels, cache: false);
+      final data = await _api.get<Map<String, dynamic>>(
+        ApiEndpoints.referentiels,
+        cache: false,
+      );
       _appliquer(data);
       await p.setString(_cle, jsonEncode(data));
     } catch (_) {
@@ -38,11 +40,14 @@ class ReferentielsService extends ChangeNotifier {
 
   void _appliquer(Map<String, dynamic> data) {
     final e = (data['enumerations'] as Map?) ?? {};
-    _enumerations = e.map((k, v) => MapEntry(
+    _enumerations = e.map(
+      (k, v) => MapEntry(
         k as String,
         (v as List)
             .map((o) => OptionRef('${(o as Map)['code']}', '${o['label']}'))
-            .toList()));
+            .toList(),
+      ),
+    );
     notifyListeners();
   }
 

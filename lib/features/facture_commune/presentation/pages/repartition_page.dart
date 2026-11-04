@@ -12,6 +12,7 @@ import 'package:gestion_immo_mobile/features/facture_commune/domain/entities/fac
 import 'package:gestion_immo_mobile/features/facture_commune/presentation/bloc/repartition_bloc.dart';
 import 'package:gestion_immo_mobile/features/facture_commune/presentation/bloc/repartition_event.dart';
 import 'package:gestion_immo_mobile/features/facture_commune/presentation/bloc/repartition_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Répartition (§ 17) : choix des appartements et, selon la méthode, consommation
 /// ou montant de chacun ; aperçu calculé par l'API avant validation.
@@ -21,9 +22,9 @@ class RepartitionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-        create: (_) => di.sl<RepartitionBloc>()..add(LoadRepartition(facture)),
-        child: _Repartition(facture: facture),
-      );
+    create: (_) => di.sl<RepartitionBloc>()..add(LoadRepartition(facture)),
+    child: _Repartition(facture: facture),
+  );
 }
 
 class _Repartition extends StatefulWidget {
@@ -105,24 +106,30 @@ class _RepartitionState extends State<_Repartition> {
         final a = state is RepartitionLoaded ? state.apercu : null;
         final enCours = state is RepartitionLoaded && state.enCours;
         return Scaffold(
-          appBar: AppBar(title: const Text('Répartir la facture')),
+          appBar: AppBar(
+            flexibleSpace: const FondMarque(),
+            title: const Text('Répartir la facture'),
+          ),
           body: apparts == null
               ? const Center(child: CircularProgressIndicator())
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
                     Encadre(
-                        '${refs.libelle('methode_repartition', _methode)} · total ${montant(widget.facture.montant)}'),
+                      '${refs.libelle('methode_repartition', _methode)} · total ${montant(widget.facture.montant)}',
+                    ),
                     const SizedBox(height: AppTheme.espaceLg),
                     if (_methode == 'consommation')
                       Padding(
-                        padding:
-                            const EdgeInsets.only(bottom: AppTheme.espaceLg),
+                        padding: const EdgeInsets.only(
+                          bottom: AppTheme.espaceLg,
+                        ),
                         child: TextField(
                           controller: _unite,
                           maxLength: 10,
                           decoration: const InputDecoration(
-                              labelText: 'Unité (kWh, m³…)'),
+                            labelText: 'Unité (kWh, m³…)',
+                          ),
                         ),
                       ),
                     Card(
@@ -138,13 +145,15 @@ class _RepartitionState extends State<_Repartition> {
                                     : _choisis.remove(ap.id);
                               }),
                               title: Text('Appartement ${ap.numero}'),
-                              subtitle: widget.facture.parLigne &&
+                              subtitle:
+                                  widget.facture.parLigne &&
                                       _choisis.contains(ap.id)
                                   ? TextField(
                                       controller: _valeurs[ap.id],
                                       keyboardType:
                                           const TextInputType.numberWithOptions(
-                                              decimal: true),
+                                            decimal: true,
+                                          ),
                                       decoration: InputDecoration(
                                         isDense: true,
                                         labelText: _methode == 'consommation'
@@ -155,7 +164,8 @@ class _RepartitionState extends State<_Repartition> {
                                           bloc.add(InvaliderApercuEvent()),
                                     )
                                   : Text(
-                                      '${refs.libelle('statut_appartement', ap.statut)} · coefficient ${ap.coefficientCharges ?? 1}'),
+                                      '${refs.libelle('statut_appartement', ap.statut)} · coefficient ${ap.coefficientCharges ?? 1}',
+                                    ),
                             ),
                         ],
                       ),
@@ -166,10 +176,16 @@ class _RepartitionState extends State<_Repartition> {
                         onPressed: enCours
                             ? null
                             : () => _choisis.isEmpty
-                                ? afficherErreur(context,
-                                    'Choisissez au moins un appartement')
-                                : bloc.add(PrevisualiserRepartitionEvent(
-                                    factureId, _corps())),
+                                  ? afficherErreur(
+                                      context,
+                                      'Choisissez au moins un appartement',
+                                    )
+                                  : bloc.add(
+                                      PrevisualiserRepartitionEvent(
+                                        factureId,
+                                        _corps(),
+                                      ),
+                                    ),
                         child: const Text('Prévisualiser'),
                       )
                     else ...[
@@ -178,20 +194,25 @@ class _RepartitionState extends State<_Repartition> {
                         padding: false,
                         children: [
                           for (final l in a.lignes)
-                            ListTile(
-                              title: Text(
-                                  'Appartement ${l.logementNumero ?? ''}${l.locataire != null ? ' · ${nomDe(l.locataire)}' : ''}'),
-                              subtitle: Text(l.explication ?? ''),
-                              trailing: Montant(l.montant),
+                            TuileOption(
+                              icone: Icons.door_front_door_outlined,
+                              titre:
+                                  'Appartement ${l.logementNumero ?? ''}${l.locataire != null ? ' · ${nomDe(l.locataire)}' : ''}',
+                              detail: l.explication ?? '',
+                              fin: Montant(l.montant),
                             ),
                           Padding(
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               children: [
-                                Ligne('Refacturé aux locataires',
-                                    montant(a.totalRefacture)),
-                                Ligne('À la charge du propriétaire',
-                                    montant(a.partProprietaire)),
+                                Ligne(
+                                  'Refacturé aux locataires',
+                                  montant(a.totalRefacture),
+                                ),
+                                Ligne(
+                                  'À la charge du propriétaire',
+                                  montant(a.partProprietaire),
+                                ),
                               ],
                             ),
                           ),
@@ -201,8 +222,9 @@ class _RepartitionState extends State<_Repartition> {
                       FilledButton(
                         onPressed: enCours
                             ? null
-                            : () => bloc
-                                .add(RepartirFactureEvent(factureId, _corps())),
+                            : () => bloc.add(
+                                RepartirFactureEvent(factureId, _corps()),
+                              ),
                         child: const Text('Valider la répartition'),
                       ),
                       TextButton(

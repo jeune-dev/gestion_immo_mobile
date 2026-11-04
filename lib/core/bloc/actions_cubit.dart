@@ -15,12 +15,13 @@ class EtatActions extends Equatable {
 
   bool get reussi => failure == null && version > 0;
 
-  const EtatActions(
-      {this.enCours = false,
-      this.failure,
-      this.succes,
-      this.resultat,
-      this.version = 0});
+  const EtatActions({
+    this.enCours = false,
+    this.failure,
+    this.succes,
+    this.resultat,
+    this.version = 0,
+  });
 
   @override
   List<Object?> get props => [enCours, failure, succes, resultat, version];
@@ -31,17 +32,23 @@ class EtatActions extends Equatable {
 class ActionsCubit extends Cubit<EtatActions> {
   ActionsCubit() : super(const EtatActions());
 
-  Future<bool> executer<R>(Future<Either<Failure, R>> action,
-      {String? succes}) async {
+  Future<bool> executer<R>(
+    Future<Either<Failure, R>> action, {
+    String? succes,
+  }) async {
     emit(EtatActions(enCours: true, version: state.version));
     final r = await action;
     // Écran fermé pendant l'action : émettre lèverait une StateError
     if (isClosed) return r.isRight();
     emit(
       r.fold(
-          (f) => EtatActions(failure: f, version: state.version + 1),
-          (v) => EtatActions(
-              succes: succes, resultat: v, version: state.version + 1)),
+        (f) => EtatActions(failure: f, version: state.version + 1),
+        (v) => EtatActions(
+          succes: succes,
+          resultat: v,
+          version: state.version + 1,
+        ),
+      ),
     );
     return r.isRight();
   }

@@ -1,75 +1,103 @@
 import 'package:flutter/material.dart';
 
-/// Couleurs de la charte Gestion Immobilière — palette « Bleu confiance et or ».
-///
-/// Valeurs reprises de `charte-graphique/tokens.json` (source unique) : ne pas
-/// modifier une couleur ici sans la modifier là-bas (et côté back-office).
+/// Palette tirée du logo Kërimmo : dégradé de bleus (nuit → roi → ciel),
+/// vert « immo » (foncé → citron) et blanc. Rouge et orange restent réservés
+/// aux erreurs et aux alertes.
 ///
 /// Dans les écrans, préférer `Theme.of(context).colorScheme` et l'extension
 /// [AppPalette] (`context.palette`) : elles basculent seules en mode sombre.
 abstract final class AppColors {
   // ── Marque ────────────────────────────────────────────────────────────────
-  static const primaire = Color(0xFF1D4E89);
-  static const primaireSurvol = Color(0xFF173F70);
-  static const primaireTeinte = Color(0xFFE8F0FA);
+  /// Bleu nuit du mot « Kër » et des ombres du logo.
+  static const marine = Color(0xFF0B2A5B);
+  static const primaire = Color(0xFF0E56B0);
+  static const primaireSurvol = Color(0xFF0A4590);
+  static const primaireTeinte = Color(0xFFE6F0FC);
   static const surPrimaire = Color(0xFFFFFFFF);
 
-  static const secondaire = Color(0xFFF4A93B);
-  static const secondaireSurvol = Color(0xFFE0952A);
-  static const secondaireTeinte = Color(0xFFFEF3E2);
+  static const secondaire = Color(0xFF2E9E1F);
+  static const secondaireSurvol = Color(0xFF23850F);
+  static const secondaireTeinte = Color(0xFFE8F6E2);
 
-  /// Texte sur l'or : TOUJOURS foncé, jamais blanc (contraste insuffisant).
-  static const surSecondaire = Color(0xFF3A2604);
+  /// Bleu ciel des immeubles du logo (dégradés, accents).
+  static const bleuLogo = Color(0xFF1E88E5);
+
+  /// Vert citron de l'arc du logo (accents sur fond bleu).
+  static const vertLogo = Color(0xFF7CC42A);
+
+  /// Texte sur le vert : blanc, en gras.
+  static const surSecondaire = Color(0xFFFFFFFF);
+
+  // ── Dégradés de marque ────────────────────────────────────────────────────
+  /// En-têtes et barres : bleu nuit → bleu roi → bleu ciel, de gauche à droite
+  /// (horizontal : deux bandeaux de hauteurs différentes se raccordent sans
+  /// couture).
+  static const degradeMarque = LinearGradient(
+    colors: [marine, primaire, bleuLogo],
+    stops: [0, 0.55, 1],
+  );
+
+  /// Variante du mode sombre : mêmes teintes, assourdies.
+  static const degradeMarqueSombre = LinearGradient(
+    colors: [Color(0xFF061730), Color(0xFF0A346E), Color(0xFF0F4E94)],
+    stops: [0, 0.55, 1],
+  );
+
+  /// Vert du logo, foncé → citron (accents, jauges, pastilles).
+  static const degradeVert = LinearGradient(
+    colors: [secondaireSurvol, secondaire, vertLogo],
+    stops: [0, 0.5, 1],
+  );
 
   // ── Neutres (mode clair) ──────────────────────────────────────────────────
-  static const fond = Color(0xFFF7F8FA);
+  static const fond = Color(0xFFF3F7FC);
   static const surface = Color(0xFFFFFFFF);
-  static const surfaceAlt = Color(0xFFF1F3F6);
-  static const bordure = Color(0xFFE2E6EC);
-  static const bordureForte = Color(0xFFCBD2DB);
+  static const surfaceAlt = Color(0xFFEEF3FA);
+  static const bordure = Color(0xFFE2E9F2);
+  static const bordureForte = Color(0xFFC9D4E3);
 
   /// Contour des champs de saisie (contraste ≥ 3:1, repérable par tous).
-  static const bordureChamp = Color(0xFF848E9D);
-  static const texte = Color(0xFF1F2937);
-  static const texteSecondaire = Color(0xFF6B7280);
-  static const texteDiscret = Color(0xFF9CA3AF);
+  static const bordureChamp = Color(0xFF8493A8);
+  static const texte = Color(0xFF0D1B33);
+  static const texteSecondaire = Color(0xFF5A6A82);
+  static const texteDiscret = Color(0xFF94A1B5);
 
   // ── États (mode clair) ────────────────────────────────────────────────────
-  static const succes = Color(0xFF18763A);
-  static const succesFond = Color(0xFFE6F4EA);
+  static const succes = Color(0xFF1F7A12);
+  static const succesFond = Color(0xFFE8F6E2);
   static const avertissement = Color(0xFFB45309);
   static const avertissementFond = Color(0xFFFFF4E5);
   static const danger = Color(0xFFC62828);
   static const dangerFond = Color(0xFFFDECEC);
-  static const info = Color(0xFF1D4E89);
-  static const infoFond = Color(0xFFE8F0FA);
-  static const neutre = Color(0xFF4B5563);
-  static const neutreFond = Color(0xFFF1F3F6);
+  static const info = Color(0xFF0E56B0);
+  static const infoFond = Color(0xFFE6F0FC);
+  static const neutre = Color(0xFF4B5B70);
+  static const neutreFond = Color(0xFFF0F3F8);
 
   // ── Mode sombre ───────────────────────────────────────────────────────────
-  static const sombrePrimaire = Color(0xFF6FA8E8);
-  static const sombrePrimaireSurvol = Color(0xFF8BBBEE);
-  static const sombrePrimaireTeinte = Color(0xFF17304F);
-  static const sombreSurPrimaire = Color(0xFF0B2440);
-  static const sombreSecondaireSurvol = Color(0xFFF7BC63);
-  static const sombreSecondaireTeinte = Color(0xFF3A2A12);
-  static const sombreFond = Color(0xFF0E1621);
-  static const sombreSurface = Color(0xFF16202D);
-  static const sombreSurfaceAlt = Color(0xFF1E2A3A);
-  static const sombreBordure = Color(0xFF2A3747);
-  static const sombreBordureForte = Color(0xFF3A4A5E);
-  static const sombreBordureChamp = Color(0xFF66778C);
-  static const sombreTexte = Color(0xFFE6EAF0);
-  static const sombreTexteSecondaire = Color(0xFFA3AEBD);
-  static const sombreTexteDiscret = Color(0xFF6B7686);
-  static const sombreSucces = Color(0xFF4CC27A);
-  static const sombreSuccesFond = Color(0xFF133222);
+  static const sombrePrimaire = Color(0xFF64A8F2);
+  static const sombrePrimaireSurvol = Color(0xFF8DBFF5);
+  static const sombrePrimaireTeinte = Color(0xFF132E52);
+  static const sombreSurPrimaire = Color(0xFF06203F);
+  static const sombreSecondaireSurvol = Color(0xFF8BD35A);
+  static const sombreSecondaireTeinte = Color(0xFF15301A);
+  static const sombreFond = Color(0xFF07111F);
+  static const sombreSurface = Color(0xFF0F1C2E);
+  static const sombreSurfaceAlt = Color(0xFF16263D);
+  static const sombreBordure = Color(0xFF223450);
+  static const sombreBordureForte = Color(0xFF33496A);
+  static const sombreBordureChamp = Color(0xFF627896);
+  static const sombreTexte = Color(0xFFE7EDF5);
+  static const sombreTexteSecondaire = Color(0xFFA2B0C4);
+  static const sombreTexteDiscret = Color(0xFF6B7A90);
+  static const sombreSucces = Color(0xFF7CC94F);
+  static const sombreSuccesFond = Color(0xFF15301A);
   static const sombreAvertissement = Color(0xFFFB923C);
   static const sombreAvertissementFond = Color(0xFF3A2412);
   static const sombreDanger = Color(0xFFF87171);
   static const sombreDangerFond = Color(0xFF3B1717);
-  static const sombreNeutre = Color(0xFFA3AEBD);
-  static const sombreNeutreFond = Color(0xFF1E2A3A);
+  static const sombreNeutre = Color(0xFFA2B0C4);
+  static const sombreNeutreFond = Color(0xFF16263D);
 }
 
 /// Couleurs hors `ColorScheme` (états, textes secondaires, bordures), en clair
@@ -243,6 +271,14 @@ class AppPalette extends ThemeExtension<AppPalette> {
 }
 
 extension AppPaletteContext on BuildContext {
-  /// Couleurs de la charte pour le mode (clair / sombre) en cours.
-  AppPalette get palette => Theme.of(this).extension<AppPalette>()!;
+  /// Couleurs de la charte pour le mode (clair / sombre) en cours. Sous un
+  /// thème qui ne la déclare pas (tests, `Theme` local), la palette du mode
+  /// en cours sert de repli au lieu d'une exception.
+  AppPalette get palette {
+    final theme = Theme.of(this);
+    return theme.extension<AppPalette>() ??
+        (theme.brightness == Brightness.dark
+            ? AppPalette.sombre
+            : AppPalette.clair);
+  }
 }

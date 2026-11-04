@@ -10,14 +10,18 @@ class Periode {
 
   static Periode moisCourant() {
     final n = DateTime.now().toUtc();
-    return Periode(versApi(DateTime.utc(n.year, n.month, 1)),
-        versApi(DateTime.utc(n.year, n.month + 1, 0)));
+    return Periode(
+      versApi(DateTime.utc(n.year, n.month, 1)),
+      versApi(DateTime.utc(n.year, n.month + 1, 0)),
+    );
   }
 
   static Periode moisPrecedent() {
     final n = DateTime.now().toUtc();
-    return Periode(versApi(DateTime.utc(n.year, n.month - 1, 1)),
-        versApi(DateTime.utc(n.year, n.month, 0)));
+    return Periode(
+      versApi(DateTime.utc(n.year, n.month - 1, 1)),
+      versApi(DateTime.utc(n.year, n.month, 0)),
+    );
   }
 
   static Periode anneeCourante() {
@@ -38,15 +42,18 @@ class Periode {
 class ChoixPeriode extends StatelessWidget {
   final Periode periode;
   final ValueChanged<Periode> onChange;
-  const ChoixPeriode(
-      {super.key, required this.periode, required this.onChange});
+  const ChoixPeriode({
+    super.key,
+    required this.periode,
+    required this.onChange,
+  });
 
   @override
   Widget build(BuildContext context) {
     final options = [
       ('Ce mois', Periode.moisCourant()),
       ('Mois dernier', Periode.moisPrecedent()),
-      ('Cette année', Periode.anneeCourante())
+      ('Cette année', Periode.anneeCourante()),
     ];
     final perso = !options.any((o) => o.$2 == periode);
     return SizedBox(
@@ -59,9 +66,10 @@ class ChoixPeriode extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                  label: Text(l),
-                  selected: periode == p,
-                  onSelected: (_) => onChange(p)),
+                label: Text(l),
+                selected: periode == p,
+                onSelected: (_) => onChange(p),
+              ),
             ),
           ChoiceChip(
             label: Text(perso ? periode.libelle : 'Autre période'),
@@ -72,8 +80,9 @@ class ChoixPeriode extends StatelessWidget {
                 firstDate: DateTime(2020),
                 lastDate: DateTime(2100),
                 initialDateRange: DateTimeRange(
-                    start: DateTime.parse(periode.du),
-                    end: DateTime.parse(periode.au)),
+                  start: DateTime.parse(periode.du),
+                  end: DateTime.parse(periode.au),
+                ),
                 locale: const Locale('fr'),
               );
               if (r != null) {

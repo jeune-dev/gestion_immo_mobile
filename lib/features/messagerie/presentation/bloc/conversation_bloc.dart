@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
+
 import '../../domain/entities/messagerie.dart';
 import '../../domain/usecases/envoyer_message.dart';
 import '../../domain/usecases/envoyer_photo_message.dart';
@@ -55,28 +56,26 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   Future<void> _onEnvoyerMessage(
     EnvoyerMessageEvent event,
     Emitter<ConversationState> emit,
-  ) =>
-      _envoyer(
-        emit,
-        envoyerMessage(
-          event.texte,
-          filId: _filId,
-          locataireId: _espaceLocataire ? null : _locataireId,
-        ),
-      );
+  ) => _envoyer(
+    emit,
+    envoyerMessage(
+      event.texte,
+      filId: _filId,
+      locataireId: _espaceLocataire ? null : _locataireId,
+    ),
+  );
 
   Future<void> _onEnvoyerPhoto(
     EnvoyerPhotoEvent event,
     Emitter<ConversationState> emit,
-  ) =>
-      _envoyer(
-        emit,
-        envoyerPhotoMessage(
-          event.chemin,
-          filId: _filId,
-          locataireId: _espaceLocataire ? null : _locataireId,
-        ),
-      );
+  ) => _envoyer(
+    emit,
+    envoyerPhotoMessage(
+      event.chemin,
+      filId: _filId,
+      locataireId: _espaceLocataire ? null : _locataireId,
+    ),
+  );
 
   Future<void> _envoyer(
     Emitter<ConversationState> emit,
@@ -106,12 +105,9 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     // Pas encore de conversation avec ce locataire : liste vide
     if (filId == null) return emit(ConversationLoaded());
     final result = await getMessages(filId, espaceLocataire: _espaceLocataire);
-    result.fold(
-      (failure) => emit(ConversationError(failure)),
-      (messages) {
-        emit(ConversationLoaded(messages: messages));
-        marquerFilLu(filId, espaceLocataire: _espaceLocataire).ignore();
-      },
-    );
+    result.fold((failure) => emit(ConversationError(failure)), (messages) {
+      emit(ConversationLoaded(messages: messages));
+      marquerFilLu(filId, espaceLocataire: _espaceLocataire).ignore();
+    });
   }
 }

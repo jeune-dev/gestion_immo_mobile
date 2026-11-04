@@ -1,10 +1,14 @@
 import 'package:gestion_immo_mobile/core/constants/api_endpoints.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
+
 import '../../domain/entities/tableau_de_bord.dart';
 import '../models/tableau_de_bord_model.dart';
 
 abstract class DashboardRemoteDataSource {
   Future<TableauDeBord> tableauDeBord();
+
+  /// Revenus et dépenses des [nbMois] derniers mois (1 à 24).
+  Future<SerieFinanciere> serieFinanciere(int nbMois);
 }
 
 class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
@@ -15,11 +19,25 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   Future<TableauDeBord> tableauDeBord() async {
     final (d, g) = await (
       api.get<Map<String, dynamic>>(ApiEndpoints.dashboard),
-      api.get<Map<String, dynamic>>(ApiEndpoints.dashboardGraphiques,
-          query: {'nb_mois': 6}),
+      api.get<Map<String, dynamic>>(
+        ApiEndpoints.dashboardGraphiques,
+        query: {'nb_mois': 6},
+      ),
     ).wait;
     return TableauDeBordModel.depuis(
-        Map<String, dynamic>.from(d['dashboard'] as Map),
-        Map<String, dynamic>.from(g['graphiques'] as Map));
+      Map<String, dynamic>.from(d['dashboard'] as Map),
+      Map<String, dynamic>.from(g['graphiques'] as Map),
+    );
+  }
+
+  @override
+  Future<SerieFinanciere> serieFinanciere(int nbMois) async {
+    final g = await api.get<Map<String, dynamic>>(
+      ApiEndpoints.dashboardGraphiques,
+      query: {'nb_mois': nbMois},
+    );
+    return TableauDeBordModel.serie(
+      Map<String, dynamic>.from(g['graphiques'] as Map),
+    );
   }
 }

@@ -24,12 +24,11 @@ class RepartitionLoaded extends RepartitionState {
     ApercuRepartition? apercu,
     bool effacerApercu = false,
     bool? enCours,
-  }) =>
-      RepartitionLoaded(
-        appartements: appartements,
-        apercu: effacerApercu ? null : apercu ?? this.apercu,
-        enCours: enCours ?? false,
-      );
+  }) => RepartitionLoaded(
+    appartements: appartements,
+    apercu: effacerApercu ? null : apercu ?? this.apercu,
+    enCours: enCours ?? false,
+  );
 }
 
 /// Échec de la lecture des appartements.

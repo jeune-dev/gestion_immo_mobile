@@ -18,6 +18,8 @@ import 'package:gestion_immo_mobile/features/espace_locataire/domain/usecases/ge
 import 'package:gestion_immo_mobile/features/espace_locataire/domain/usecases/signaler_probleme.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/etat_des_lieux_locataire_page.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/incident_locataire_page.dart';
+import 'package:gestion_immo_mobile/core/widgets/logo.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// « Signaler un problème » et « Mes demandes » (§ 22, § 28) ; états des lieux à valider (§ 52).
 class DemandesPage extends StatefulWidget {
@@ -43,12 +45,13 @@ class _DemandesPageState extends State<DemandesPage>
       (logements) => [
         for (final b in logements.where((b) => b.actif))
           OptionRef(
-              b.bailId,
-              [
-                b.immeubleNom,
-                if (b.appartementNumero != null)
-                  'Appartement ${b.appartementNumero}'
-              ].whereType<String>().join(' · ')),
+            b.bailId,
+            [
+              b.immeubleNom,
+              if (b.appartementNumero != null)
+                'Appartement ${b.appartementNumero}',
+            ].whereType<String>().join(' · '),
+          ),
       ],
     );
   }
@@ -60,25 +63,42 @@ class _DemandesPageState extends State<DemandesPage>
       context,
       EcranFormulaire(
         titre: 'Signaler un problème',
-        intro: const Text(
-            'Décrivez le problème : votre propriétaire est prévenu immédiatement. Vous pourrez ajouter des photos ensuite.'),
+        intro: const Encadre(
+          'Votre propriétaire est prévenu immédiatement. Vous pourrez ajouter des photos ensuite.',
+        ),
         champs: [
           if (logements.length > 1)
-            Champ('lease_id', 'Logement concerné',
-                type: TypeChamp.selection,
-                options: logements,
-                obligatoire: true),
-          const Champ('category', 'Type de problème',
+            Champ(
+              'lease_id',
+              'Logement concerné',
               type: TypeChamp.selection,
-              referentiel: 'categorie_incident',
-              obligatoire: true),
-          const Champ('title', 'En quelques mots',
+              options: logements,
               obligatoire: true,
-              minLongueur: 2,
-              maxLongueur: 150,
-              indice: 'Ex. Fuite sous l’évier'),
-          const Champ('description', 'Description',
-              type: TypeChamp.multiligne, obligatoire: true, maxLongueur: 5000),
+            ),
+          const Champ(
+            'category',
+            'Type de problème',
+            type: TypeChamp.selection,
+            referentiel: 'categorie_incident',
+            obligatoire: true,
+            icone: Icons.category_outlined,
+          ),
+          const Champ(
+            'title',
+            'En quelques mots',
+            obligatoire: true,
+            minLongueur: 2,
+            maxLongueur: 150,
+            indice: 'Ex. Fuite sous l’évier',
+            icone: Icons.short_text,
+          ),
+          const Champ(
+            'description',
+            'Description',
+            type: TypeChamp.multiligne,
+            obligatoire: true,
+            maxLongueur: 5000,
+          ),
         ],
         libelleEnvoi: 'Envoyer',
         envoyer: (c) async =>
@@ -87,8 +107,10 @@ class _DemandesPageState extends State<DemandesPage>
     );
     if (r == null || !mounted) return;
     if (r == 'differe') {
-      return afficherSucces(context,
-          'Hors ligne : votre signalement sera envoyé au retour du réseau.');
+      return afficherSucces(
+        context,
+        'Hors ligne : votre signalement sera envoyé au retour du réseau.',
+      );
     }
     afficherSucces(context, 'Signalement envoyé');
     _incidents.currentState?.recharger();
@@ -101,6 +123,10 @@ class _DemandesPageState extends State<DemandesPage>
     final fg = Theme.of(context).appBarTheme.foregroundColor;
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        leading: LogoBarre.siRacine(context),
+        leadingWidth: LogoBarre.largeur,
+
         title: const Text('Mes demandes'),
         bottom: TabBar(
           controller: _onglets,
@@ -108,7 +134,7 @@ class _DemandesPageState extends State<DemandesPage>
           unselectedLabelColor: fg?.withValues(alpha: 0.7),
           indicatorColor: Theme.of(context).colorScheme.secondary,
           tabs: const [
-            Tab(text: 'Problèmes signalés'),
+            Tab(text: 'Problèmes'),
             Tab(text: 'États des lieux'),
           ],
         ),
@@ -116,8 +142,8 @@ class _DemandesPageState extends State<DemandesPage>
       floatingActionButton: _onglets.index == 0
           ? FloatingActionButton.extended(
               onPressed: _signaler,
-              icon: const Icon(Icons.report_problem_outlined),
-              label: const Text('Signaler un problème'),
+              icon: const Icon(Icons.add),
+              label: const Text('Signaler'),
             )
           : null,
       body: TabBarView(
@@ -128,12 +154,12 @@ class _DemandesPageState extends State<DemandesPage>
             vide: 'Aucun problème signalé',
             iconeVide: Icons.build_circle_outlined,
             charger: (page) => sl<GetMesIncidents>()(page: page),
-            element: (context, i) => ListTile(
-              title: Text(i.titre ?? ''),
-              subtitle: Text(
-                  '${i.reference ?? ''} · ${refs.libelle('categorie_incident', i.categorie)} · ${ilYa(i.creeLe)}'),
-              trailing:
-                  Statut(FamilleStatut.incident, 'statut_incident', i.statut),
+            element: (context, i) => TuileOption(
+              icone: Icons.build_outlined,
+              titre: i.titre ?? 'Problème',
+              detail:
+                  '${refs.libelle('categorie_incident', i.categorie)} · ${ilYa(i.creeLe)}',
+              fin: Statut(FamilleStatut.incident, 'statut_incident', i.statut),
               onTap: () async {
                 await ouvrir(context, IncidentLocatairePage(id: i.id));
                 _incidents.currentState?.recharger();
@@ -144,16 +170,17 @@ class _DemandesPageState extends State<DemandesPage>
             vide: 'Aucun état des lieux',
             iconeVide: Icons.fact_check_outlined,
             charger: (page) => sl<GetMesEtatsDesLieux>()(page: page),
-            element: (context, e) => ListTile(
-              title: Text(
-                  '${refs.libelle('type_etat_des_lieux', e.type)} · version ${e.version ?? ''}'),
-              subtitle: Text(
-                e.statut == 'soumis'
-                    ? 'À accepter ou contester avant le ${dateHeure(e.limiteReponse)}'
-                    : date(e.realiseLe ?? e.soumisLe),
+            element: (context, e) => TuileOption(
+              icone: Icons.fact_check_outlined,
+              titre: refs.libelle('type_etat_des_lieux', e.type),
+              detail: e.statut == 'soumis'
+                  ? 'À accepter ou contester avant le ${dateHeure(e.limiteReponse)}'
+                  : 'Version ${e.version ?? 1} · ${date(e.realiseLe ?? e.soumisLe)}',
+              fin: Statut(
+                FamilleStatut.etatDesLieux,
+                'statut_etat_des_lieux',
+                e.statut,
               ),
-              trailing: Statut(FamilleStatut.etatDesLieux,
-                  'statut_etat_des_lieux', e.statut),
               onTap: () => ouvrir(context, EtatDesLieuxLocatairePage(id: e.id)),
             ),
           ),

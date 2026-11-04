@@ -1,10 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/get_immeuble.dart';
 import '../../domain/usecases/supprimer_immeuble.dart';
+
 import 'package:dartz/dartz.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/features/appartement/domain/usecases/get_appartements.dart';
+
 import 'immeuble_event.dart';
 import 'immeuble_state.dart';
 
@@ -54,7 +57,8 @@ class ImmeubleBloc extends Bloc<ImmeubleEvent, ImmeubleState> {
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(String id, Emitter<ImmeubleState> emit) async {
-    final dejaAffichee = state is! ImmeubleInitial &&
+    final dejaAffichee =
+        state is! ImmeubleInitial &&
         state is! ImmeubleLoading &&
         state is! ImmeubleError;
     final result = await _lireFiche(id);
@@ -72,8 +76,6 @@ class ImmeubleBloc extends Bloc<ImmeubleEvent, ImmeubleState> {
       getImmeuble(id),
       getAppartements(page: 1, immeubleId: id, limite: 100),
     );
-    return result.map(
-      (v) => (immeuble: v.$1, appartements: v.$2.items),
-    );
+    return result.map((v) => (immeuble: v.$1, appartements: v.$2.items));
   }
 }

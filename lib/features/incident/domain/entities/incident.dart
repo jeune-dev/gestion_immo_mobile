@@ -10,8 +10,12 @@ class TravauxLies extends Equatable {
   final String? titre;
   final String? statut;
 
-  const TravauxLies(
-      {required this.id, this.reference, this.titre, this.statut});
+  const TravauxLies({
+    required this.id,
+    this.reference,
+    this.titre,
+    this.statut,
+  });
 
   @override
   List<Object?> get props => [id, reference, titre, statut];
@@ -65,40 +69,40 @@ class Incident extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        reference,
-        titre,
-        description,
-        categorie,
-        statut,
-        immeubleNom,
-        appartementNumero,
-        locataire,
-        creeLe,
-        analyseLe,
-        resoluLe,
-        note,
-        motifRejet,
-        travaux,
-        pieces,
-      ];
+    id,
+    reference,
+    titre,
+    description,
+    categorie,
+    statut,
+    immeubleNom,
+    appartementNumero,
+    locataire,
+    creeLe,
+    analyseLe,
+    resoluLe,
+    note,
+    motifRejet,
+    travaux,
+    pieces,
+  ];
 }
 
 Incident copieAvecPieces(Incident i, List<DocumentApp> pieces) => Incident(
-      id: i.id,
-      reference: i.reference,
-      titre: i.titre,
-      description: i.description,
-      categorie: i.categorie,
-      statut: i.statut,
-      immeubleNom: i.immeubleNom,
-      appartementNumero: i.appartementNumero,
-      locataire: i.locataire,
-      creeLe: i.creeLe,
-      analyseLe: i.analyseLe,
-      resoluLe: i.resoluLe,
-      note: i.note,
-      motifRejet: i.motifRejet,
-      travaux: i.travaux,
-      pieces: pieces,
-    );
+  id: i.id,
+  reference: i.reference,
+  titre: i.titre,
+  description: i.description,
+  categorie: i.categorie,
+  statut: i.statut,
+  immeubleNom: i.immeubleNom,
+  appartementNumero: i.appartementNumero,
+  locataire: i.locataire,
+  creeLe: i.creeLe,
+  analyseLe: i.analyseLe,
+  resoluLe: i.resoluLe,
+  note: i.note,
+  motifRejet: i.motifRejet,
+  travaux: i.travaux,
+  pieces: pieces,
+);

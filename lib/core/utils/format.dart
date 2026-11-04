@@ -7,10 +7,10 @@ const _insecable = ' ';
 String nombre(num? v) {
   if (v == null) return '—';
   final n = v.round();
-  final s = n
-      .abs()
-      .toString()
-      .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => _insecable);
+  final s = n.abs().toString().replaceAllMapped(
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => _insecable,
+  );
   return n < 0 ? '-$s' : s;
 }
 
@@ -83,8 +83,8 @@ String nomComplet(Map? p) {
 String initiales(Map? p) {
   final a = (p?['first_name'] as String?) ?? '';
   final b = (p?['last_name'] as String?) ?? '';
-  final s =
-      '${a.isNotEmpty ? a[0] : ''}${b.isNotEmpty ? b[0] : ''}'.toUpperCase();
+  final s = '${a.isNotEmpty ? a[0] : ''}${b.isNotEmpty ? b[0] : ''}'
+      .toUpperCase();
   return s.isEmpty ? '?' : s;
 }
 

@@ -20,14 +20,12 @@ class ListeArtisans extends StatelessWidget {
       vide: 'Aucun artisan',
       iconeVide: Icons.engineering_outlined,
       charger: (page) => sl<GetArtisans>()(page: page),
-      element: (context, a) => ListTile(
-        leading: CircleAvatar(
-            child: Icon(a.actif ? Icons.engineering_outlined : Icons.block,
-                size: 20)),
-        title: Text(a.nom),
-        subtitle: Text(
-            '${refs.libelle('metier_artisan', a.metier)} · ${a.interventions} intervention(s) · ${montant(a.totalPaye)}'),
-        trailing: a.actif
+      element: (context, a) => TuileOption(
+        icone: a.actif ? Icons.engineering_outlined : Icons.block,
+        titre: a.nom,
+        detail:
+            '${refs.libelle('metier_artisan', a.metier)} · ${a.interventions} intervention(s) · ${montant(a.totalPaye)}',
+        fin: a.actif
             ? const Icon(Icons.chevron_right)
             : const Pastille('Inactif'),
         onTap: () async {

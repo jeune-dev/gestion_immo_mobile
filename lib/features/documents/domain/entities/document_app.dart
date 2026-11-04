@@ -11,6 +11,7 @@ class DocumentApp extends Equatable {
   final String? creeLe;
 
   bool get estImage => (mimeType ?? '').startsWith('image/');
+  bool get estVideo => (mimeType ?? '').startsWith('video/');
 
   const DocumentApp({
     required this.id,
@@ -24,14 +25,14 @@ class DocumentApp extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        categorie,
-        mimeType,
-        nomOrigine,
-        aMiniature,
-        visibleLocataire,
-        creeLe
-      ];
+    id,
+    categorie,
+    mimeType,
+    nomOrigine,
+    aMiniature,
+    visibleLocataire,
+    creeLe,
+  ];
 }
 
 /// Lien temporaire de partage (`GET /documents/:id/lien`).

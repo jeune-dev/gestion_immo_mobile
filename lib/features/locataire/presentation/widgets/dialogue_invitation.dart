@@ -16,8 +16,9 @@ Future<void> afficherInvitation(
 ) {
   final code = invitation.code;
   final expiration = date(invitation.expireLe);
-  final texte = 'Bonjour ${locataire.prenom}, téléchargez l’application '
-      'Gestion Immo et activez votre compte locataire avec le code $code et '
+  final texte =
+      'Bonjour ${locataire.prenom}, téléchargez l’application '
+      'Kërimmo et activez votre compte locataire avec le code $code et '
       'votre numéro ${locataire.telephone ?? ''}. Code valable jusqu’au '
       '$expiration.';
 

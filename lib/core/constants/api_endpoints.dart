@@ -12,6 +12,7 @@ class ApiEndpoints {
   static const refresh = '/auth/refresh';
   static const deconnexion = '/auth/deconnexion';
   static const motDePasseOublie = '/auth/mot-de-passe-oublie';
+  static const verifierCodeReinitialisation = '/auth/verifier-code';
   static const reinitialiserMotDePasse = '/auth/reinitialiser-mot-de-passe';
   static const activationLocataire = '/auth/locataire/activation';
 
@@ -188,6 +189,7 @@ class ApiEndpoints {
   static String locContesterRetenue(String transactionId) =>
       '/locataire/caution/retenues/$transactionId/contester';
   static const locCharges = '/locataire/charges';
+  static String locCharge(String id) => '/locataire/charges/$id';
   static const locIncidents = '/locataire/incidents';
   static String locIncident(String id) => '/locataire/incidents/$id';
   static String locIncidentPieces(String id) =>

@@ -339,7 +339,14 @@ async function pdf(client, libelle, chemin) {
   const qL = await etape('GET /locataire/quittances', () => l.appel('GET', '/locataire/quittances', { query: { page: 1, tri: '-issued_at' } }));
   if (qL.data?.items?.[0]) await pdf(l, 'GET /locataire/quittances/:id/pdf', `/locataire/quittances/${qL.data.items[0].id}/pdf`);
   await etape('GET /locataire/caution', () => l.appel('GET', '/locataire/caution'));
-  await etape('GET /locataire/charges', () => l.appel('GET', '/locataire/charges', { query: { page: 1, tri: '-due_date' } }));
+  const chL = await etape('GET /locataire/charges', () => l.appel('GET', '/locataire/charges', { query: { page: 1, tri: '-due_date' } }));
+  verifier('charges locataire : au moins une quote-part', (chL.data?.items || []).length > 0, j(chL.data?.pagination));
+  if (chL.data?.items?.[0]) {
+    const chD = await etape('GET /locataire/charges/:id', () => l.appel('GET', `/locataire/charges/${chL.data.items[0].id}`));
+    const calc = chD.data?.charge?.calculation;
+    verifier('détail charge : calculation (méthode, total facture, logements, explication)',
+      Boolean(calc?.method && Number.isInteger(calc?.invoice_total) && Number.isInteger(calc?.apartments_count) && 'explanation' in calc), j(calc));
+  }
   const moy = await etape('GET /locataire/paiements/moyens', () => l.appel('GET', '/locataire/paiements/moyens', { query: { lease_id: bail1 } }));
   verifier('moyens locataire : methods.integre[] et methods.preuve[]', Array.isArray(moy.data?.methods?.integre) && Array.isArray(moy.data?.methods?.preuve), j(moy.data));
   const aPayer = (echL.data?.items || []).find((e) => ['a_payer', 'en_retard', 'partiellement_paye'].includes(e.status));

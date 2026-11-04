@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
+
 import '../entities/echeance.dart';
 
 abstract class EcheanceRepository {

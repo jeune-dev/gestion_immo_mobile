@@ -10,11 +10,16 @@ class Utilisateur extends Equatable {
   final String nom;
   final String? email;
   final String? telephone;
+  final String? photoUrl;
   final String langue;
   final bool doitChangerMotDePasse;
   final bool doubleAuthentificationActive;
 
   String get nomComplet => '$prenom $nom'.trim();
+
+  String get initiales =>
+      '${prenom.isNotEmpty ? prenom[0] : ''}${nom.isNotEmpty ? nom[0] : ''}'
+          .toUpperCase();
 
   const Utilisateur({
     required this.id,
@@ -23,6 +28,7 @@ class Utilisateur extends Equatable {
     required this.nom,
     this.email,
     this.telephone,
+    this.photoUrl,
     this.langue = 'fr',
     this.doitChangerMotDePasse = false,
     this.doubleAuthentificationActive = false,
@@ -30,14 +36,15 @@ class Utilisateur extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        role,
-        prenom,
-        nom,
-        email,
-        telephone,
-        langue,
-        doitChangerMotDePasse,
-        doubleAuthentificationActive
-      ];
+    id,
+    role,
+    prenom,
+    nom,
+    email,
+    telephone,
+    photoUrl,
+    langue,
+    doitChangerMotDePasse,
+    doubleAuthentificationActive,
+  ];
 }

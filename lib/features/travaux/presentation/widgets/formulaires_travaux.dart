@@ -48,45 +48,77 @@ Future<Travaux?> formulaireTravaux(BuildContext context, {Travaux? existant}) {
             },
       champs: [
         if (existant == null)
-          Champ('building_id', 'Immeuble',
-              type: TypeChamp.entite,
-              obligatoire: true,
-              entite: sourceImmeubles()),
-        const Champ('title', 'Intitulé',
+          Champ(
+            'building_id',
+            'Immeuble',
+            type: TypeChamp.entite,
             obligatoire: true,
-            minLongueur: 2,
-            maxLongueur: 150,
-            indice: 'Ex. Fuite salle de bain'),
-        const Champ('category', 'Catégorie',
-            type: TypeChamp.selection,
-            referentiel: 'categorie_travaux',
-            obligatoire: true),
-        const Champ('priority', 'Priorité',
-            type: TypeChamp.selection,
-            referentiel: 'priorite',
-            obligatoire: true),
-        Champ('apartment_id', 'Appartement (facultatif)',
-            type: TypeChamp.entite, entite: sourceAppartements()),
-        const Champ('description', 'Description',
-            type: TypeChamp.multiligne, maxLongueur: 5000),
-        const Champ('estimated_amount', 'Coût estimé',
-            type: TypeChamp.montant, nullable: true),
-        Champ('contractor_id', 'Artisan',
-            type: TypeChamp.entite, entite: sourceArtisans()),
+            entite: sourceImmeubles(),
+          ),
+        const Champ(
+          'title',
+          'Intitulé',
+          obligatoire: true,
+          minLongueur: 2,
+          maxLongueur: 150,
+          indice: 'Ex. Fuite salle de bain',
+        ),
+        const Champ(
+          'category',
+          'Catégorie',
+          type: TypeChamp.selection,
+          referentiel: 'categorie_travaux',
+          obligatoire: true,
+        ),
+        const Champ(
+          'priority',
+          'Priorité',
+          type: TypeChamp.selection,
+          referentiel: 'priorite',
+          obligatoire: true,
+        ),
+        Champ(
+          'apartment_id',
+          'Appartement (facultatif)',
+          type: TypeChamp.entite,
+          entite: sourceAppartements(),
+        ),
+        const Champ(
+          'description',
+          'Description',
+          type: TypeChamp.multiligne,
+          maxLongueur: 5000,
+        ),
+        const Champ(
+          'estimated_amount',
+          'Coût estimé',
+          type: TypeChamp.montant,
+          nullable: true,
+        ),
+        Champ(
+          'contractor_id',
+          'Artisan',
+          type: TypeChamp.entite,
+          entite: sourceArtisans(),
+        ),
         const Champ('scheduled_for', 'Date prévue', type: TypeChamp.date),
       ],
       messageSucces: existant == null ? 'Travaux créés' : 'Travaux modifiés',
-      envoyer: (c) async => (existant == null
-              ? await sl<CreerTravaux>()(c, cle: cle)
-              : await sl<ModifierTravaux>()(existant.id, c))
-          .ouLeve(),
+      envoyer: (c) async =>
+          (existant == null
+                  ? await sl<CreerTravaux>()(c, cle: cle)
+                  : await sl<ModifierTravaux>()(existant.id, c))
+              .ouLeve(),
     ),
   );
 }
 
 /// Passage au statut [statut] (artisan exigé à l'assignation, coût réel à la fin, motif à l'annulation).
 Future<bool> changerStatutTravaux(
-    BuildContext context, Travaux t, String statut) async {
+  BuildContext context,
+  Travaux t,
+  String statut,
+) async {
   final r = await EcranFormulaire.ouvrir<Object>(
     context,
     EcranFormulaire(
@@ -98,14 +130,18 @@ Future<bool> changerStatutTravaux(
       },
       intro: statut == 'termine'
           ? const Text(
-              'Un chantier terminé est figé : son historique et ses photos ne pourront plus être modifiés.')
+              'Un chantier terminé est figé : son historique et ses photos ne pourront plus être modifiés.',
+            )
           : null,
       champs: [
         if (statut == 'artisan_assigne')
-          Champ('contractor_id', 'Artisan',
-              type: TypeChamp.entite,
-              obligatoire: true,
-              entite: sourceArtisans()),
+          Champ(
+            'contractor_id',
+            'Artisan',
+            type: TypeChamp.entite,
+            obligatoire: true,
+            entite: sourceArtisans(),
+          ),
         if (statut == 'termine')
           const Champ('actual_amount', 'Coût réel', type: TypeChamp.montant),
         Champ(
@@ -119,8 +155,10 @@ Future<bool> changerStatutTravaux(
       libelleEnvoi: 'Confirmer',
       messageSucces: 'Statut mis à jour',
       envoyer: (c) async {
-        (await sl<ChangerStatutTravaux>()(t.id, {...c, 'status': statut}))
-            .ouLeve();
+        (await sl<ChangerStatutTravaux>()(t.id, {
+          ...c,
+          'status': statut,
+        })).ouLeve();
         return true;
       },
     ),

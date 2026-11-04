@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
+
 import '../../domain/entities/locataire.dart';
 import '../../domain/repositories/locataire_repository.dart';
 import '../datasources/locataire_remote_datasource.dart';
@@ -46,8 +47,10 @@ class LocataireRepositoryImpl implements LocataireRepository {
     required String cle,
   }) async {
     try {
-      final (locataire, invitation) =
-          await remoteDataSource.creerLocataire(data, cle: cle);
+      final (locataire, invitation) = await remoteDataSource.creerLocataire(
+        data,
+        cle: cle,
+      );
       return Right(LocataireCree(locataire: locataire, invitation: invitation));
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));

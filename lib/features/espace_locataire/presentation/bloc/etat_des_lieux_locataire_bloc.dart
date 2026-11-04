@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/accepter_etat_des_lieux.dart';
 import '../../domain/usecases/contester_etat_des_lieux.dart';
 import '../../domain/usecases/get_mon_etat_des_lieux.dart';
@@ -23,7 +24,8 @@ class EtatDesLieuxLocataireBloc
     on<AccepterEtatDesLieuxEvent>(_onAccepterEtatDesLieux);
     on<ContesterEtatDesLieuxEvent>(_onContesterEtatDesLieux);
     on<ResetEtatDesLieuxLocataireState>(
-        (_, emit) => emit(EtatDesLieuxLocataireInitial()));
+      (_, emit) => emit(EtatDesLieuxLocataireInitial()),
+    );
   }
 
   Future<void> _onLoadEtatDesLieuxLocataire(
@@ -72,8 +74,11 @@ class EtatDesLieuxLocataireBloc
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(
-      String id, Emitter<EtatDesLieuxLocataireState> emit) async {
-    final dejaAffichee = state is! EtatDesLieuxLocataireInitial &&
+    String id,
+    Emitter<EtatDesLieuxLocataireState> emit,
+  ) async {
+    final dejaAffichee =
+        state is! EtatDesLieuxLocataireInitial &&
         state is! EtatDesLieuxLocataireLoading &&
         state is! EtatDesLieuxLocataireError;
     final result = await getMonEtatDesLieux(id);

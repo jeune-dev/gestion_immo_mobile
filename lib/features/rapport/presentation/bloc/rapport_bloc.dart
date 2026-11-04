@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
+
 import 'rapport_event.dart';
 import 'rapport_state.dart';
 

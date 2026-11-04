@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
@@ -20,6 +21,7 @@ import 'package:gestion_immo_mobile/features/paiement/domain/usecases/rembourser
 import 'package:gestion_immo_mobile/features/paiement/presentation/bloc/paiement_bloc.dart';
 import 'package:gestion_immo_mobile/features/paiement/presentation/bloc/paiement_event.dart';
 import 'package:gestion_immo_mobile/features/paiement/presentation/bloc/paiement_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Paiements de loyer reçus (§ 12), avec remboursement.
 class PaiementsPage extends StatefulWidget {
@@ -36,13 +38,16 @@ class _PaiementsPageState extends State<PaiementsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Paiements reçus')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('Paiements reçus'),
+      ),
       body: Column(
         children: [
           Filtres(
             options: [
               ('', 'Tous'),
-              for (final o in refs.options('mode_paiement')) (o.code, o.label)
+              for (final o in refs.options('mode_paiement')) (o.code, o.label),
             ],
             valeur: _methode,
             onChange: (v) => setState(() => _methode = v),
@@ -53,18 +58,22 @@ class _PaiementsPageState extends State<PaiementsPage> {
               cle: _methode,
               vide: 'Aucun paiement',
               charger: (page) => di.sl<GetPaiements>()(
-                  page: page, moyen: _methode.isEmpty ? null : _methode),
-              element: (context, p) => ListTile(
-                title:
-                    Text('${nomDe(p.locataire)} · ${p.logementNumero ?? ''}'),
-                subtitle: Text(
-                    '${date(p.payeLe)} · ${refs.libelle('mode_paiement', p.moyen)} · ${p.reference ?? ''}'),
-                trailing: Column(
+                page: page,
+                moyen: _methode.isEmpty ? null : _methode,
+              ),
+              element: (context, p) => TuileOption(
+                icone: Icons.check_circle_outline,
+                titre: '${nomDe(p.locataire)} · ${p.logementNumero ?? ''}',
+                detail:
+                    '${date(p.payeLe)} · ${refs.libelle('mode_paiement', p.moyen)} · ${p.reference ?? ''}',
+                fin: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Montant(p.montant,
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Montant(
+                      p.montant,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     Statut(FamilleStatut.paiement, 'statut_paiement', p.statut),
                   ],
                 ),
@@ -92,15 +101,23 @@ class PaiementDetailPage extends StatelessWidget {
       EcranFormulaire(
         titre: 'Rembourser le paiement',
         intro: const Text(
-            'Les échéances concernées sont rouvertes et les quittances annulées.'),
+          'Les échéances concernées sont rouvertes et les quittances annulées.',
+        ),
         champs: const [
-          Champ('reason', 'Motif',
-              type: TypeChamp.multiligne,
-              obligatoire: true,
-              minLongueur: 3,
-              maxLongueur: 500),
-          Champ('method', 'Moyen du remboursement',
-              type: TypeChamp.selection, referentiel: 'mode_paiement'),
+          Champ(
+            'reason',
+            'Motif',
+            type: TypeChamp.multiligne,
+            obligatoire: true,
+            minLongueur: 3,
+            maxLongueur: 500,
+          ),
+          Champ(
+            'method',
+            'Moyen du remboursement',
+            type: TypeChamp.selection,
+            referentiel: 'mode_paiement',
+          ),
         ],
         libelleEnvoi: 'Rembourser',
         messageSucces: 'Paiement remboursé',
@@ -147,34 +164,37 @@ class PaiementDetailPage extends StatelessWidget {
     final p = fiche.paiement;
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
         title: Text(p.reference ?? 'Paiement'),
         actions: [
           if (p.statut == 'valide')
-            MenuActions(actions: [
-              (
-                'Rembourser',
-                () => _rembourser(
-                    context, () => bloc.add(RafraichirPaiement(id))),
-                true
-              )
-            ]),
+            MenuActions(
+              actions: [
+                (
+                  'Rembourser',
+                  () => _rembourser(
+                    context,
+                    () => bloc.add(RafraichirPaiement(id)),
+                  ),
+                  true,
+                ),
+              ],
+            ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          EnTeteFiche(
+            surtitre: refs.libelle('mode_paiement', p.moyen),
+            titre: montant(p.montant),
+            detail: nomDe(p.locataire),
+            statut: Statut(FamilleStatut.paiement, 'statut_paiement', p.statut),
+          ),
+          const SizedBox(height: AppTheme.espaceLg),
           Section(
+            titre: 'Informations',
             children: [
-              Ligne(
-                'Montant',
-                null,
-                widget: Montant(p.montant,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 18)),
-              ),
-              Ligne('Statut', null,
-                  widget: Statut(
-                      FamilleStatut.paiement, 'statut_paiement', p.statut)),
               Ligne('Locataire', nomDe(p.locataire)),
               Ligne('Moyen', refs.libelle('mode_paiement', p.moyen)),
               Ligne('Payé le', date(p.payeLe)),
@@ -182,16 +202,19 @@ class PaiementDetailPage extends StatelessWidget {
               if (p.commentaire != null) Ligne('Commentaire', p.commentaire),
               if (p.rembourseLe != null) ...[
                 Ligne('Remboursé le', dateHeure(p.rembourseLe)),
-                Ligne('Motif', p.motifRemboursement ?? '')
+                Ligne('Motif', p.motifRemboursement ?? ''),
               ],
             ],
           ),
           if (p.imputations.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Section(titre: 'Imputation', children: [
-              for (final a in p.imputations)
-                Ligne(a.libelle, montant(a.montant))
-            ]),
+            Section(
+              titre: 'Imputation',
+              children: [
+                for (final a in p.imputations)
+                  Ligne(a.libelle, montant(a.montant)),
+              ],
+            ),
           ],
           const SizedBox(height: 16),
           Section(
@@ -200,8 +223,8 @@ class PaiementDetailPage extends StatelessWidget {
             children: [
               if (fiche.quittances.isEmpty)
                 const ListTile(
-                    title:
-                        Text('Aucune quittance (échéance pas encore soldée)')),
+                  title: Text('Aucune quittance (échéance pas encore soldée)'),
+                ),
               for (final q in fiche.quittances) TuileQuittance(q: q),
             ],
           ),

@@ -18,6 +18,7 @@ import 'package:gestion_immo_mobile/features/travaux/presentation/bloc/travaux_b
 import 'package:gestion_immo_mobile/features/travaux/presentation/bloc/travaux_event.dart';
 import 'package:gestion_immo_mobile/features/travaux/presentation/bloc/travaux_state.dart';
 import 'package:gestion_immo_mobile/features/travaux/presentation/widgets/formulaires_travaux.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Fiche d'un chantier (§ 18–19) : statut historisé, photos avant / pendant / après, dépenses.
 class TravauxDetailPage extends StatelessWidget {
@@ -77,6 +78,7 @@ class TravauxDetailPage extends StatelessWidget {
     final suivants = transitionsTravaux[t.statut] ?? const <String>[];
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
         title: Text(t.reference ?? 'Travaux'),
         actions: [
           if (!t.ferme)
@@ -94,8 +96,11 @@ class TravauxDetailPage extends StatelessWidget {
                 (
                   'Ajouter une dépense',
                   () async {
-                    if (await nouvelleDepense(context,
-                        travauxId: t.id, travauxTitre: t.titre)) {
+                    if (await nouvelleDepense(
+                      context,
+                      travauxId: t.id,
+                      travauxTitre: t.titre,
+                    )) {
                       bloc.add(RafraichirTravaux(id));
                     }
                   },
@@ -110,25 +115,32 @@ class TravauxDetailPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            EnTeteFiche(
+              surtitre: refs.libelle('categorie_travaux', t.categorie),
+              titre: t.titre ?? 'Travaux',
+              detail: t.immeubleNom,
+              statut: Statut(FamilleStatut.travaux, 'statut_travaux', t.statut),
+            ),
+            const SizedBox(height: AppTheme.espaceLg),
             Section(
+              titre: 'Informations',
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                        child: Text(t.titre ?? '',
-                            style: Theme.of(context).textTheme.titleMedium)),
-                    Statut(FamilleStatut.travaux, 'statut_travaux', t.statut),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.espaceSm),
                 Ligne('Immeuble', t.immeubleNom ?? ''),
                 if (t.appartementNumero != null)
                   Ligne('Appartement', t.appartementNumero),
-                Ligne('Catégorie',
-                    refs.libelle('categorie_travaux', t.categorie)),
-                Ligne('Priorité', null,
-                    widget:
-                        Statut(FamilleStatut.priorite, 'priorite', t.priorite)),
+                Ligne(
+                  'Catégorie',
+                  refs.libelle('categorie_travaux', t.categorie),
+                ),
+                Ligne(
+                  'Priorité',
+                  null,
+                  widget: Statut(
+                    FamilleStatut.priorite,
+                    'priorite',
+                    t.priorite,
+                  ),
+                ),
                 Ligne('Artisan', t.artisanNom),
                 Ligne('Prévu le', date(t.prevuLe)),
                 Ligne('Coût estimé', montant(t.coutEstime)),
@@ -138,8 +150,9 @@ class TravauxDetailPage extends StatelessWidget {
                   Ligne('Incident', t.incidentReference),
                 if (t.description != null)
                   Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(t.description!)),
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(t.description!),
+                  ),
               ],
             ),
             if (suivants.isNotEmpty) ...[
@@ -164,8 +177,9 @@ class TravauxDetailPage extends StatelessWidget {
                                 bloc.add(RafraichirTravaux(id));
                               }
                             },
-                            child:
-                                Text('→ ${refs.libelle('statut_travaux', s)}'),
+                            child: Text(
+                              '→ ${refs.libelle('statut_travaux', s)}',
+                            ),
                           ),
                 ],
               ),
@@ -180,13 +194,16 @@ class TravauxDetailPage extends StatelessWidget {
                     : IconButton(
                         tooltip: 'Ajouter',
                         icon: const Icon(Icons.add_a_photo_outlined),
-                        onPressed: () => photo(phase)),
+                        onPressed: () => photo(phase),
+                      ),
                 children: [
                   if ((t.photos[phase] ?? const []).isEmpty)
-                    Text('Aucune photo',
-                        style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant))
+                    Text(
+                      'Aucune photo',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    )
                   else
                     SizedBox(
                       height: 96,
@@ -202,12 +219,14 @@ class TravauxDetailPage extends StatelessWidget {
                                 // Chantier terminé ou annulé : les photos sont des preuves, l'API refuse leur retrait
                                 onLongPress: t.ferme ? null : () => retirer(p),
                                 child: ClipRRect(
-                                  borderRadius:
-                                      BorderRadius.circular(AppTheme.rayon),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.rayon,
+                                  ),
                                   child: SizedBox(
-                                      width: 96,
-                                      height: 96,
-                                      child: ImageApi(p.document.id)),
+                                    width: 96,
+                                    height: 96,
+                                    child: ImageApi(p.document.id),
+                                  ),
                                 ),
                               ),
                             ),
@@ -226,10 +245,12 @@ class TravauxDetailPage extends StatelessWidget {
                 if (t.depenses.isEmpty)
                   const ListTile(title: Text('Aucune dépense liée')),
                 for (final d in t.depenses)
-                  ListTile(
-                      title: Text(d.libelle),
-                      subtitle: Text(date(d.date)),
-                      trailing: Montant(d.montant)),
+                  TuileOption(
+                    icone: Icons.receipt_long_outlined,
+                    titre: d.libelle,
+                    detail: date(d.date),
+                    fin: Montant(d.montant),
+                  ),
               ],
             ),
             const SizedBox(height: AppTheme.espaceLg),
@@ -238,12 +259,12 @@ class TravauxDetailPage extends StatelessWidget {
               padding: false,
               children: [
                 for (final e in t.historique.reversed)
-                  ListTile(
-                    dense: true,
-                    leading: const Icon(Icons.history, size: 20),
-                    title: Text(refs.libelle('statut_travaux', e.statut)),
-                    subtitle: Text(
-                        '${dateHeure(e.date)}${e.commentaire != null ? ' · ${e.commentaire}' : ''}'),
+                  TuileOption(
+                    icone: Icons.receipt_long_outlined,
+                    titre: refs.libelle('statut_travaux', e.statut),
+                    detail:
+                        '${dateHeure(e.date)}${e.commentaire != null ? ' · ${e.commentaire}' : ''}',
+                    fin: const SizedBox.shrink(),
                   ),
               ],
             ),

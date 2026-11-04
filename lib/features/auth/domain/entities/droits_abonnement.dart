@@ -8,8 +8,12 @@ class DroitsAbonnement extends Equatable {
   final String? plan;
   final String? finPeriode;
 
-  const DroitsAbonnement(
-      {required this.actif, this.statut, this.plan, this.finPeriode});
+  const DroitsAbonnement({
+    required this.actif,
+    this.statut,
+    this.plan,
+    this.finPeriode,
+  });
 
   @override
   List<Object?> get props => [actif, statut, plan, finPeriode];

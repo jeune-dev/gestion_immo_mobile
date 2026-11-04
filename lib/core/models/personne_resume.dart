@@ -7,11 +7,12 @@ class PersonneResume extends Equatable {
   final String nom;
   final String? telephone;
 
-  const PersonneResume(
-      {required this.id,
-      required this.prenom,
-      required this.nom,
-      this.telephone});
+  const PersonneResume({
+    required this.id,
+    required this.prenom,
+    required this.nom,
+    this.telephone,
+  });
 
   String get nomComplet {
     final s = '$prenom $nom'.trim();

@@ -23,13 +23,17 @@ class ListeEtatsDesLieux extends StatelessWidget {
       vide: 'Aucun état des lieux',
       iconeVide: Icons.fact_check_outlined,
       charger: (page) => sl<GetEtatsDesLieux>()(page: page),
-      element: (context, e) => ListTile(
-        title: Text(
-            '${refs.libelle('type_etat_des_lieux', e.type)} · ${nomDe(e.locataire)}'),
-        subtitle: Text(
-            'Appartement ${e.appartementNumero ?? ''} · v${e.version ?? ''} · ${date(e.date)}'),
-        trailing: Statut(
-            FamilleStatut.etatDesLieux, 'statut_etat_des_lieux', e.statut),
+      element: (context, e) => TuileOption(
+        icone: Icons.fact_check_outlined,
+        titre:
+            '${refs.libelle('type_etat_des_lieux', e.type)} · ${nomDe(e.locataire)}',
+        detail:
+            'Appartement ${e.appartementNumero ?? ''} · v${e.version ?? ''} · ${date(e.date)}',
+        fin: Statut(
+          FamilleStatut.etatDesLieux,
+          'statut_etat_des_lieux',
+          e.statut,
+        ),
         onTap: () async {
           await ouvrir(context, EtatDesLieuxDetailPage(id: e.id));
           cle.currentState?.recharger();

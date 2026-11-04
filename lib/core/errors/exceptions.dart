@@ -18,12 +18,14 @@ class ApiException implements Exception {
   /// 402 : abonnement échu ou suspendu, l'espace est en lecture seule.
   bool get abonnementRequis => status == 402 || code == 'ABONNEMENT_REQUIS';
 
-  const ApiException(this.message,
-      {this.status,
-      this.code,
-      this.details = const [],
-      this.requestId,
-      this.retryAfter});
+  const ApiException(
+    this.message, {
+    this.status,
+    this.code,
+    this.details = const [],
+    this.requestId,
+    this.retryAfter,
+  });
 
   /// Message complet, avec les champs refusés quand l'API les détaille.
   String get messageComplet {

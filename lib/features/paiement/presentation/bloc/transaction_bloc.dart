@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/get_transaction.dart';
 import '../../domain/usecases/rejeter_transaction.dart';
 import '../../domain/usecases/valider_transaction.dart';
@@ -68,7 +69,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(String id, Emitter<TransactionState> emit) async {
-    final dejaAffichee = state is! TransactionInitial &&
+    final dejaAffichee =
+        state is! TransactionInitial &&
         state is! TransactionLoading &&
         state is! TransactionError;
     final result = await getTransaction(id);

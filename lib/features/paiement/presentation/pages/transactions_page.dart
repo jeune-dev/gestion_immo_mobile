@@ -17,6 +17,7 @@ import 'package:gestion_immo_mobile/features/paiement/domain/usecases/get_transa
 import 'package:gestion_immo_mobile/features/paiement/presentation/bloc/transaction_bloc.dart';
 import 'package:gestion_immo_mobile/features/paiement/presentation/bloc/transaction_event.dart';
 import 'package:gestion_immo_mobile/features/paiement/presentation/bloc/transaction_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Paiements en ligne (Wave, Orange Money via PayDunya) et paiements directs
 /// déclarés avec une preuve, que le propriétaire valide ou rejette (§ 12, § 51).
@@ -35,14 +36,17 @@ class _TransactionsPageState extends State<TransactionsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Paiements en ligne')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('Paiements en ligne'),
+      ),
       body: Column(
         children: [
           Filtres(
             options: [
               ('', 'Toutes'),
               for (final o in refs.options('statut_transaction'))
-                (o.code, o.label)
+                (o.code, o.label),
             ],
             valeur: _statut,
             onChange: (v) => setState(() => _statut = v),
@@ -53,22 +57,29 @@ class _TransactionsPageState extends State<TransactionsPage> {
               cle: _statut,
               vide: 'Aucune transaction',
               charger: (page) => di.sl<GetTransactions>()(
-                  page: page,
-                  statut: _statut.isEmpty ? null : _statut,
-                  preuvesSeulement: widget.aValider),
-              element: (context, t) => ListTile(
-                title: Text(
-                    '${nomDe(t.locataire)} · ${refs.libelle('portefeuille', t.portefeuille)}'),
-                subtitle: Text(
-                    '${refs.libelle('mode_transaction', t.mode)} · ${t.libelleEcheance ?? ''} · ${dateHeure(t.creeLe)}'),
-                trailing: Column(
+                page: page,
+                statut: _statut.isEmpty ? null : _statut,
+                preuvesSeulement: widget.aValider,
+              ),
+              element: (context, t) => TuileOption(
+                icone: Icons.phone_iphone,
+                titre:
+                    '${nomDe(t.locataire)} · ${refs.libelle('portefeuille', t.portefeuille)}',
+                detail:
+                    '${refs.libelle('mode_transaction', t.mode)} · ${t.libelleEcheance ?? ''} · ${dateHeure(t.creeLe)}',
+                fin: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Montant(t.montant,
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Statut(FamilleStatut.transaction, 'statut_transaction',
-                        t.statut),
+                    Montant(
+                      t.montant,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Statut(
+                      FamilleStatut.transaction,
+                      'statut_transaction',
+                      t.statut,
+                    ),
                   ],
                 ),
                 onTap: () async {
@@ -125,26 +136,33 @@ class TransactionDetailPage extends StatelessWidget {
     final bloc = context.read<TransactionBloc>();
     final preuve = t.preuve;
     return Scaffold(
-      appBar: AppBar(title: Text(t.reference ?? 'Transaction')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: Text(t.reference ?? 'Transaction'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          EnTeteFiche(
+            surtitre: refs.libelle('portefeuille', t.portefeuille),
+            titre: montant(t.montant),
+            detail: nomDe(t.locataire),
+            statut: Statut(
+              FamilleStatut.transaction,
+              'statut_transaction',
+              t.statut,
+            ),
+          ),
+          const SizedBox(height: AppTheme.espaceLg),
           Section(
+            titre: 'Informations',
             children: [
-              Ligne(
-                'Montant',
-                null,
-                widget: Montant(t.montant,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w600)),
-              ),
-              Ligne('Statut', null,
-                  widget: Statut(FamilleStatut.transaction,
-                      'statut_transaction', t.statut)),
               Ligne('Locataire', nomDe(t.locataire)),
               Ligne('Échéance', t.libelleEcheance ?? '—'),
               Ligne(
-                  'Portefeuille', refs.libelle('portefeuille', t.portefeuille)),
+                'Portefeuille',
+                refs.libelle('portefeuille', t.portefeuille),
+              ),
               Ligne('Mode', refs.libelle('mode_transaction', t.mode)),
               Ligne('N° de transaction', t.numeroTransaction),
               Ligne('Téléphone payeur', t.telephonePayeur),
@@ -166,11 +184,17 @@ class TransactionDetailPage extends StatelessWidget {
                     child: SizedBox(
                       height: 220,
                       child: preuve.estImage
-                          ? ImageApi(preuve.id,
-                              taille: 'originale', fit: BoxFit.contain)
+                          ? ImageApi(
+                              preuve.id,
+                              taille: 'originale',
+                              fit: BoxFit.contain,
+                            )
                           : const Center(
-                              child: Icon(Icons.picture_as_pdf_outlined,
-                                  size: 48)),
+                              child: Icon(
+                                Icons.picture_as_pdf_outlined,
+                                size: 48,
+                              ),
+                            ),
                     ),
                   ),
                 ),
@@ -180,7 +204,8 @@ class TransactionDetailPage extends StatelessWidget {
           if (t.aValider) ...[
             const SizedBox(height: AppTheme.espaceLg),
             const Encadre(
-                'Vérifiez sur votre relevé Wave / Orange Money que ce montant a bien été reçu avant de valider.'),
+              'Vérifiez sur votre relevé Wave / Orange Money que ce montant a bien été reçu avant de valider.',
+            ),
             const SizedBox(height: AppTheme.espaceLg),
             FilledButton.icon(
               onPressed: () async {

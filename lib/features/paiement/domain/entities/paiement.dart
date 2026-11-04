@@ -46,19 +46,19 @@ class Paiement extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        reference,
-        montant,
-        statut,
-        locataire,
-        logementNumero,
-        moyen,
-        payeLe,
-        commentaire,
-        rembourseLe,
-        motifRemboursement,
-        imputations,
-      ];
+    id,
+    reference,
+    montant,
+    statut,
+    locataire,
+    logementNumero,
+    moyen,
+    payeLe,
+    commentaire,
+    rembourseLe,
+    motifRemboursement,
+    imputations,
+  ];
 }
 
 /// Fiche d'un paiement et ses quittances.
@@ -117,22 +117,22 @@ class TransactionPaiement extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        reference,
-        montant,
-        statut,
-        mode,
-        portefeuille,
-        locataire,
-        libelleEcheance,
-        numeroTransaction,
-        telephonePayeur,
-        creeLe,
-        motifRejet,
-        referencePaiement,
-        preuve,
-        checkoutUrl,
-      ];
+    id,
+    reference,
+    montant,
+    statut,
+    mode,
+    portefeuille,
+    locataire,
+    libelleEcheance,
+    numeroTransaction,
+    telephonePayeur,
+    creeLe,
+    motifRejet,
+    referencePaiement,
+    preuve,
+    checkoutUrl,
+  ];
 }
 
 /// Entrée de la file « À rapprocher » (§ 51.3) : paiement non identifié ou excédent.
@@ -161,16 +161,16 @@ class Rapprochement extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        type,
-        statut,
-        montant,
-        bailId,
-        locataire,
-        telephonePayeur,
-        referenceRecue,
-        creeLe
-      ];
+    id,
+    type,
+    statut,
+    montant,
+    bailId,
+    locataire,
+    telephonePayeur,
+    referenceRecue,
+    creeLe,
+  ];
 }
 
 /// Moyen de paiement configuré par le propriétaire (§ 51) ; les clés ne sont jamais renvoyées.
@@ -181,14 +181,20 @@ class MoyenPaiement extends Equatable {
   final String? numeroReception;
   final bool actif;
 
-  const MoyenPaiement(
-      {required this.fournisseur,
-      required this.mode,
-      this.libelle,
-      this.numeroReception,
-      this.actif = false});
+  const MoyenPaiement({
+    required this.fournisseur,
+    required this.mode,
+    this.libelle,
+    this.numeroReception,
+    this.actif = false,
+  });
 
   @override
-  List<Object?> get props =>
-      [fournisseur, mode, libelle, numeroReception, actif];
+  List<Object?> get props => [
+    fournisseur,
+    mode,
+    libelle,
+    numeroReception,
+    actif,
+  ];
 }

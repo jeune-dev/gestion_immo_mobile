@@ -20,6 +20,7 @@ import 'package:gestion_immo_mobile/features/etat_des_lieux/domain/usecases/tele
 import 'package:gestion_immo_mobile/features/etat_des_lieux/presentation/bloc/etat_des_lieux_bloc.dart';
 import 'package:gestion_immo_mobile/features/etat_des_lieux/presentation/bloc/etat_des_lieux_event.dart';
 import 'package:gestion_immo_mobile/features/etat_des_lieux/presentation/bloc/etat_des_lieux_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 class EtatDesLieuxDetailPage extends StatelessWidget {
   final String id;
@@ -81,15 +82,33 @@ class _DetailState extends State<_Detail> {
           'general_observations': e.observations,
         },
         champs: const [
-          Champ('water_meter', 'Compteur d’eau (m³)',
-              type: TypeChamp.decimal, nullable: true),
-          Champ('electricity_meter', 'Compteur d’électricité (kWh)',
-              type: TypeChamp.decimal, nullable: true),
-          Champ('keys_count', 'Nombre de clés remises',
-              type: TypeChamp.entier, min: 0, max: 100, nullable: true),
+          Champ(
+            'water_meter',
+            'Compteur d’eau (m³)',
+            type: TypeChamp.decimal,
+            nullable: true,
+          ),
+          Champ(
+            'electricity_meter',
+            'Compteur d’électricité (kWh)',
+            type: TypeChamp.decimal,
+            nullable: true,
+          ),
+          Champ(
+            'keys_count',
+            'Nombre de clés remises',
+            type: TypeChamp.entier,
+            min: 0,
+            max: 100,
+            nullable: true,
+          ),
           Champ('keys_details', 'Détail des clés', maxLongueur: 2000),
-          Champ('general_observations', 'Observations générales',
-              type: TypeChamp.multiligne, maxLongueur: 5000),
+          Champ(
+            'general_observations',
+            'Observations générales',
+            type: TypeChamp.multiligne,
+            maxLongueur: 5000,
+          ),
         ],
         messageSucces: 'Enregistré',
         envoyer: (c) async {
@@ -102,8 +121,13 @@ class _DetailState extends State<_Detail> {
   }
 
   /// Saisie d'un texte court (nom de pièce, précision d'élément). Renvoie null si annulé.
-  Future<String?> _saisirTexte(String titre, String libelle,
-      {String? initial, int maxLongueur = 80, bool obligatoire = true}) {
+  Future<String?> _saisirTexte(
+    String titre,
+    String libelle, {
+    String? initial,
+    int maxLongueur = 80,
+    bool obligatoire = true,
+  }) {
     final ctrl = TextEditingController(text: initial ?? '');
     return showDialog<String>(
       context: context,
@@ -117,8 +141,9 @@ class _DetailState extends State<_Detail> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Annuler')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler'),
+          ),
           FilledButton(
             onPressed: () {
               final v = ctrl.text.trim();
@@ -140,8 +165,11 @@ class _DetailState extends State<_Detail> {
   }
 
   Future<void> _renommerPiece(PieceEdl piece) async {
-    final nom =
-        await _saisirTexte('Renommer la pièce', 'Nom', initial: piece.nom);
+    final nom = await _saisirTexte(
+      'Renommer la pièce',
+      'Nom',
+      initial: piece.nom,
+    );
     if (nom != null && nom != piece.nom) {
       _bloc.add(RenommerPieceEvent(widget.id, piece.id, nom));
     }
@@ -168,12 +196,19 @@ class _DetailState extends State<_Detail> {
       EcranFormulaire(
         titre: 'Nouvel élément · ${piece.nom}',
         champs: const [
-          Champ('element', 'Élément',
-              type: TypeChamp.selection,
-              referentiel: 'element_etat_des_lieux',
-              obligatoire: true),
-          Champ('label', 'Précision (facultatif)',
-              maxLongueur: 120, indice: 'Ex. Placard mural'),
+          Champ(
+            'element',
+            'Élément',
+            type: TypeChamp.selection,
+            referentiel: 'element_etat_des_lieux',
+            obligatoire: true,
+          ),
+          Champ(
+            'label',
+            'Précision (facultatif)',
+            maxLongueur: 120,
+            indice: 'Ex. Placard mural',
+          ),
         ],
         envoyer: (c) async => c,
       ),
@@ -182,19 +217,31 @@ class _DetailState extends State<_Detail> {
   }
 
   Future<void> _preciserElement(ElementEdl el) async {
-    final precision = await _saisirTexte("Précision de l'élément", 'Précision',
-        initial: el.precision, maxLongueur: 120, obligatoire: false);
+    final precision = await _saisirTexte(
+      "Précision de l'élément",
+      'Précision',
+      initial: el.precision,
+      maxLongueur: 120,
+      obligatoire: false,
+    );
     if (precision == null || precision == (el.precision ?? '')) return;
-    _bloc.add(PreciserElementEvent(
-        widget.id, el.id, precision.isEmpty ? null : precision));
+    _bloc.add(
+      PreciserElementEvent(
+        widget.id,
+        el.id,
+        precision.isEmpty ? null : precision,
+      ),
+    );
   }
 
   Future<void> _supprimerElement(ElementEdl el) async {
-    final ok = await confirmer(context,
-        titre: "Supprimer l'élément",
-        message: 'Ses photos seront supprimées.',
-        action: 'Supprimer',
-        danger: true);
+    final ok = await confirmer(
+      context,
+      titre: "Supprimer l'élément",
+      message: 'Ses photos seront supprimées.',
+      action: 'Supprimer',
+      danger: true,
+    );
     if (ok == null) return;
     _saisies.remove(el.id);
     _bloc.add(SupprimerElementEvent(widget.id, el.id));
@@ -208,11 +255,13 @@ class _DetailState extends State<_Detail> {
   }
 
   Future<void> _supprimerPhoto(PhotoEdl photo) async {
-    final ok = await confirmer(context,
-        titre: 'Retirer la photo',
-        message: 'La photo sera supprimée.',
-        action: 'Retirer',
-        danger: true);
+    final ok = await confirmer(
+      context,
+      titre: 'Retirer la photo',
+      message: 'La photo sera supprimée.',
+      action: 'Retirer',
+      danger: true,
+    );
     if (ok != null) _bloc.add(SupprimerPhotoEvent(widget.id, photo.id));
   }
 
@@ -290,16 +339,19 @@ class _DetailState extends State<_Detail> {
       },
       child: Scaffold(
         appBar: AppBar(
+          flexibleSpace: const FondMarque(),
           title: Text(
-              '${refs.libelle('type_etat_des_lieux', e.type)} · v${e.version ?? ''}'),
+            '${refs.libelle('type_etat_des_lieux', e.type)} · v${e.version ?? ''}',
+          ),
           actions: [
             IconButton(
               tooltip: 'PDF',
               icon: const Icon(Icons.picture_as_pdf_outlined),
               onPressed: () => ouvrirPdf(
-                  context,
-                  () => di.sl<TelechargerPdfEdl>()(widget.id),
-                  'etat-des-lieux-${e.type}-v${e.version}.pdf'),
+                context,
+                () => di.sl<TelechargerPdfEdl>()(widget.id),
+                'etat-des-lieux-${e.type}-v${e.version}.pdf',
+              ),
             ),
             MenuActions(
               actions: [
@@ -310,7 +362,7 @@ class _DetailState extends State<_Detail> {
                   (
                     'Corriger (nouvelle version)',
                     () => _bloc.add(CorrigerEtatDesLieuxEvent(widget.id)),
-                    false
+                    false,
                   ),
                 if (e.modifiable)
                   (
@@ -341,18 +393,22 @@ class _DetailState extends State<_Detail> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed:
-                              _envoi || _saisies.isEmpty ? null : _enregistrer,
-                          child: Text(_saisies.isEmpty
-                              ? 'Enregistré'
-                              : 'Enregistrer (${_saisies.length})'),
+                          onPressed: _envoi || _saisies.isEmpty
+                              ? null
+                              : _enregistrer,
+                          child: Text(
+                            _saisies.isEmpty
+                                ? 'Enregistré'
+                                : 'Enregistrer (${_saisies.length})',
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: FilledButton(
-                            onPressed: _envoi ? null : _soumettre,
-                            child: const Text('Soumettre')),
+                          onPressed: _envoi ? null : _soumettre,
+                          child: const Text('Soumettre'),
+                        ),
                       ),
                     ],
                   ),
@@ -374,35 +430,46 @@ class _DetailState extends State<_Detail> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
-                      Statut(FamilleStatut.etatDesLieux,
-                          'statut_etat_des_lieux', statut),
+                      Statut(
+                        FamilleStatut.etatDesLieux,
+                        'statut_etat_des_lieux',
+                        statut,
+                      ),
                     ],
                   ),
                   const SizedBox(height: AppTheme.espaceSm),
                   Ligne('Date', date(e.realiseLe)),
-                  Ligne('Compteur d’eau',
-                      e.compteurEau == null ? null : '${e.compteurEau} m³'),
                   Ligne(
-                      'Compteur d’électricité',
-                      e.compteurElectricite == null
-                          ? null
-                          : '${e.compteurElectricite} kWh'),
+                    'Compteur d’eau',
+                    e.compteurEau == null ? null : '${e.compteurEau} m³',
+                  ),
                   Ligne(
-                      'Clés',
-                      e.nbCles == null
-                          ? null
-                          : '${e.nbCles}${e.detailCles != null ? ' · ${e.detailCles}' : ''}'),
+                    'Compteur d’électricité',
+                    e.compteurElectricite == null
+                        ? null
+                        : '${e.compteurElectricite} kWh',
+                  ),
+                  Ligne(
+                    'Clés',
+                    e.nbCles == null
+                        ? null
+                        : '${e.nbCles}${e.detailCles != null ? ' · ${e.detailCles}' : ''}',
+                  ),
                   if (e.observations != null)
                     Ligne('Observations', e.observations),
                   if (e.limiteReponse != null && statut == 'soumis')
-                    Ligne('Réponse attendue avant le',
-                        dateHeure(e.limiteReponse)),
+                    Ligne(
+                      'Réponse attendue avant le',
+                      dateHeure(e.limiteReponse),
+                    ),
                   if (e.accepteTacitement)
                     const Ligne('Acceptation', 'Tacite (délai écoulé)'),
                   if (e.contestation != null) ...[
                     const SizedBox(height: 8),
-                    Encadre('Contestation du locataire : « ${e.contestation} »',
-                        ton: TonStatut.danger),
+                    Encadre(
+                      'Contestation du locataire : « ${e.contestation} »',
+                      ton: TonStatut.danger,
+                    ),
                   ],
                 ],
               ),
@@ -423,13 +490,17 @@ class _DetailState extends State<_Detail> {
                             },
                             itemBuilder: (_) => const [
                               PopupMenuItem(
-                                  value: 'element',
-                                  child: Text('Ajouter un élément')),
+                                value: 'element',
+                                child: Text('Ajouter un élément'),
+                              ),
                               PopupMenuItem(
-                                  value: 'renommer', child: Text('Renommer')),
+                                value: 'renommer',
+                                child: Text('Renommer'),
+                              ),
                               PopupMenuItem(
-                                  value: 'supprimer',
-                                  child: Text('Supprimer la pièce')),
+                                value: 'supprimer',
+                                child: Text('Supprimer la pièce'),
+                              ),
                             ],
                           )
                         : null,
@@ -441,7 +512,8 @@ class _DetailState extends State<_Detail> {
                           modifiable: e.modifiable,
                           saisie: _saisies[el.id],
                           onChange: (etat, commentaire) => setState(
-                              () => _saisies[el.id] = (etat, commentaire)),
+                            () => _saisies[el.id] = (etat, commentaire),
+                          ),
                           onPhoto: () => _photo(el),
                           onPreciser: () => _preciserElement(el),
                           onSupprimer: () => _supprimerElement(el),
@@ -498,14 +570,17 @@ class _Element extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(libelle,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                child: Text(
+                  libelle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
               if (modifiable)
                 IconButton(
-                    tooltip: 'Photo',
-                    onPressed: onPhoto,
-                    icon: const Icon(Icons.add_a_photo_outlined, size: 20)),
+                  tooltip: 'Photo',
+                  onPressed: onPhoto,
+                  icon: const Icon(Icons.add_a_photo_outlined, size: 20),
+                ),
               if (modifiable)
                 PopupMenuButton<String>(
                   tooltip: "Actions sur l'élément",
@@ -514,9 +589,13 @@ class _Element extends StatelessWidget {
                       a == 'libelle' ? onPreciser() : onSupprimer(),
                   itemBuilder: (_) => const [
                     PopupMenuItem(
-                        value: 'libelle', child: Text('Modifier la précision')),
+                      value: 'libelle',
+                      child: Text('Modifier la précision'),
+                    ),
                     PopupMenuItem(
-                        value: 'supprimer', child: Text("Supprimer l'élément")),
+                      value: 'supprimer',
+                      child: Text("Supprimer l'élément"),
+                    ),
                   ],
                 ),
             ],
@@ -527,33 +606,42 @@ class _Element extends StatelessWidget {
               children: [
                 for (final o in etats)
                   ChoiceChip(
-                      label: Text(o.label),
-                      selected: etat == o.code,
-                      onSelected: (_) => onChange(o.code, commentaire)),
+                    label: Text(o.label),
+                    selected: etat == o.code,
+                    onSelected: (_) => onChange(o.code, commentaire),
+                  ),
               ],
             )
           else
-            Text(etat == null
-                ? 'Non renseigné'
-                : refs.libelle('etat_element', etat)),
+            Text(
+              etat == null
+                  ? 'Non renseigné'
+                  : refs.libelle('etat_element', etat),
+            ),
           if (modifiable)
             TextFormField(
               initialValue: commentaire,
-              decoration:
-                  const InputDecoration(isDense: true, hintText: 'Commentaire'),
+              decoration: const InputDecoration(
+                isDense: true,
+                hintText: 'Commentaire',
+              ),
               maxLength: 2000,
-              buildCounter: (_,
-                      {required currentLength,
-                      required isFocused,
-                      maxLength}) =>
-                  null,
+              buildCounter: (
+                _, {
+                required currentLength,
+                required isFocused,
+                maxLength,
+              }) => null,
               onChanged: (v) =>
                   onChange(etat ?? 'bon', v.trim().isEmpty ? null : v.trim()),
             )
           else if (commentaire != null)
-            Text(commentaire,
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            Text(
+              commentaire,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           if (element.photos.isNotEmpty) ...[
             const SizedBox(height: 8),
             SizedBox(
@@ -566,15 +654,18 @@ class _Element extends StatelessWidget {
                       padding: const EdgeInsets.only(right: 6),
                       child: InkWell(
                         onTap: () => afficherImage(context, ph.document.id),
-                        onLongPress:
-                            modifiable ? () => onSupprimerPhoto(ph) : null,
+                        onLongPress: modifiable
+                            ? () => onSupprimerPhoto(ph)
+                            : null,
                         child: ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.rayonPetit),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.rayonPetit,
+                          ),
                           child: SizedBox(
-                              width: 64,
-                              height: 64,
-                              child: ImageApi(ph.document.id)),
+                            width: 64,
+                            height: 64,
+                            child: ImageApi(ph.document.id),
+                          ),
                         ),
                       ),
                     ),
@@ -585,10 +676,13 @@ class _Element extends StatelessWidget {
           if (modifiable && etat == null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('À renseigner',
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              child: Text(
+                'À renseigner',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
         ],
       ),

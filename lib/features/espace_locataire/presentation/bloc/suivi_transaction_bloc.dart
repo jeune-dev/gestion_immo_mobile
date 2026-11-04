@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/get_ma_transaction.dart';
 import 'suivi_transaction_event.dart';
 import 'suivi_transaction_state.dart';
@@ -16,7 +17,7 @@ class SuiviTransactionBloc
   int _essais = 0;
 
   SuiviTransactionBloc({required this.getMaTransaction})
-      : super(SuiviTransactionInitial()) {
+    : super(SuiviTransactionInitial()) {
     on<DemarrerSuiviTransaction>(_onDemarrerSuivi);
     on<VerifierTransactionEvent>(_onVerifierTransaction);
   }
@@ -27,7 +28,8 @@ class SuiviTransactionBloc
   ) async {
     _minuterie?.cancel();
     _minuterie = Timer.periodic(const Duration(seconds: 5), (_) {
-      final termine = state is SuiviTransactionLoaded &&
+      final termine =
+          state is SuiviTransactionLoaded &&
           (state as SuiviTransactionLoaded).transaction.termine;
       if (++_essais > 60 || termine) {
         _minuterie?.cancel();
@@ -45,10 +47,7 @@ class SuiviTransactionBloc
     await _verifier(event.id, emit);
   }
 
-  Future<void> _verifier(
-    String id,
-    Emitter<SuiviTransactionState> emit,
-  ) async {
+  Future<void> _verifier(String id, Emitter<SuiviTransactionState> emit) async {
     final result = await getMaTransaction(id);
     // Erreur : nouvelle tentative au prochain passage
     result.fold(

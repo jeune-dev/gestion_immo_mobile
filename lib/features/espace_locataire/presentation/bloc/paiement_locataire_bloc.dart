@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/get_moyens_paiement_locataire.dart';
 import '../../domain/usecases/payer_en_ligne.dart';
 import 'paiement_locataire_event.dart';
@@ -19,7 +20,8 @@ class PaiementLocataireBloc
     on<RafraichirPaiementLocataire>(_onRafraichirPaiementLocataire);
     on<PayerEnLigneEvent>(_onPayerEnLigne);
     on<ResetPaiementLocataireState>(
-        (_, emit) => emit(PaiementLocataireInitial()));
+      (_, emit) => emit(PaiementLocataireInitial()),
+    );
   }
 
   Future<void> _onLoadPaiementLocataire(
@@ -66,8 +68,11 @@ class PaiementLocataireBloc
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(
-      String bailId, Emitter<PaiementLocataireState> emit) async {
-    final dejaAffichee = state is! PaiementLocataireInitial &&
+    String bailId,
+    Emitter<PaiementLocataireState> emit,
+  ) async {
+    final dejaAffichee =
+        state is! PaiementLocataireInitial &&
         state is! PaiementLocataireLoading &&
         state is! PaiementLocataireError;
     final result = await getMoyensPaiementLocataire(bailId);
@@ -77,8 +82,9 @@ class PaiementLocataireBloc
             ? PaiementLocataireActionError(failure)
             : PaiementLocataireError(failure),
       ),
-      (moyens) => emit(PaiementLocataireLoaded(moyens,
-          paiementEnCours: _paiementEnCours)),
+      (moyens) => emit(
+        PaiementLocataireLoaded(moyens, paiementEnCours: _paiementEnCours),
+      ),
     );
   }
 }

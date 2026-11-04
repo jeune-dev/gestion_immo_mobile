@@ -11,6 +11,7 @@ import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/bloc/account_bloc.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/bloc/account_event.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/bloc/account_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 class SessionsPage extends StatelessWidget {
   const SessionsPage({super.key});
@@ -43,33 +44,51 @@ class SessionsPage extends StatelessWidget {
           final sessions = state.sessions;
           final bloc = context.read<AccountBloc>();
           return Scaffold(
-            appBar: AppBar(title: const Text('Appareils connectés')),
+            appBar: AppBar(
+              flexibleSpace: const FondMarque(),
+              title: const Text('Appareils connectés'),
+            ),
             body: RefreshIndicator(
               onRefresh: () async => bloc.add(LoadSessions()),
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
                   Card(
+                    clipBehavior: Clip.antiAlias,
                     child: Column(
                       children: [
                         for (final session in sessions)
                           ListTile(
-                            leading: Icon(session.plateforme == 'web'
-                                ? Icons.computer
-                                : Icons.smartphone),
-                            title: Text(session.nomAppareil ??
-                                refs.libelle(
-                                    'plateforme_appareil', session.plateforme)),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            leading: IconeOption(
+                              session.plateforme == 'web'
+                                  ? Icons.computer
+                                  : Icons.smartphone,
+                            ),
+                            title: Text(
+                              session.nomAppareil ??
+                                  refs.libelle(
+                                    'plateforme_appareil',
+                                    session.plateforme,
+                                  ),
+                            ),
                             subtitle: Text(
-                                'Actif ${ilYa(session.derniereUtilisation)}${session.courante ? ' · cet appareil' : ''}'),
+                              'Actif ${ilYa(session.derniereUtilisation)}${session.courante ? ' · cet appareil' : ''}',
+                            ),
                             trailing: session.courante
-                                ? const Pastille('Cet appareil',
-                                    ton: TonStatut.info)
+                                ? const Pastille(
+                                    'Cet appareil',
+                                    ton: TonStatut.info,
+                                  )
                                 : IconButton(
                                     tooltip: 'Déconnecter',
                                     icon: const Icon(Icons.logout),
-                                    onPressed: () => bloc
-                                        .add(RevoquerSessionEvent(session.id)),
+                                    onPressed: () => bloc.add(
+                                      RevoquerSessionEvent(session.id),
+                                    ),
                                   ),
                           ),
                       ],
@@ -88,7 +107,9 @@ class SessionsPage extends StatelessWidget {
                         if (ok != null) bloc.add(RevoquerAutresSessionsEvent());
                       },
                       icon: const Icon(Icons.phonelink_erase),
-                      label: const Text('Déconnecter tous les autres appareils'),
+                      label: const Text(
+                        'Déconnecter tous les autres appareils',
+                      ),
                     ),
                   ],
                 ],

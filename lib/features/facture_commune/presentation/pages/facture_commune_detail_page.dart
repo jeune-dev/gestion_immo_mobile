@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/utils/choisir_photo.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
@@ -16,6 +17,7 @@ import 'package:gestion_immo_mobile/features/facture_commune/presentation/bloc/f
 import 'package:gestion_immo_mobile/features/facture_commune/presentation/bloc/facture_commune_state.dart';
 import 'package:gestion_immo_mobile/features/facture_commune/presentation/widgets/formulaire_facture.dart';
 import 'package:gestion_immo_mobile/features/facture_commune/presentation/pages/repartition_page.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 class FactureCommuneDetailPage extends StatelessWidget {
   final String id;
@@ -58,6 +60,7 @@ class FactureCommuneDetailPage extends StatelessWidget {
     final bloc = context.read<FactureCommuneBloc>();
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
         title: Text(refs.libelle('type_charge', f.typeCharge)),
         actions: [
           if (f.statut != 'annulee')
@@ -119,19 +122,27 @@ class FactureCommuneDetailPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
         children: [
+          EnTeteFiche(
+            surtitre: refs.libelle('statut_facture_commune', f.statut),
+            titre: montant(f.montant),
+            detail: f.immeubleNom,
+          ),
+          const SizedBox(height: AppTheme.espaceLg),
           Section(
+            titre: 'Informations',
             children: [
-              Ligne('Immeuble', f.immeubleNom ?? ''),
               Ligne('Fournisseur', f.fournisseur),
               Ligne('N° de facture', f.numeroFacture),
               Ligne(
-                  'Période', '${date(f.debutPeriode)} → ${date(f.finPeriode)}'),
-              Ligne('Montant', montant(f.montant)),
+                'Période',
+                '${date(f.debutPeriode)} → ${date(f.finPeriode)}',
+              ),
               Ligne('Échéance', date(f.dateLimite)),
-              Ligne('Méthode',
-                  refs.libelle('methode_repartition', f.methodeRepartition)),
+              Ligne(
+                'Méthode',
+                refs.libelle('methode_repartition', f.methodeRepartition),
+              ),
               Ligne('Refacturée aux locataires', f.refacturer ? 'Oui' : 'Non'),
-              Ligne('Statut', refs.libelle('statut_facture_commune', f.statut)),
             ],
           ),
           if (f.repartition.isNotEmpty) ...[
@@ -141,20 +152,22 @@ class FactureCommuneDetailPage extends StatelessWidget {
               padding: false,
               children: [
                 for (final l in f.repartition)
-                  ListTile(
-                    title: Text('Appartement ${l.logementNumero ?? ''}'),
-                    subtitle: Text(l.explication ?? ''),
-                    trailing: Montant(l.montant),
+                  TuileOption(
+                    icone: Icons.door_front_door_outlined,
+                    titre: 'Appartement ${l.logementNumero ?? ''}',
+                    detail: l.explication ?? '',
+                    fin: Montant(l.montant),
                   ),
               ],
             ),
           ],
           const SizedBox(height: 16),
           SectionDocuments(
-              type: 'charge_invoice',
-              ajout: false,
-              id: id,
-              titre: 'Pièces jointes'),
+            type: 'charge_invoice',
+            ajout: false,
+            id: id,
+            titre: 'Pièces jointes',
+          ),
         ],
       ),
     );

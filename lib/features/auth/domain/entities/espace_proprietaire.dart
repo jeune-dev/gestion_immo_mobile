@@ -8,12 +8,13 @@ class EspaceProprietaire extends Equatable {
   final String? ville;
   final String? statut;
 
-  const EspaceProprietaire(
-      {required this.id,
-      required this.nomAffiche,
-      this.societe,
-      this.ville,
-      this.statut});
+  const EspaceProprietaire({
+    required this.id,
+    required this.nomAffiche,
+    this.societe,
+    this.ville,
+    this.statut,
+  });
 
   @override
   List<Object?> get props => [id, nomAffiche, societe, ville, statut];

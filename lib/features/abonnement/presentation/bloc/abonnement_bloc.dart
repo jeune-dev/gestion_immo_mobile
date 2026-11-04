@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/get_fiche_abonnement.dart';
 import '../../domain/usecases/souscrire_abonnement.dart';
 import 'abonnement_event.dart';
@@ -43,19 +44,19 @@ class AbonnementBloc extends Bloc<AbonnementEvent, AbonnementState> {
       mois: event.mois,
       portefeuille: event.portefeuille,
     );
-    await result.fold(
-      (failure) async => emit(AbonnementActionError(failure)),
-      (url) async {
-        if (url != null) emit(LienPaiementAbonnementLoaded(url));
-        await _relire(emit);
-      },
-    );
+    await result.fold((failure) async => emit(AbonnementActionError(failure)), (
+      url,
+    ) async {
+      if (url != null) emit(LienPaiementAbonnementLoaded(url));
+      await _relire(emit);
+    });
   }
 
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(Emitter<AbonnementState> emit) async {
-    final dejaAffichee = state is! AbonnementInitial &&
+    final dejaAffichee =
+        state is! AbonnementInitial &&
         state is! AbonnementLoading &&
         state is! AbonnementError;
     final result = await getFicheAbonnement();

@@ -5,6 +5,7 @@ import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/models/option_ref.dart';
 import 'package:gestion_immo_mobile/core/widgets/formulaire.dart';
 import 'package:gestion_immo_mobile/injection_container.dart';
+import 'package:gestion_immo_mobile/features/auth/presentation/widgets/avatar_utilisateur.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.dart';
 import 'package:gestion_immo_mobile/features/account/domain/usecases/modifier_profil.dart';
@@ -22,18 +23,49 @@ Future<void> modifierProfil(BuildContext context) async {
         'first_name': u.prenom,
         'last_name': u.nom,
         'email': u.email,
-        'language': u.langue
+        'language': u.langue,
       },
-      champs: const [
-        Champ('first_name', 'Prénom', obligatoire: true, maxLongueur: 80),
-        Champ('last_name', 'Nom', obligatoire: true, maxLongueur: 80),
-        Champ('email', 'E-mail', type: TypeChamp.email),
-        Champ('language', 'Langue',
-            type: TypeChamp.selection,
-            options: [OptionRef('fr', 'Français'), OptionRef('en', 'Anglais')]),
-        Champ('current_password', 'Mot de passe actuel',
-            type: TypeChamp.motDePasse,
-            indice: "Uniquement pour changer d'e-mail"),
+      intro: const EditeurPhotoProfil(),
+      champs: [
+        const Champ(
+          'first_name',
+          'Prénom',
+          obligatoire: true,
+          maxLongueur: 80,
+          groupe: 'Mes informations',
+          moitie: true,
+        ),
+        const Champ(
+          'last_name',
+          'Nom',
+          obligatoire: true,
+          maxLongueur: 80,
+          moitie: true,
+        ),
+        const Champ(
+          'email',
+          'E-mail',
+          type: TypeChamp.email,
+          icone: Icons.mail_outline,
+        ),
+        const Champ(
+          'language',
+          'Langue',
+          type: TypeChamp.selection,
+          options: [OptionRef('fr', 'Français'), OptionRef('en', 'Anglais')],
+          icone: Icons.language,
+        ),
+        // Le mot de passe n'est demandé que si l'e-mail change.
+        Champ(
+          'current_password',
+          'Mot de passe actuel',
+          type: TypeChamp.motDePasse,
+          obligatoire: true,
+          indice: "Requis pour changer d'e-mail",
+          groupe: 'Sécurité',
+          icone: Icons.lock_outline,
+          visible: (v) => '${v['email'] ?? ''}'.trim() != (u.email ?? ''),
+        ),
       ],
       messageSucces: 'Profil mis à jour',
       envoyer: (c) async {

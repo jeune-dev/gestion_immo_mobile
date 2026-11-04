@@ -18,12 +18,13 @@ class FinancierImmeuble extends Equatable {
   final num? impayes;
   final num? beneficeNet;
 
-  const FinancierImmeuble(
-      {required this.nom,
-      this.revenus,
-      this.depenses,
-      this.impayes,
-      this.beneficeNet});
+  const FinancierImmeuble({
+    required this.nom,
+    this.revenus,
+    this.depenses,
+    this.impayes,
+    this.beneficeNet,
+  });
 
   @override
   List<Object?> get props => [nom, revenus, depenses, impayes, beneficeNet];
@@ -73,25 +74,25 @@ class RapportFinancier extends Equatable {
 
   @override
   List<Object?> get props => [
-        loyers,
-        chargesRecuperees,
-        autresRevenus,
-        totalRevenus,
-        totalDepenses,
-        beneficeNet,
-        impayesDate,
-        impayesMontant,
-        impayesEcheances,
-        impayesLocataires,
-        depensesParCategorie,
-        nombreFactures,
-        facturesTotal,
-        chargesRefacturees,
-        chargesRecupereesLocataires,
-        resteARecouvrer,
-        aChargeProprietaire,
-        parImmeuble,
-      ];
+    loyers,
+    chargesRecuperees,
+    autresRevenus,
+    totalRevenus,
+    totalDepenses,
+    beneficeNet,
+    impayesDate,
+    impayesMontant,
+    impayesEcheances,
+    impayesLocataires,
+    depensesParCategorie,
+    nombreFactures,
+    facturesTotal,
+    chargesRefacturees,
+    chargesRecupereesLocataires,
+    resteARecouvrer,
+    aChargeProprietaire,
+    parImmeuble,
+  ];
 }
 
 class OccupationImmeuble extends Equatable {
@@ -101,16 +102,22 @@ class OccupationImmeuble extends Equatable {
   final int occupes;
   final num? tauxOccupation;
 
-  const OccupationImmeuble(
-      {required this.nom,
-      this.ville,
-      this.appartements = 0,
-      this.occupes = 0,
-      this.tauxOccupation});
+  const OccupationImmeuble({
+    required this.nom,
+    this.ville,
+    this.appartements = 0,
+    this.occupes = 0,
+    this.tauxOccupation,
+  });
 
   @override
-  List<Object?> get props =>
-      [nom, ville, appartements, occupes, tauxOccupation];
+  List<Object?> get props => [
+    nom,
+    ville,
+    appartements,
+    occupes,
+    tauxOccupation,
+  ];
 }
 
 /// Rapport d'occupation (§ 26).
@@ -145,19 +152,19 @@ class RapportImmobilier extends Equatable {
 
   @override
   List<Object?> get props => [
-        immeubles,
-        appartements,
-        occupes,
-        disponibles,
-        enTravaux,
-        tauxOccupation,
-        tauxOccupationPeriode,
-        loyerMensuelOccupes,
-        loyerMoyen,
-        loyerPotentiel,
-        manqueAGagner,
-        parImmeuble,
-      ];
+    immeubles,
+    appartements,
+    occupes,
+    disponibles,
+    enTravaux,
+    tauxOccupation,
+    tauxOccupationPeriode,
+    loyerMensuelOccupes,
+    loyerMoyen,
+    loyerPotentiel,
+    manqueAGagner,
+    parImmeuble,
+  ];
 }
 
 class LocataireEnImpaye extends Equatable {
@@ -166,8 +173,12 @@ class LocataireEnImpaye extends Equatable {
   final String? depuis;
   final num? montant;
 
-  const LocataireEnImpaye(
-      {required this.nom, this.echeances = 0, this.depuis, this.montant});
+  const LocataireEnImpaye({
+    required this.nom,
+    this.echeances = 0,
+    this.depuis,
+    this.montant,
+  });
 
   @override
   List<Object?> get props => [nom, echeances, depuis, montant];
@@ -180,8 +191,12 @@ class MouvementLocataire extends Equatable {
   final String? appartement;
   final String? date;
 
-  const MouvementLocataire(
-      {required this.nom, this.immeuble, this.appartement, this.date});
+  const MouvementLocataire({
+    required this.nom,
+    this.immeuble,
+    this.appartement,
+    this.date,
+  });
 
   @override
   List<Object?> get props => [nom, immeuble, appartement, date];
@@ -209,14 +224,14 @@ class RapportLocataires extends Equatable {
 
   @override
   List<Object?> get props => [
-        actifs,
-        nombreArrivees,
-        nombreDeparts,
-        impayesTotal,
-        enImpaye,
-        arrivees,
-        departs
-      ];
+    actifs,
+    nombreArrivees,
+    nombreDeparts,
+    impayesTotal,
+    enImpaye,
+    arrivees,
+    departs,
+  ];
 }
 
 class TravauxParCategorie extends Equatable {
@@ -225,8 +240,12 @@ class TravauxParCategorie extends Equatable {
   final int termines;
   final num? coutReel;
 
-  const TravauxParCategorie(
-      {this.categorie, this.nombre = 0, this.termines = 0, this.coutReel});
+  const TravauxParCategorie({
+    this.categorie,
+    this.nombre = 0,
+    this.termines = 0,
+    this.coutReel,
+  });
 
   @override
   List<Object?> get props => [categorie, nombre, termines, coutReel];
@@ -258,16 +277,16 @@ class RapportTravaux extends Equatable {
 
   @override
   List<Object?> get props => [
-        crees,
-        termines,
-        enCours,
-        enAttente,
-        annules,
-        coutEstime,
-        coutReel,
-        depensesLiees,
-        parCategorie
-      ];
+    crees,
+    termines,
+    enCours,
+    enAttente,
+    annules,
+    coutEstime,
+    coutReel,
+    depensesLiees,
+    parCategorie,
+  ];
 }
 
 /// Rentabilité d'un appartement, classée par résultat net (§ 48).
@@ -280,23 +299,24 @@ class LigneRentabilite extends Equatable {
   final num? tauxOccupation;
   final num? resultatNet;
 
-  const LigneRentabilite(
-      {this.rang,
-      this.immeuble,
-      this.appartement,
-      this.revenus,
-      this.depenses,
-      this.tauxOccupation,
-      this.resultatNet});
+  const LigneRentabilite({
+    this.rang,
+    this.immeuble,
+    this.appartement,
+    this.revenus,
+    this.depenses,
+    this.tauxOccupation,
+    this.resultatNet,
+  });
 
   @override
   List<Object?> get props => [
-        rang,
-        immeuble,
-        appartement,
-        revenus,
-        depenses,
-        tauxOccupation,
-        resultatNet
-      ];
+    rang,
+    immeuble,
+    appartement,
+    revenus,
+    depenses,
+    tauxOccupation,
+    resultatNet,
+  ];
 }

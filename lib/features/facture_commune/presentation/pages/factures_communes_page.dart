@@ -12,6 +12,7 @@ import 'package:gestion_immo_mobile/features/facture_commune/domain/usecases/get
 import 'package:gestion_immo_mobile/features/facture_commune/presentation/widgets/bandeau_a_repartir.dart';
 import 'package:gestion_immo_mobile/features/facture_commune/presentation/widgets/formulaire_facture.dart';
 import 'package:gestion_immo_mobile/features/facture_commune/presentation/pages/facture_commune_detail_page.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Factures communes (§ 16) : eau, électricité, gardiennage… et leur répartition (§ 17).
 class FacturesCommunesPage extends StatefulWidget {
@@ -45,21 +46,26 @@ class _FacturesCommunesPageState extends State<FacturesCommunesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Factures communes')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('Factures communes'),
+      ),
       floatingActionButton: FloatingActionButton.extended(
-          onPressed: _nouvelle,
-          icon: const Icon(Icons.add),
-          label: const Text('Facture')),
+        onPressed: _nouvelle,
+        icon: const Icon(Icons.add),
+        label: const Text('Facture'),
+      ),
       body: Column(
         children: [
           BandeauARepartir(
-              cle: _version,
-              onVoir: () => setState(() => _statut = 'brouillon')),
+            cle: _version,
+            onVoir: () => setState(() => _statut = 'brouillon'),
+          ),
           Filtres(
             options: [
               ('', 'Toutes'),
               for (final o in refs.options('statut_facture_commune'))
-                (o.code, o.label)
+                (o.code, o.label),
             ],
             valeur: _statut,
             onChange: (v) => setState(() => _statut = v),
@@ -71,25 +77,30 @@ class _FacturesCommunesPageState extends State<FacturesCommunesPage> {
               vide: 'Aucune facture commune',
               iconeVide: Icons.water_drop_outlined,
               charger: (page) => sl<GetFacturesCommunes>()(
-                  page: page, statut: _statut.isEmpty ? null : _statut),
-              element: (context, f) => ListTile(
-                title: Text(
-                    '${refs.libelle('type_charge', f.typeCharge)} · ${f.immeubleNom ?? ''}'),
-                subtitle: Text(
-                    '${f.fournisseur ?? ''} · ${date(f.debutPeriode)} → ${date(f.finPeriode)}'),
-                trailing: Column(
+                page: page,
+                statut: _statut.isEmpty ? null : _statut,
+              ),
+              element: (context, f) => TuileOption(
+                icone: Icons.water_drop_outlined,
+                titre:
+                    '${refs.libelle('type_charge', f.typeCharge)} · ${f.immeubleNom ?? ''}',
+                detail:
+                    '${f.fournisseur ?? ''} · ${date(f.debutPeriode)} → ${date(f.finPeriode)}',
+                fin: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Montant(f.montant,
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Montant(
+                      f.montant,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     Pastille(
                       refs.libelle('statut_facture_commune', f.statut),
                       ton: f.statut == 'repartie'
                           ? TonStatut.succes
                           : f.brouillon
-                              ? TonStatut.avertissement
-                              : TonStatut.neutre,
+                          ? TonStatut.avertissement
+                          : TonStatut.neutre,
                     ),
                   ],
                 ),

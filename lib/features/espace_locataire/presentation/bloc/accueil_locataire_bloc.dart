@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/get_accueil_locataire.dart';
 import 'accueil_locataire_event.dart';
 import 'accueil_locataire_state.dart';
@@ -8,13 +9,13 @@ class AccueilLocataireBloc
     extends Bloc<AccueilLocataireEvent, AccueilLocataireState> {
   final GetAccueilLocataire getAccueilLocataire;
 
-  AccueilLocataireBloc({
-    required this.getAccueilLocataire,
-  }) : super(AccueilLocataireInitial()) {
+  AccueilLocataireBloc({required this.getAccueilLocataire})
+    : super(AccueilLocataireInitial()) {
     on<LoadAccueilLocataire>(_onLoadAccueilLocataire);
     on<RafraichirAccueilLocataire>(_onRafraichirAccueilLocataire);
     on<ResetAccueilLocataireState>(
-        (_, emit) => emit(AccueilLocataireInitial()));
+      (_, emit) => emit(AccueilLocataireInitial()),
+    );
   }
 
   Future<void> _onLoadAccueilLocataire(
@@ -35,7 +36,8 @@ class AccueilLocataireBloc
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(Emitter<AccueilLocataireState> emit) async {
-    final dejaAffichee = state is! AccueilLocataireInitial &&
+    final dejaAffichee =
+        state is! AccueilLocataireInitial &&
         state is! AccueilLocataireLoading &&
         state is! AccueilLocataireError;
     final result = await getAccueilLocataire();

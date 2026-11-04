@@ -1,5 +1,6 @@
 import 'package:gestion_immo_mobile/core/models/logement_resume.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import '../../domain/entities/locataire.dart';
 
 class InvitationModel extends Invitation {

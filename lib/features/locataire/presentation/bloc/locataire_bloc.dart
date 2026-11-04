@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/enregistrer_consentement_whatsapp.dart';
 import '../../domain/usecases/get_locataire.dart';
 import '../../domain/usecases/inviter_locataire.dart';
@@ -61,13 +62,12 @@ class LocataireBloc extends Bloc<LocataireEvent, LocataireState> {
     Emitter<LocataireState> emit,
   ) async {
     final result = await inviterLocataire(event.id);
-    await result.fold(
-      (failure) async => emit(LocataireActionError(failure)),
-      (invitation) async {
-        emit(LocataireInvitationLoaded(invitation));
-        await _relire(event.id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(LocataireActionError(failure)), (
+      invitation,
+    ) async {
+      emit(LocataireInvitationLoaded(invitation));
+      await _relire(event.id, emit);
+    });
   }
 
   Future<void> _onEnregistrerConsentement(
@@ -78,19 +78,19 @@ class LocataireBloc extends Bloc<LocataireEvent, LocataireState> {
       event.id,
       accorde: true,
     );
-    await result.fold(
-      (failure) async => emit(LocataireActionError(failure)),
-      (_) async {
-        emit(LocataireSuccess(message: 'Consentement enregistré'));
-        await _relire(event.id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(LocataireActionError(failure)), (
+      _,
+    ) async {
+      emit(LocataireSuccess(message: 'Consentement enregistré'));
+      await _relire(event.id, emit);
+    });
   }
 
   /// Relit la fiche. Si une fiche est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(String id, Emitter<LocataireState> emit) async {
-    final dejaAffichee = state is! LocataireInitial &&
+    final dejaAffichee =
+        state is! LocataireInitial &&
         state is! LocataireLoading &&
         state is! LocataireError;
     final result = await getLocataire(id);

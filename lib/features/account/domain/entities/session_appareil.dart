@@ -8,16 +8,22 @@ class SessionAppareil extends Equatable {
   final String? derniereUtilisation;
   final bool courante;
 
-  const SessionAppareil(
-      {required this.id,
-      this.nomAppareil,
-      this.plateforme,
-      this.derniereUtilisation,
-      this.courante = false});
+  const SessionAppareil({
+    required this.id,
+    this.nomAppareil,
+    this.plateforme,
+    this.derniereUtilisation,
+    this.courante = false,
+  });
 
   @override
-  List<Object?> get props =>
-      [id, nomAppareil, plateforme, derniereUtilisation, courante];
+  List<Object?> get props => [
+    id,
+    nomAppareil,
+    plateforme,
+    derniereUtilisation,
+    courante,
+  ];
 }
 
 /// Clé TOTP à ajouter dans l'application d'authentification.

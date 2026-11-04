@@ -7,7 +7,8 @@ import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 
 /// Charge une page `n` (1, 2…) d'une liste de l'API via un cas d'usage.
 typedef ChargeurPage<T> = Future<Either<Failure, PageResultat<T>>> Function(
-    int page);
+  int page,
+);
 
 class PaginationState<T> extends Equatable {
   final List<T> items;
@@ -18,27 +19,28 @@ class PaginationState<T> extends Equatable {
 
   bool get aSuite => page < totalPages;
 
-  const PaginationState(
-      {this.items = const [],
-      this.page = 0,
-      this.totalPages = 1,
-      this.enCours = false,
-      this.failure});
+  const PaginationState({
+    this.items = const [],
+    this.page = 0,
+    this.totalPages = 1,
+    this.enCours = false,
+    this.failure,
+  });
 
-  PaginationState<T> copyWith(
-          {List<T>? items,
-          int? page,
-          int? totalPages,
-          bool? enCours,
-          Failure? failure,
-          bool effacerErreur = false}) =>
-      PaginationState<T>(
-        items: items ?? this.items,
-        page: page ?? this.page,
-        totalPages: totalPages ?? this.totalPages,
-        enCours: enCours ?? this.enCours,
-        failure: effacerErreur ? null : failure ?? this.failure,
-      );
+  PaginationState<T> copyWith({
+    List<T>? items,
+    int? page,
+    int? totalPages,
+    bool? enCours,
+    Failure? failure,
+    bool effacerErreur = false,
+  }) => PaginationState<T>(
+    items: items ?? this.items,
+    page: page ?? this.page,
+    totalPages: totalPages ?? this.totalPages,
+    enCours: enCours ?? this.enCours,
+    failure: effacerErreur ? null : failure ?? this.failure,
+  );
 
   @override
   List<Object?> get props => [items, page, totalPages, enCours, failure];
@@ -79,10 +81,13 @@ class PaginationCubit<T> extends Cubit<PaginationState<T>> {
     if (isClosed || generation != _generation) return;
     r.fold(
       (f) => emit(state.copyWith(enCours: false, failure: f)),
-      (p) => emit(PaginationState<T>(
+      (p) => emit(
+        PaginationState<T>(
           items: remplacer ? p.items : [...state.items, ...p.items],
           page: p.page,
-          totalPages: p.totalPages)),
+          totalPages: p.totalPages,
+        ),
+      ),
     );
   }
 }

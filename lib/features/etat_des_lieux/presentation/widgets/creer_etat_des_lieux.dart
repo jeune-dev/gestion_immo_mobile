@@ -12,8 +12,11 @@ import 'package:gestion_immo_mobile/features/etat_des_lieux/domain/usecases/cree
 import 'package:gestion_immo_mobile/features/etat_des_lieux/presentation/pages/etat_des_lieux_detail_page.dart';
 
 /// Crée un état des lieux (brouillon, pièces types pré-remplies) puis l'ouvre.
-Future<EtatDesLieux?> creerEtatDesLieux(BuildContext context,
-    {String? bailId, String? type}) async {
+Future<EtatDesLieux?> creerEtatDesLieux(
+  BuildContext context, {
+  String? bailId,
+  String? type,
+}) async {
   final cle = nouvelleCle();
   final r = await EcranFormulaire.ouvrir<EtatDesLieux>(
     context,
@@ -21,7 +24,8 @@ Future<EtatDesLieux?> creerEtatDesLieux(BuildContext context,
       titre: 'Nouvel état des lieux',
       initial: {if (type != null) 'type': type, 'performed_at': aujourdhui()},
       intro: const Text(
-          'Les pièces usuelles sont proposées automatiquement selon le type de logement ; vous pourrez en ajouter.'),
+        'Les pièces usuelles sont proposées automatiquement selon le type de logement ; vous pourrez en ajouter.',
+      ),
       champs: [
         if (bailId == null)
           Champ(
@@ -31,17 +35,20 @@ Future<EtatDesLieux?> creerEtatDesLieux(BuildContext context,
             obligatoire: true,
             entite: sourceBaux(statut: ''),
           ),
-        const Champ('type', 'Type',
-            type: TypeChamp.selection,
-            referentiel: 'type_etat_des_lieux',
-            obligatoire: true),
+        const Champ(
+          'type',
+          'Type',
+          type: TypeChamp.selection,
+          referentiel: 'type_etat_des_lieux',
+          obligatoire: true,
+        ),
         const Champ('performed_at', 'Date de la visite', type: TypeChamp.date),
       ],
       libelleEnvoi: 'Créer',
-      envoyer: (c) async => (await sl<CreerEtatDesLieux>()(
-              {...c, if (bailId != null) 'lease_id': bailId},
-              cle: cle))
-          .ouLeve(),
+      envoyer: (c) async => (await sl<CreerEtatDesLieux>()({
+        ...c,
+        if (bailId != null) 'lease_id': bailId,
+      }, cle: cle)).ouLeve(),
     ),
   );
   if (r != null && context.mounted) {

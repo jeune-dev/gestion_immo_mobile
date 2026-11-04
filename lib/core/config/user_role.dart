@@ -7,7 +7,8 @@ enum UserRole {
   const UserRole(this.code);
   final String code;
 
-  static UserRole depuis(String? code) =>
-      UserRole.values.firstWhere((r) => r.code == code && r != UserRole.inconnu,
-          orElse: () => UserRole.inconnu);
+  static UserRole depuis(String? code) => UserRole.values.firstWhere(
+    (r) => r.code == code && r != UserRole.inconnu,
+    orElse: () => UserRole.inconnu,
+  );
 }

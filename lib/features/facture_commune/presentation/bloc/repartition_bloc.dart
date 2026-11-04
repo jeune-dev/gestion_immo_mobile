@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_immo_mobile/features/appartement/domain/usecases/get_appartements.dart';
+
 import '../../domain/usecases/previsualiser_repartition.dart';
 import '../../domain/usecases/repartir_facture.dart';
 import 'repartition_event.dart';
@@ -56,13 +57,10 @@ class RepartitionBloc extends Bloc<RepartitionEvent, RepartitionState> {
     if (actuel is! RepartitionLoaded) return;
     emit(actuel.copyWith(enCours: true));
     final result = await previsualiserRepartition(event.factureId, event.data);
-    result.fold(
-      (failure) {
-        emit(RepartitionActionError(failure));
-        emit(actuel.copyWith(enCours: false));
-      },
-      (apercu) => emit(actuel.copyWith(apercu: apercu)),
-    );
+    result.fold((failure) {
+      emit(RepartitionActionError(failure));
+      emit(actuel.copyWith(enCours: false));
+    }, (apercu) => emit(actuel.copyWith(apercu: apercu)));
   }
 
   Future<void> _onRepartirFacture(
@@ -73,12 +71,9 @@ class RepartitionBloc extends Bloc<RepartitionEvent, RepartitionState> {
     if (actuel is! RepartitionLoaded) return;
     emit(actuel.copyWith(enCours: true));
     final result = await repartirFacture(event.factureId, event.data);
-    result.fold(
-      (failure) {
-        emit(RepartitionActionError(failure));
-        emit(actuel.copyWith(enCours: false));
-      },
-      (_) => emit(RepartitionSuccess()),
-    );
+    result.fold((failure) {
+      emit(RepartitionActionError(failure));
+      emit(actuel.copyWith(enCours: false));
+    }, (_) => emit(RepartitionSuccess()));
   }
 }

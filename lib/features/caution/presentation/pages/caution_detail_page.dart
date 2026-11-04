@@ -24,15 +24,18 @@ import 'package:gestion_immo_mobile/features/caution/domain/usecases/verser_caut
 import 'package:gestion_immo_mobile/features/caution/presentation/bloc/caution_bloc.dart';
 import 'package:gestion_immo_mobile/features/caution/presentation/bloc/caution_event.dart';
 import 'package:gestion_immo_mobile/features/caution/presentation/bloc/caution_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 class CautionDetailPage extends StatelessWidget {
   final String id;
   const CautionDetailPage({super.key, required this.id});
 
-  Future<void> _mouvement(BuildContext context,
-      {required bool versement,
-      required Caution c,
-      required VoidCallback recharger}) async {
+  Future<void> _mouvement(
+    BuildContext context, {
+    required bool versement,
+    required Caution c,
+    required VoidCallback recharger,
+  }) async {
     final cle = nouvelleCle();
     final r = await EcranFormulaire.ouvrir<Object>(
       context,
@@ -41,21 +44,30 @@ class CautionDetailPage extends StatelessWidget {
         initial: {
           'occurred_on': aujourdhui(),
           'method': 'especes',
-          'amount': versement ? c.resteAVerser : c.solde
+          'amount': versement ? c.resteAVerser : c.solde,
         },
         intro: versement ? null : Text('Solde détenu : ${montant(c.solde)}'),
         champs: const [
-          Champ('amount', 'Montant',
-              type: TypeChamp.montant, obligatoire: true, min: 1),
-          Champ('method', 'Moyen',
-              type: TypeChamp.selection,
-              referentiel: 'mode_paiement',
-              obligatoire: true),
+          Champ(
+            'amount',
+            'Montant',
+            type: TypeChamp.montant,
+            obligatoire: true,
+            min: 1,
+          ),
+          Champ(
+            'method',
+            'Moyen',
+            type: TypeChamp.selection,
+            referentiel: 'mode_paiement',
+            obligatoire: true,
+          ),
           Champ('occurred_on', 'Date', type: TypeChamp.date, obligatoire: true),
           Champ('reference', 'Référence', maxLongueur: 64),
         ],
-        messageSucces:
-            versement ? 'Versement enregistré' : 'Restitution enregistrée',
+        messageSucces: versement
+            ? 'Versement enregistré'
+            : 'Restitution enregistrée',
         envoyer: (corps) async {
           (versement
                   ? await di.sl<VerserCaution>()(id, corps, cle: cle)
@@ -73,7 +85,9 @@ class CautionDetailPage extends StatelessWidget {
     final photo = await choisirPhoto(context);
     if (photo == null || !context.mounted) return;
     final docId = await executer(
-        context, () => di.sl<AjouterJustificatifCaution>()(id, photo.path));
+      context,
+      () => di.sl<AjouterJustificatifCaution>()(id, photo.path),
+    );
     if (docId == null || !context.mounted) return;
     final cle = nouvelleCle();
     final r = await EcranFormulaire.ouvrir<Object>(
@@ -81,34 +95,42 @@ class CautionDetailPage extends StatelessWidget {
       EcranFormulaire(
         titre: 'Retenue sur caution',
         intro: const Encadre(
-            'Justificatif joint. Le locataire est informé et peut contester la retenue.'),
+          'Justificatif joint. Le locataire est informé et peut contester la retenue.',
+        ),
         initial: {'occurred_on': aujourdhui()},
         champs: const [
-          Champ('amount', 'Montant retenu',
-              type: TypeChamp.montant, obligatoire: true, min: 1),
-          Champ('reason', 'Motif',
-              type: TypeChamp.selection,
-              referentiel: 'motif_retenue',
-              obligatoire: true),
-          Champ('description', 'Explication',
-              type: TypeChamp.multiligne,
-              obligatoire: true,
-              minLongueur: 5,
-              maxLongueur: 2000,
-              indice: '5 caractères minimum'),
+          Champ(
+            'amount',
+            'Montant retenu',
+            type: TypeChamp.montant,
+            obligatoire: true,
+            min: 1,
+          ),
+          Champ(
+            'reason',
+            'Motif',
+            type: TypeChamp.selection,
+            referentiel: 'motif_retenue',
+            obligatoire: true,
+          ),
+          Champ(
+            'description',
+            'Explication',
+            type: TypeChamp.multiligne,
+            obligatoire: true,
+            minLongueur: 5,
+            maxLongueur: 2000,
+            indice: '5 caractères minimum',
+          ),
           Champ('occurred_on', 'Date', type: TypeChamp.date),
         ],
         libelleEnvoi: 'Enregistrer la retenue',
         messageSucces: 'Retenue enregistrée',
         envoyer: (corps) async {
-          (await di.sl<RetenirCaution>()(
-                  id,
-                  {
-                    ...corps,
-                    'justification_document_ids': [docId],
-                  },
-                  cle: cle))
-              .ouLeve();
+          (await di.sl<RetenirCaution>()(id, {
+            ...corps,
+            'justification_document_ids': [docId],
+          }, cle: cle)).ouLeve();
           return true;
         },
       ),
@@ -117,7 +139,10 @@ class CautionDetailPage extends StatelessWidget {
   }
 
   Future<void> _repondre(
-      BuildContext context, MouvementCaution t, VoidCallback recharger) async {
+    BuildContext context,
+    MouvementCaution t,
+    VoidCallback recharger,
+  ) async {
     final r = await EcranFormulaire.ouvrir<Object>(
       context,
       EcranFormulaire(
@@ -130,22 +155,29 @@ class CautionDetailPage extends StatelessWidget {
             type: TypeChamp.selection,
             obligatoire: true,
             options: [
-              for (final o in refs
-                  .options('statut_contestation')
-                  .where((o) => o.code != 'conteste'))
-                OptionRef(o.code, o.label)
+              for (final o
+                  in refs
+                      .options('statut_contestation')
+                      .where((o) => o.code != 'conteste'))
+                OptionRef(o.code, o.label),
             ],
           ),
-          Champ('adjusted_amount', 'Nouveau montant retenu',
-              type: TypeChamp.montant,
-              obligatoire: true,
-              min: 0,
-              visible: (v) => v['outcome'] == 'ajustee'),
-          const Champ('response', 'Réponse au locataire',
-              type: TypeChamp.multiligne,
-              obligatoire: true,
-              minLongueur: 5,
-              maxLongueur: 4000),
+          Champ(
+            'adjusted_amount',
+            'Nouveau montant retenu',
+            type: TypeChamp.montant,
+            obligatoire: true,
+            min: 0,
+            visible: (v) => v['outcome'] == 'ajustee',
+          ),
+          const Champ(
+            'response',
+            'Réponse au locataire',
+            type: TypeChamp.multiligne,
+            obligatoire: true,
+            minLongueur: 5,
+            maxLongueur: 4000,
+          ),
         ],
         libelleEnvoi: 'Envoyer la réponse',
         messageSucces: 'Réponse envoyée',
@@ -191,33 +223,27 @@ class CautionDetailPage extends StatelessWidget {
   Widget _buildFiche(BuildContext context, Caution c) {
     final bloc = context.read<CautionBloc>();
     return Scaffold(
-      appBar: AppBar(title: Text('Caution · ${nomDe(c.locataire)}')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: Text('Caution · ${nomDe(c.locataire)}'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          EnTeteFiche(
+            surtitre: 'Solde détenu',
+            titre: montant(c.solde),
+            detail: c.bailReference,
+            statut: Statut(FamilleStatut.caution, 'statut_caution', c.statut),
+          ),
+          const SizedBox(height: AppTheme.espaceLg),
           Section(
+            titre: 'Détail',
             children: [
-              Row(
-                children: [
-                  Expanded(
-                      child: Text(c.bailReference ?? '',
-                          style: Theme.of(context).textTheme.titleMedium)),
-                  Statut(FamilleStatut.caution, 'statut_caution', c.statut),
-                ],
-              ),
-              const SizedBox(height: AppTheme.espaceSm),
               Ligne('Attendue', montant(c.attendue)),
               Ligne('Reçue', montant(c.recue)),
               Ligne('Retenue', montant(c.retenue)),
               Ligne('Restituée', montant(c.restituee)),
-              const Divider(),
-              Ligne(
-                'Solde détenu',
-                null,
-                widget: Montant(c.solde,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 18)),
-              ),
               if (c.restituerAvant != null)
                 Ligne('À restituer avant le', date(c.restituerAvant)),
             ],
@@ -229,10 +255,12 @@ class CautionDetailPage extends StatelessWidget {
             children: [
               if (c.resteAVerser > 0)
                 FilledButton.icon(
-                  onPressed: () => _mouvement(context,
-                      versement: true,
-                      c: c,
-                      recharger: () => bloc.add(RafraichirCaution(id))),
+                  onPressed: () => _mouvement(
+                    context,
+                    versement: true,
+                    c: c,
+                    recharger: () => bloc.add(RafraichirCaution(id)),
+                  ),
                   icon: const Icon(Icons.add),
                   label: const Text('Enregistrer un versement'),
                 ),
@@ -244,10 +272,12 @@ class CautionDetailPage extends StatelessWidget {
                   label: const Text('Retenue justifiée'),
                 ),
                 OutlinedButton.icon(
-                  onPressed: () => _mouvement(context,
-                      versement: false,
-                      c: c,
-                      recharger: () => bloc.add(RafraichirCaution(id))),
+                  onPressed: () => _mouvement(
+                    context,
+                    versement: false,
+                    c: c,
+                    recharger: () => bloc.add(RafraichirCaution(id)),
+                  ),
                   icon: const Icon(Icons.undo),
                   label: const Text('Restituer'),
                 ),
@@ -258,7 +288,8 @@ class CautionDetailPage extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: Encadre(
-                  'Retenues et restitution sont possibles une fois le bail terminé.'),
+                'Retenues et restitution sont possibles une fois le bail terminé.',
+              ),
             ),
           const SizedBox(height: AppTheme.espaceLg),
           Section(
@@ -268,24 +299,23 @@ class CautionDetailPage extends StatelessWidget {
               if (c.mouvements.isEmpty)
                 const ListTile(title: Text('Aucun mouvement')),
               for (final t in c.mouvements)
-                ListTile(
-                  title: Text(
-                    '${refs.libelle('type_mouvement_caution', t.type)}${t.motif != null ? ' · ${refs.libelle('motif_retenue', t.motif)}' : ''}',
-                  ),
-                  subtitle: Text(
-                    [
-                      date(t.date),
-                      if (t.description != null) t.description!,
-                      if (t.statutContestation != null)
-                        'Contestation : ${refs.libelle('statut_contestation', t.statutContestation)}',
-                    ].join('\n'),
-                  ),
-                  isThreeLine:
-                      t.description != null || t.statutContestation != null,
-                  trailing: Montant(t.montant),
+                TuileOption(
+                  icone: Icons.swap_vert,
+                  titre:
+                      '${refs.libelle('type_mouvement_caution', t.type)}${t.motif != null ? ' · ${refs.libelle('motif_retenue', t.motif)}' : ''}',
+                  detail: [
+                    date(t.date),
+                    if (t.description != null) t.description!,
+                    if (t.statutContestation != null)
+                      'Contestation : ${refs.libelle('statut_contestation', t.statutContestation)}',
+                  ].join('\n'),
+                  fin: Montant(t.montant),
                   onTap: t.contestee
                       ? () => _repondre(
-                          context, t, () => bloc.add(RafraichirCaution(id)))
+                          context,
+                          t,
+                          () => bloc.add(RafraichirCaution(id)),
+                        )
                       : null,
                 ),
             ],
@@ -294,12 +324,17 @@ class CautionDetailPage extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: Encadre(
-                  'Une retenue est contestée par le locataire : touchez-la pour répondre.',
-                  ton: TonStatut.danger),
+                'Une retenue est contestée par le locataire : touchez-la pour répondre.',
+                ton: TonStatut.danger,
+              ),
             ),
           const SizedBox(height: AppTheme.espaceLg),
           SectionDocuments(
-              type: 'deposit', ajout: false, id: id, titre: 'Justificatifs'),
+            type: 'deposit',
+            ajout: false,
+            id: id,
+            titre: 'Justificatifs',
+          ),
         ],
       ),
     );

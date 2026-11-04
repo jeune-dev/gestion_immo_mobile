@@ -1,5 +1,6 @@
 import 'package:gestion_immo_mobile/core/constants/api_endpoints.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
+
 import '../../domain/entities/parametres.dart';
 import '../models/parametres_model.dart';
 
@@ -14,9 +15,9 @@ class ParametresRemoteDataSourceImpl implements ParametresRemoteDataSource {
   ParametresRemoteDataSourceImpl({required this.api});
 
   @override
-  Future<ParametresProprietaire> lire() async =>
-      ParametresModel.depuis(await api
-          .get<Map<String, dynamic>>(ApiEndpoints.parametres, cache: false));
+  Future<ParametresProprietaire> lire() async => ParametresModel.depuis(
+    await api.get<Map<String, dynamic>>(ApiEndpoints.parametres, cache: false),
+  );
 
   @override
   Future<void> modifierReglages(Map<String, dynamic> corps) =>

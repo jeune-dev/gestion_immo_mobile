@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/definir_activite_artisan.dart';
 import '../../domain/usecases/get_artisan.dart';
 import '../../domain/usecases/supprimer_artisan.dart';
@@ -42,14 +43,16 @@ class ArtisanBloc extends Bloc<ArtisanEvent, ArtisanState> {
     Emitter<ArtisanState> emit,
   ) async {
     final result = await definirActiviteArtisan(event.id, actif: event.actif);
-    await result.fold(
-      (failure) async => emit(ArtisanActionError(failure)),
-      (_) async {
-        emit(ArtisanSuccess(
-            message: event.actif ? 'Artisan réactivé' : 'Artisan désactivé'));
-        await _relire(event.id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(ArtisanActionError(failure)), (
+      _,
+    ) async {
+      emit(
+        ArtisanSuccess(
+          message: event.actif ? 'Artisan réactivé' : 'Artisan désactivé',
+        ),
+      );
+      await _relire(event.id, emit);
+    });
   }
 
   Future<void> _onSupprimerArtisan(
@@ -66,7 +69,8 @@ class ArtisanBloc extends Bloc<ArtisanEvent, ArtisanState> {
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(String id, Emitter<ArtisanState> emit) async {
-    final dejaAffichee = state is! ArtisanInitial &&
+    final dejaAffichee =
+        state is! ArtisanInitial &&
         state is! ArtisanLoading &&
         state is! ArtisanError;
     final result = await getArtisan(id);

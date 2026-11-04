@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
+
 import '../../domain/usecases/ajouter_photo_document.dart';
 import '../../domain/usecases/changer_visibilite_document.dart';
 import '../../domain/usecases/get_documents.dart';
@@ -27,6 +28,7 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
   }) : super(DocumentsInitial()) {
     on<LoadDocuments>(_onLoadDocuments);
     on<AjouterPhotoDocumentEvent>(_onAjouterPhotoDocument);
+    on<AjouterPhotosDocumentEvent>(_onAjouterPhotosDocument);
     on<ChangerVisibiliteDocumentEvent>(_onChangerVisibiliteDocument);
     on<SupprimerDocumentEvent>(_onSupprimerDocument);
     on<GetLienDocumentEvent>(_onGetLienDocument);
@@ -48,7 +50,10 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
       event.id,
       emit,
       ajouterPhotoDocument(
-          type: event.type, id: event.id, chemin: event.chemin),
+        type: event.type,
+        id: event.id,
+        chemin: event.chemin,
+      ),
       'Photo ajoutée',
     );
   }
@@ -92,6 +97,36 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
     );
   }
 
+  Future<void> _onAjouterPhotosDocument(
+    AjouterPhotosDocumentEvent event,
+    Emitter<DocumentsState> emit,
+  ) async {
+    final n = event.chemins.length;
+    await _agir(
+      event.type,
+      event.id,
+      emit,
+      _envoyerPhotos(event),
+      n > 1 ? '$n photos ajoutées' : 'Photo ajoutée',
+    );
+  }
+
+  /// Envoi une à une (l'API limite les envois simultanés) ; s'arrête au premier échec.
+  Future<Either<Failure, void>> _envoyerPhotos(
+    AjouterPhotosDocumentEvent event,
+  ) async {
+    for (final chemin in event.chemins) {
+      final r = await ajouterPhotoDocument(
+        type: event.type,
+        id: event.id,
+        chemin: chemin,
+        visibleLocataire: event.visibleLocataire,
+      );
+      if (r.isLeft()) return r;
+    }
+    return const Right(null);
+  }
+
   /// Exécute une action puis, si elle réussit, affiche [message] et relit la
   /// liste.
   Future<void> _agir(
@@ -102,13 +137,12 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
     String message,
   ) async {
     final result = await action;
-    await result.fold(
-      (failure) async => emit(DocumentsError(failure)),
-      (_) async {
-        emit(DocumentsSuccess(message: message));
-        await _charger(type, id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(DocumentsError(failure)), (
+      _,
+    ) async {
+      emit(DocumentsSuccess(message: message));
+      await _charger(type, id, emit);
+    });
   }
 
   Future<void> _charger(

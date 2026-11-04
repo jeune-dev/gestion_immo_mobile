@@ -13,6 +13,8 @@ import 'package:gestion_immo_mobile/features/incident/presentation/widgets/formu
 import 'package:gestion_immo_mobile/features/travaux/domain/entities/travaux.dart';
 import 'package:gestion_immo_mobile/features/travaux/presentation/widgets/formulaires_travaux.dart';
 import 'package:gestion_immo_mobile/features/travaux/presentation/widgets/liste_travaux.dart';
+import 'package:gestion_immo_mobile/core/widgets/logo.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Onglet « Travaux » : chantiers, incidents signalés, artisans, états des lieux.
 class TravauxHubPage extends StatefulWidget {
@@ -32,11 +34,11 @@ class _TravauxHubPageState extends State<TravauxHubPage>
   final _edl = GlobalKey<ListePagineeState<EtatDesLieux>>();
 
   Future<Object?> _formulaire() => switch (_onglets.index) {
-        0 => formulaireTravaux(context),
-        1 => nouvelIncident(context),
-        2 => formulaireArtisan(context),
-        _ => creerEtatDesLieux(context),
-      };
+    0 => formulaireTravaux(context),
+    1 => nouvelIncident(context),
+    2 => formulaireArtisan(context),
+    _ => creerEtatDesLieux(context),
+  };
 
   Future<void> _ajouter() async {
     final i = _onglets.index;
@@ -58,6 +60,10 @@ class _TravauxHubPageState extends State<TravauxHubPage>
     final fg = Theme.of(context).appBarTheme.foregroundColor;
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        leading: LogoBarre.siRacine(context),
+        leadingWidth: LogoBarre.largeur,
+
         title: const Text('Travaux'),
         bottom: TabBar(
           controller: _onglets,
@@ -77,12 +83,9 @@ class _TravauxHubPageState extends State<TravauxHubPage>
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _ajouter,
         icon: const Icon(Icons.add),
-        label: Text([
-          'Travaux',
-          'Incident',
-          'Artisan',
-          'État des lieux'
-        ][_onglets.index]),
+        label: Text(
+          ['Travaux', 'Incident', 'Artisan', 'État des lieux'][_onglets.index],
+        ),
       ),
       body: TabBarView(
         controller: _onglets,

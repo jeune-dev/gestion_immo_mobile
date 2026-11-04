@@ -1,6 +1,7 @@
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
 import 'package:gestion_immo_mobile/features/documents/data/models/document_model.dart';
+
 import '../../domain/entities/messagerie.dart';
 
 class FilDiscussionModel extends FilDiscussion {
@@ -29,20 +30,21 @@ class FilDiscussionModel extends FilDiscussion {
 }
 
 class MessageModel extends Message {
-  const MessageModel(
-      {required super.id,
-      super.filId,
-      super.roleExpediteur,
-      super.texte,
-      super.document,
-      super.creeLe});
+  const MessageModel({
+    required super.id,
+    super.filId,
+    super.roleExpediteur,
+    super.texte,
+    super.document,
+    super.creeLe,
+  });
 
   factory MessageModel.fromJson(Map<String, dynamic> json) => MessageModel(
-        id: '${json['id']}',
-        filId: json['thread_id']?.toString(),
-        roleExpediteur: json['sender_role'] as String?,
-        texte: json['body'] as String?,
-        document: DocumentModel.depuis(json['document']),
-        creeLe: json['created_at'] as String?,
-      );
+    id: '${json['id']}',
+    filId: json['thread_id']?.toString(),
+    roleExpediteur: json['sender_role'] as String?,
+    texte: json['body'] as String?,
+    document: DocumentModel.depuis(json['document']),
+    creeLe: json['created_at'] as String?,
+  );
 }

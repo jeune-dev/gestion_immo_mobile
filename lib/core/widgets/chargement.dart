@@ -4,8 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_immo_mobile/core/bloc/actions_cubit.dart';
 import 'package:gestion_immo_mobile/core/bloc/pagination_cubit.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
+
 import 'actions.dart';
 import 'base.dart';
+
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 export 'package:gestion_immo_mobile/core/bloc/actions_cubit.dart';
 export 'package:gestion_immo_mobile/core/bloc/pagination_cubit.dart'
@@ -84,10 +87,17 @@ class ListePagineeState<T> extends State<ListePaginee<T>> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 96),
           itemCount: enTete + (s.items.isEmpty ? 1 : s.items.length + 1),
-          separatorBuilder: (context, i) => widget.separateur &&
+          separatorBuilder: (context, i) =>
+              widget.separateur &&
                   i >= enTete &&
                   i < enTete + s.items.length - 1
-              ? const Divider(height: 1, indent: 16)
+              ? const _GroupeCarte(
+                  child: Divider(
+                    height: 1,
+                    indent: AppTheme.espaceLg,
+                    endIndent: AppTheme.espaceLg,
+                  ),
+                )
               : const SizedBox.shrink(),
           itemBuilder: (context, i) {
             if (i < enTete) return widget.entete!;
@@ -107,7 +117,9 @@ class ListePagineeState<T> extends State<ListePaginee<T>> {
             if (k == s.items.length) {
               if (s.failure != null) {
                 return TextButton(
-                    onPressed: _cubit.suivante, child: const Text('Réessayer'));
+                  onPressed: _cubit.suivante,
+                  child: const Text('Réessayer'),
+                );
               }
               return s.aSuite
                   ? const Padding(
@@ -116,8 +128,51 @@ class ListePagineeState<T> extends State<ListePaginee<T>> {
                     )
                   : const SizedBox(height: AppTheme.espaceLg);
             }
-            return widget.element(context, s.items[k]);
+            // Éléments regroupés dans une carte blanche arrondie (liste « groupée »).
+            return _GroupeCarte(
+              haut: k == 0,
+              bas: k == s.items.length - 1,
+              child: widget.element(context, s.items[k]),
+            );
           },
+        ),
+      ),
+    );
+  }
+}
+
+/// Tranche d'une carte blanche continue : coins arrondis en haut du premier
+/// élément et en bas du dernier.
+class _GroupeCarte extends StatelessWidget {
+  final bool haut;
+  final bool bas;
+  final Widget child;
+  const _GroupeCarte({
+    this.haut = false,
+    this.bas = false,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const r = Radius.circular(AppTheme.rayonCarte);
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppTheme.espaceLg,
+        haut ? AppTheme.espaceMd : 0,
+        AppTheme.espaceLg,
+        0,
+      ),
+      child: Material(
+        color: Theme.of(context).colorScheme.surface,
+        clipBehavior: Clip.antiAlias,
+        borderRadius: BorderRadius.vertical(
+          top: haut ? r : Radius.zero,
+          bottom: bas ? r : Radius.zero,
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(top: haut ? 4 : 0, bottom: bas ? 4 : 0),
+          child: child,
         ),
       ),
     );
@@ -138,12 +193,16 @@ class VueChargement extends StatelessWidget {
   Widget build(BuildContext context) {
     final corps = failure != null
         ? ListView(
-            children: [VueErreur(failure!, onReessayer: onReessayer ?? () {})])
+            children: [VueErreur(failure!, onReessayer: onReessayer ?? () {})],
+          )
         : const Center(child: CircularProgressIndicator());
     return titre == null
         ? corps
         : Scaffold(
-            appBar: AppBar(title: Text(titre!)),
+            appBar: AppBar(
+              flexibleSpace: const FondMarque(),
+              title: Text(titre!),
+            ),
             body: corps,
           );
   }
@@ -154,11 +213,12 @@ class Filtres extends StatelessWidget {
   final List<(String, String)> options;
   final String valeur;
   final ValueChanged<String> onChange;
-  const Filtres(
-      {super.key,
-      required this.options,
-      required this.valeur,
-      required this.onChange});
+  const Filtres({
+    super.key,
+    required this.options,
+    required this.valeur,
+    required this.onChange,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -167,15 +227,18 @@ class Filtres extends StatelessWidget {
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.espaceLg, vertical: AppTheme.espaceSm),
+          horizontal: AppTheme.espaceLg,
+          vertical: AppTheme.espaceSm,
+        ),
         children: [
           for (final (code, libelle) in options)
             Padding(
               padding: const EdgeInsets.only(right: AppTheme.espaceSm),
               child: ChoiceChip(
-                  label: Text(libelle),
-                  selected: valeur == code,
-                  onSelected: (_) => onChange(code)),
+                label: Text(libelle),
+                selected: valeur == code,
+                onSelected: (_) => onChange(code),
+              ),
             ),
         ],
       ),

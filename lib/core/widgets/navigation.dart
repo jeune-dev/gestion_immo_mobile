@@ -21,8 +21,10 @@ class MenuActions extends StatelessWidget {
         for (var i = 0; i < actions.length; i++)
           PopupMenuItem(
             value: i,
-            child: Text(actions[i].$1,
-                style: actions[i].$3 ? TextStyle(color: cs.error) : null),
+            child: Text(
+              actions[i].$1,
+              style: actions[i].$3 ? TextStyle(color: cs.error) : null,
+            ),
           ),
       ],
     );

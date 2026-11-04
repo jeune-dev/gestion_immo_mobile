@@ -16,8 +16,11 @@ import 'package:gestion_immo_mobile/features/paiement/domain/usecases/encaisser_
 /// Encaissement d'un loyer (§ 12) : espèces ou paiement reçu hors application.
 /// Idempotency-Key OBLIGATOIRE : un double envoi n'encaisse jamais deux fois.
 /// L'API alloue aux échéances, produit les quittances et le mouvement de caisse.
-Future<bool> encaisser(BuildContext context,
-    {Bail? bail, Echeance? echeance}) async {
+Future<bool> encaisser(
+  BuildContext context, {
+  Bail? bail,
+  Echeance? echeance,
+}) async {
   final cle = nouvelleCle();
   final r = await EcranFormulaire.ouvrir<int>(
     context,
@@ -40,23 +43,52 @@ Future<bool> encaisser(BuildContext context,
       },
       champs: [
         if (bail == null && echeance == null)
-          Champ('lease_id', 'Bail',
-              type: TypeChamp.entite, obligatoire: true, entite: sourceBaux()),
+          Champ(
+            'lease_id',
+            'Bail',
+            type: TypeChamp.entite,
+            obligatoire: true,
+            entite: sourceBaux(),
+          ),
         if (bail != null && echeance == null)
-          Champ('rent_schedule_id', 'Échéance (facultatif)',
-              type: TypeChamp.entite, entite: sourceEcheancesImpayees(bail.id)),
-        const Champ('amount', 'Montant reçu',
-            type: TypeChamp.montant, obligatoire: true, min: 1),
-        const Champ('method', 'Moyen de paiement',
-            type: TypeChamp.selection,
-            referentiel: 'mode_paiement',
-            obligatoire: true),
-        const Champ('paid_on', 'Date du paiement',
-            type: TypeChamp.date, obligatoire: true),
-        const Champ('reference', 'Référence (facultatif)',
-            maxLongueur: 40, indice: 'N° de reçu, de chèque ou de transaction'),
-        const Champ('comment', 'Commentaire',
-            type: TypeChamp.multiligne, maxLongueur: 1000),
+          Champ(
+            'rent_schedule_id',
+            'Échéance (facultatif)',
+            type: TypeChamp.entite,
+            entite: sourceEcheancesImpayees(bail.id),
+          ),
+        const Champ(
+          'amount',
+          'Montant reçu',
+          type: TypeChamp.montant,
+          obligatoire: true,
+          min: 1,
+        ),
+        const Champ(
+          'method',
+          'Moyen de paiement',
+          type: TypeChamp.selection,
+          referentiel: 'mode_paiement',
+          obligatoire: true,
+        ),
+        const Champ(
+          'paid_on',
+          'Date du paiement',
+          type: TypeChamp.date,
+          obligatoire: true,
+        ),
+        const Champ(
+          'reference',
+          'Référence (facultatif)',
+          maxLongueur: 40,
+          indice: 'N° de reçu, de chèque ou de transaction',
+        ),
+        const Champ(
+          'comment',
+          'Commentaire',
+          type: TypeChamp.multiligne,
+          maxLongueur: 1000,
+        ),
       ],
       libelleEnvoi: 'Encaisser',
       envoyer: (corps) async {
@@ -68,10 +100,11 @@ Future<bool> encaisser(BuildContext context,
   );
   if (r != null && context.mounted) {
     afficherSucces(
-        context,
-        r > 0
-            ? 'Paiement enregistré · $r quittance(s) générée(s)'
-            : 'Paiement enregistré');
+      context,
+      r > 0
+          ? 'Paiement enregistré · $r quittance(s) générée(s)'
+          : 'Paiement enregistré',
+    );
   }
   return r != null;
 }

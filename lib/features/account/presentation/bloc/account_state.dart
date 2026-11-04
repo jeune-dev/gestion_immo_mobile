@@ -29,8 +29,10 @@ class AccountSuccess extends AccountState {
   /// le relire.
   final bool compteModifie;
 
-  AccountSuccess(
-      {this.message = 'Opération réussie', this.compteModifie = false});
+  AccountSuccess({
+    this.message = 'Opération réussie',
+    this.compteModifie = false,
+  });
 }
 
 /// Échec de la lecture des appareils connectés.

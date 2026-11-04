@@ -26,6 +26,7 @@ import 'package:gestion_immo_mobile/features/rapport/domain/usecases/get_rentabi
 import 'package:gestion_immo_mobile/features/rapport/presentation/bloc/rapport_bloc.dart';
 import 'package:gestion_immo_mobile/features/rapport/presentation/bloc/rapport_event.dart';
 import 'package:gestion_immo_mobile/features/rapport/presentation/bloc/rapport_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Rapports (§ 26) : financier, immobilier, travaux, locataires, rentabilité (§ 4.21).
 class RapportsPage extends StatefulWidget {
@@ -50,15 +51,19 @@ class _RapportsPageState extends State<RapportsPage>
   Future<void> _exporter() async {
     final type = _types[_onglets.index].$1;
     afficherSucces(context, 'Préparation de l’export…');
-    final r =
-        await sl<ExporterRapportCsv>()(type, du: _periode.du, au: _periode.au);
+    final r = await sl<ExporterRapportCsv>()(
+      type,
+      du: _periode.du,
+      au: _periode.au,
+    );
     await r.fold(
       (f) async {
         if (mounted) afficherErreurApi(context, f);
       },
       (octets) async {
         final f = File(
-            '${(await getTemporaryDirectory()).path}/rapport-$type-${_periode.du}-${_periode.au}.csv');
+          '${(await getTemporaryDirectory()).path}/rapport-$type-${_periode.du}-${_periode.au}.csv',
+        );
         await f.writeAsBytes(octets, flush: true);
         await SharePlus.instance.share(
           ShareParams(
@@ -75,21 +80,21 @@ class _RapportsPageState extends State<RapportsPage>
     final du = _periode.du, au = _periode.au;
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
         title: const Text('Rapports'),
         actions: [
           IconButton(
-              tooltip: 'Exporter (CSV)',
-              onPressed: _exporter,
-              icon: const Icon(Icons.ios_share))
+            tooltip: 'Exporter (CSV)',
+            onPressed: _exporter,
+            icon: const Icon(Icons.ios_share),
+          ),
         ],
         bottom: TabBar(
           controller: _onglets,
           isScrollable: true,
           tabAlignment: TabAlignment.start,
           labelColor: Theme.of(context).appBarTheme.foregroundColor,
-          unselectedLabelColor: Theme.of(context)
-              .appBarTheme
-              .foregroundColor
+          unselectedLabelColor: Theme.of(context).appBarTheme.foregroundColor
               ?.withValues(alpha: 0.7),
           indicatorColor: Theme.of(context).colorScheme.secondary,
           tabs: [for (final t in _types) Tab(text: t.$2)],
@@ -98,7 +103,9 @@ class _RapportsPageState extends State<RapportsPage>
       body: Column(
         children: [
           ChoixPeriode(
-              periode: _periode, onChange: (p) => setState(() => _periode = p)),
+            periode: _periode,
+            onChange: (p) => setState(() => _periode = p),
+          ),
           Expanded(
             child: TabBarView(
               controller: _onglets,
@@ -133,207 +140,221 @@ class _RapportsPageState extends State<RapportsPage>
   }
 
   static List<Widget> _financier(BuildContext context, RapportFinancier r) => [
-        Section(
-          titre: 'Résultat',
-          children: [
-            Ligne('Loyers', montant(r.loyers)),
-            Ligne('Charges récupérées', montant(r.chargesRecuperees)),
-            Ligne('Autres revenus', montant(r.autresRevenus)),
-            Ligne('Total revenus', montant(r.totalRevenus)),
-            Ligne('Dépenses', montant(r.totalDepenses)),
-            const Divider(),
-            Ligne(
-              'Bénéfice net',
-              null,
-              widget: Montant(
-                r.beneficeNet,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                  color: (r.beneficeNet ?? 0) < 0
-                      ? context.palette.danger
-                      : context.palette.succes,
-                ),
-              ),
+    Section(
+      titre: 'Résultat',
+      children: [
+        Ligne('Loyers', montant(r.loyers)),
+        Ligne('Charges récupérées', montant(r.chargesRecuperees)),
+        Ligne('Autres revenus', montant(r.autresRevenus)),
+        Ligne('Total revenus', montant(r.totalRevenus)),
+        Ligne('Dépenses', montant(r.totalDepenses)),
+        const Divider(),
+        Ligne(
+          'Bénéfice net',
+          null,
+          widget: Montant(
+            r.beneficeNet,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+              color: (r.beneficeNet ?? 0) < 0
+                  ? context.palette.danger
+                  : context.palette.succes,
             ),
-          ],
-        ),
-        const SizedBox(height: AppTheme.espaceLg),
-        Section(
-          titre: 'Impayés au ${date(r.impayesDate)}',
-          children: [
-            Ligne('Montant', montant(r.impayesMontant)),
-            Ligne('Échéances', '${r.impayesEcheances}'),
-            Ligne('Locataires', '${r.impayesLocataires}'),
-          ],
-        ),
-        const SizedBox(height: AppTheme.espaceLg),
-        Section(
-          titre: 'Dépenses par catégorie',
-          children: [
-            for (final c in r.depensesParCategorie)
-              Ligne(c.libelle, montant(c.montant)),
-            if (r.depensesParCategorie.isEmpty) const Text('Aucune dépense'),
-          ],
-        ),
-        const SizedBox(height: AppTheme.espaceLg),
-        Section(
-          titre: 'Charges',
-          children: [
-            Ligne('Factures communes',
-                '${r.nombreFactures} · ${montant(r.facturesTotal)}'),
-            Ligne('Refacturées', montant(r.chargesRefacturees)),
-            Ligne('Récupérées', montant(r.chargesRecupereesLocataires)),
-            Ligne('Reste à recouvrer', montant(r.resteARecouvrer)),
-            Ligne(
-                'À la charge du propriétaire', montant(r.aChargeProprietaire)),
-          ],
-        ),
-        const SizedBox(height: AppTheme.espaceLg),
-        Section(
-          titre: 'Par immeuble',
-          padding: false,
-          children: [
-            for (final b in r.parImmeuble)
-              ListTile(
-                title: Text(b.nom),
-                subtitle: Text(
-                    'Revenus ${montant(b.revenus)} · dépenses ${montant(b.depenses)} · impayés ${montant(b.impayes)}'),
-                trailing: Montant(b.beneficeNet,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-              ),
-          ],
-        ),
-      ];
-
-  static List<Widget> _immobilier(BuildContext context, RapportImmobilier r) =>
-      [
-        Section(
-          titre: 'Occupation',
-          children: [
-            Ligne('Immeubles', '${r.immeubles}'),
-            Ligne('Appartements', '${r.appartements}'),
-            Ligne('Occupés', '${r.occupes}'),
-            Ligne('Disponibles', '${r.disponibles}'),
-            Ligne('En travaux', '${r.enTravaux}'),
-            Ligne("Taux d'occupation", pourcent(r.tauxOccupation)),
-            Ligne(
-                'Occupation sur la période', pourcent(r.tauxOccupationPeriode)),
-          ],
-        ),
-        const SizedBox(height: AppTheme.espaceLg),
-        Section(
-          titre: 'Loyers',
-          children: [
-            Ligne('Loyers mensuels (occupés)', montant(r.loyerMensuelOccupes)),
-            Ligne('Loyer moyen', montant(r.loyerMoyen)),
-            Ligne('Loyer potentiel', montant(r.loyerPotentiel)),
-            Ligne('Manque à gagner (vacance)', montant(r.manqueAGagner)),
-          ],
-        ),
-        const SizedBox(height: AppTheme.espaceLg),
-        Section(
-          titre: 'Par immeuble',
-          padding: false,
-          children: [
-            for (final b in r.parImmeuble)
-              ListTile(
-                title: Text(b.nom),
-                subtitle: Text(
-                    '${b.occupes} occupés sur ${b.appartements} · ${b.ville ?? ''}'),
-                trailing:
-                    Text(pourcent(b.tauxOccupation), style: chiffresFixes),
-              ),
-          ],
-        ),
-      ];
-
-  static List<Widget> _locataires(BuildContext context, RapportLocataires r) =>
-      [
-        Section(
-          children: [
-            Ligne('Locataires actifs', '${r.actifs}'),
-            Ligne('Arrivées', '${r.nombreArrivees}'),
-            Ligne('Départs', '${r.nombreDeparts}'),
-            Ligne('Impayés', montant(r.impayesTotal)),
-          ],
-        ),
-        const SizedBox(height: AppTheme.espaceLg),
-        Section(
-          titre: 'Locataires en impayé',
-          padding: false,
-          children: [
-            for (final t in r.enImpaye)
-              ListTile(
-                  title: Text(t.nom),
-                  subtitle: Text(
-                      '${t.echeances} échéance(s) · depuis le ${date(t.depuis)}'),
-                  trailing: Montant(t.montant)),
-            if (r.enImpaye.isEmpty) const ListTile(title: Text('Aucun impayé')),
-          ],
-        ),
-        const SizedBox(height: AppTheme.espaceLg),
-        Section(
-          titre: 'Arrivées',
-          padding: false,
-          children: [
-            for (final b in r.arrivees)
-              ListTile(
-                  title: Text(b.nom),
-                  subtitle: Text(
-                      '${b.immeuble ?? ''} · ${b.appartement ?? ''} · ${date(b.date)}')),
-          ],
-        ),
-        if (r.departs.isNotEmpty) ...[
-          const SizedBox(height: AppTheme.espaceLg),
-          Section(
-            titre: 'Départs',
-            padding: false,
-            children: [
-              for (final b in r.departs)
-                ListTile(
-                    title: Text(b.nom),
-                    subtitle: Text(
-                        '${b.immeuble ?? ''} · ${b.appartement ?? ''} · ${date(b.date)}')),
-            ],
           ),
+        ),
+      ],
+    ),
+    const SizedBox(height: AppTheme.espaceLg),
+    Section(
+      titre: 'Impayés au ${date(r.impayesDate)}',
+      children: [
+        Ligne('Montant', montant(r.impayesMontant)),
+        Ligne('Échéances', '${r.impayesEcheances}'),
+        Ligne('Locataires', '${r.impayesLocataires}'),
+      ],
+    ),
+    const SizedBox(height: AppTheme.espaceLg),
+    Section(
+      titre: 'Dépenses par catégorie',
+      children: [
+        for (final c in r.depensesParCategorie)
+          Ligne(c.libelle, montant(c.montant)),
+        if (r.depensesParCategorie.isEmpty) const Text('Aucune dépense'),
+      ],
+    ),
+    const SizedBox(height: AppTheme.espaceLg),
+    Section(
+      titre: 'Charges',
+      children: [
+        Ligne(
+          'Factures communes',
+          '${r.nombreFactures} · ${montant(r.facturesTotal)}',
+        ),
+        Ligne('Refacturées', montant(r.chargesRefacturees)),
+        Ligne('Récupérées', montant(r.chargesRecupereesLocataires)),
+        Ligne('Reste à recouvrer', montant(r.resteARecouvrer)),
+        Ligne('À la charge du propriétaire', montant(r.aChargeProprietaire)),
+      ],
+    ),
+    const SizedBox(height: AppTheme.espaceLg),
+    Section(
+      titre: 'Par immeuble',
+      padding: false,
+      children: [
+        for (final b in r.parImmeuble)
+          TuileOption(
+            icone: Icons.insights_outlined,
+            titre: b.nom,
+            detail:
+                'Revenus ${montant(b.revenus)} · dépenses ${montant(b.depenses)} · impayés ${montant(b.impayes)}',
+            fin: Montant(
+              b.beneficeNet,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+      ],
+    ),
+  ];
+
+  static List<Widget> _immobilier(
+    BuildContext context,
+    RapportImmobilier r,
+  ) => [
+    Section(
+      titre: 'Occupation',
+      children: [
+        Ligne('Immeubles', '${r.immeubles}'),
+        Ligne('Appartements', '${r.appartements}'),
+        Ligne('Occupés', '${r.occupes}'),
+        Ligne('Disponibles', '${r.disponibles}'),
+        Ligne('En travaux', '${r.enTravaux}'),
+        Ligne("Taux d'occupation", pourcent(r.tauxOccupation)),
+        Ligne('Occupation sur la période', pourcent(r.tauxOccupationPeriode)),
+      ],
+    ),
+    const SizedBox(height: AppTheme.espaceLg),
+    Section(
+      titre: 'Loyers',
+      children: [
+        Ligne('Loyers mensuels (occupés)', montant(r.loyerMensuelOccupes)),
+        Ligne('Loyer moyen', montant(r.loyerMoyen)),
+        Ligne('Loyer potentiel', montant(r.loyerPotentiel)),
+        Ligne('Manque à gagner (vacance)', montant(r.manqueAGagner)),
+      ],
+    ),
+    const SizedBox(height: AppTheme.espaceLg),
+    Section(
+      titre: 'Par immeuble',
+      padding: false,
+      children: [
+        for (final b in r.parImmeuble)
+          TuileOption(
+            icone: Icons.insights_outlined,
+            titre: b.nom,
+            detail:
+                '${b.occupes} occupés sur ${b.appartements} · ${b.ville ?? ''}',
+            fin: Text(pourcent(b.tauxOccupation), style: chiffresFixes),
+          ),
+      ],
+    ),
+  ];
+
+  static List<Widget> _locataires(
+    BuildContext context,
+    RapportLocataires r,
+  ) => [
+    Section(
+      children: [
+        Ligne('Locataires actifs', '${r.actifs}'),
+        Ligne('Arrivées', '${r.nombreArrivees}'),
+        Ligne('Départs', '${r.nombreDeparts}'),
+        Ligne('Impayés', montant(r.impayesTotal)),
+      ],
+    ),
+    const SizedBox(height: AppTheme.espaceLg),
+    Section(
+      titre: 'Locataires en impayé',
+      padding: false,
+      children: [
+        for (final t in r.enImpaye)
+          TuileOption(
+            icone: Icons.insights_outlined,
+            titre: t.nom,
+            detail: '${t.echeances} échéance(s) · depuis le ${date(t.depuis)}',
+            fin: Montant(t.montant),
+          ),
+        if (r.enImpaye.isEmpty) const ListTile(title: Text('Aucun impayé')),
+      ],
+    ),
+    const SizedBox(height: AppTheme.espaceLg),
+    Section(
+      titre: 'Arrivées',
+      padding: false,
+      children: [
+        for (final b in r.arrivees)
+          TuileOption(
+            icone: Icons.insights_outlined,
+            titre: b.nom,
+            detail:
+                '${b.immeuble ?? ''} · ${b.appartement ?? ''} · ${date(b.date)}',
+            fin: const SizedBox.shrink(),
+          ),
+      ],
+    ),
+    if (r.departs.isNotEmpty) ...[
+      const SizedBox(height: AppTheme.espaceLg),
+      Section(
+        titre: 'Départs',
+        padding: false,
+        children: [
+          for (final b in r.departs)
+            TuileOption(
+              icone: Icons.insights_outlined,
+              titre: b.nom,
+              detail:
+                  '${b.immeuble ?? ''} · ${b.appartement ?? ''} · ${date(b.date)}',
+              fin: const SizedBox.shrink(),
+            ),
         ],
-      ];
+      ),
+    ],
+  ];
 
   static List<Widget> _travaux(BuildContext context, RapportTravaux r) => [
-        Section(
-          children: [
-            Ligne('Créés sur la période', '${r.crees}'),
-            Ligne('Terminés', '${r.termines}'),
-            Ligne('En cours', '${r.enCours}'),
-            Ligne('En attente', '${r.enAttente}'),
-            Ligne('Annulés', '${r.annules}'),
-          ],
-        ),
-        const SizedBox(height: AppTheme.espaceLg),
-        Section(
-          titre: 'Coûts',
-          children: [
-            Ligne('Estimés', montant(r.coutEstime)),
-            Ligne('Réels', montant(r.coutReel)),
-            Ligne('Dépenses liées', montant(r.depensesLiees))
-          ],
-        ),
-        const SizedBox(height: AppTheme.espaceLg),
-        Section(
-          titre: 'Par catégorie',
-          padding: false,
-          children: [
-            for (final c in r.parCategorie)
-              ListTile(
-                title: Text(refs.libelle('categorie_travaux', c.categorie)),
-                subtitle:
-                    Text('${c.nombre} chantier(s) · ${c.termines} terminé(s)'),
-                trailing: Montant(c.coutReel),
-              ),
-          ],
-        ),
-      ];
+    Section(
+      children: [
+        Ligne('Créés sur la période', '${r.crees}'),
+        Ligne('Terminés', '${r.termines}'),
+        Ligne('En cours', '${r.enCours}'),
+        Ligne('En attente', '${r.enAttente}'),
+        Ligne('Annulés', '${r.annules}'),
+      ],
+    ),
+    const SizedBox(height: AppTheme.espaceLg),
+    Section(
+      titre: 'Coûts',
+      children: [
+        Ligne('Estimés', montant(r.coutEstime)),
+        Ligne('Réels', montant(r.coutReel)),
+        Ligne('Dépenses liées', montant(r.depensesLiees)),
+      ],
+    ),
+    const SizedBox(height: AppTheme.espaceLg),
+    Section(
+      titre: 'Par catégorie',
+      padding: false,
+      children: [
+        for (final c in r.parCategorie)
+          TuileOption(
+            icone: Icons.insights_outlined,
+            titre: refs.libelle('categorie_travaux', c.categorie),
+            detail: '${c.nombre} chantier(s) · ${c.termines} terminé(s)',
+            fin: Montant(c.coutReel),
+          ),
+      ],
+    ),
+  ];
 }
 
 /// Onglet d'un rapport, relu à chaque changement de période.
@@ -341,8 +362,11 @@ class _Rapport<T> extends StatelessWidget {
   final Periode cle;
   final Future<Either<Failure, T>> Function() lire;
   final List<Widget> Function(BuildContext, T) builder;
-  const _Rapport(
-      {required this.cle, required this.lire, required this.builder});
+  const _Rapport({
+    required this.cle,
+    required this.lire,
+    required this.builder,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -386,18 +410,19 @@ class _Rentabilite extends StatelessWidget {
       vide: 'Aucun appartement',
       charger: (page) =>
           sl<GetRentabilite>()(page: page, du: periode.du, au: periode.au),
-      element: (context, a) => ListTile(
-        leading: CircleAvatar(child: Text('${a.rang ?? ''}')),
-        title: Text('${a.immeuble ?? ''} · ${a.appartement ?? ''}'),
-        subtitle: Text(
-            'Revenus ${montant(a.revenus)} · dépenses ${montant(a.depenses)} · occupé ${pourcent(a.tauxOccupation)}'),
-        trailing: Montant(
+      element: (context, a) => TuileOption(
+        icone: Icons.insights_outlined,
+        titre: '${a.immeuble ?? ''} · ${a.appartement ?? ''}',
+        detail:
+            'Revenus ${montant(a.revenus)} · dépenses ${montant(a.depenses)} · occupé ${pourcent(a.tauxOccupation)}',
+        fin: Montant(
           a.resultatNet,
           style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: (a.resultatNet ?? 0) < 0
-                  ? context.palette.danger
-                  : context.palette.succes),
+            fontWeight: FontWeight.w600,
+            color: (a.resultatNet ?? 0) < 0
+                ? context.palette.danger
+                : context.palette.succes,
+          ),
         ),
       ),
     );

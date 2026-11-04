@@ -31,14 +31,14 @@ class FilDiscussion extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        locataire,
-        proprietaireNom,
-        dernierMessage,
-        aUnDernierMessage,
-        nonLus,
-        dernierMessageLe
-      ];
+    id,
+    locataire,
+    proprietaireNom,
+    dernierMessage,
+    aUnDernierMessage,
+    nonLus,
+    dernierMessageLe,
+  ];
 }
 
 class Message extends Equatable {
@@ -51,15 +51,22 @@ class Message extends Equatable {
   final DocumentApp? document;
   final String? creeLe;
 
-  const Message(
-      {required this.id,
-      this.filId,
-      this.roleExpediteur,
-      this.texte,
-      this.document,
-      this.creeLe});
+  const Message({
+    required this.id,
+    this.filId,
+    this.roleExpediteur,
+    this.texte,
+    this.document,
+    this.creeLe,
+  });
 
   @override
-  List<Object?> get props =>
-      [id, filId, roleExpediteur, texte, document, creeLe];
+  List<Object?> get props => [
+    id,
+    filId,
+    roleExpediteur,
+    texte,
+    document,
+    creeLe,
+  ];
 }

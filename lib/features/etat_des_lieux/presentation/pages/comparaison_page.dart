@@ -9,6 +9,7 @@ import 'package:gestion_immo_mobile/features/etat_des_lieux/domain/entities/etat
 import 'package:gestion_immo_mobile/features/etat_des_lieux/presentation/bloc/comparaison_bloc.dart';
 import 'package:gestion_immo_mobile/features/etat_des_lieux/presentation/bloc/comparaison_event.dart';
 import 'package:gestion_immo_mobile/features/etat_des_lieux/presentation/bloc/comparaison_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Comparaison entrée / sortie (§ 52.3) : éléments dégradés, absents, nouveaux.
 class ComparaisonPage extends StatelessWidget {
@@ -48,7 +49,10 @@ class ComparaisonPage extends StatelessWidget {
 
   Widget _buildFiche(BuildContext context, ComparaisonEdl c) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Entrée / sortie')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('Entrée / sortie'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -63,8 +67,10 @@ class ComparaisonPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (c.ecarts.isEmpty)
-            const Vide('Aucune dégradation constatée',
-                icone: Icons.verified_outlined),
+            const Vide(
+              'Aucune dégradation constatée',
+              icone: Icons.verified_outlined,
+            ),
           for (final e in c.ecarts)
             Card(
               child: Padding(
@@ -72,11 +78,14 @@ class ComparaisonPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${e.piece ?? ''} · ${e.element ?? ''}',
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(
+                      '${e.piece ?? ''} · ${e.element ?? ''}',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 4),
                     Text(
-                        'Entrée : ${e.etatEntree ?? '—'}  →  Sortie : ${e.etatSortie ?? '—'}'),
+                      'Entrée : ${e.etatEntree ?? '—'}  →  Sortie : ${e.etatSortie ?? '—'}',
+                    ),
                     if (e.commentaireSortie != null)
                       Text('« ${e.commentaireSortie} »'),
                   ],

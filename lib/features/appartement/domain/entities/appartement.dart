@@ -11,13 +11,14 @@ class OccupationAppartement extends Equatable {
   final String? fin;
   final PersonneResume? locataire;
 
-  const OccupationAppartement(
-      {required this.bailId,
-      this.reference,
-      this.statut,
-      this.debut,
-      this.fin,
-      this.locataire});
+  const OccupationAppartement({
+    required this.bailId,
+    this.reference,
+    this.statut,
+    this.debut,
+    this.fin,
+    this.locataire,
+  });
 
   @override
   List<Object?> get props => [bailId, reference, statut, debut, fin, locataire];
@@ -68,24 +69,24 @@ class Appartement extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        numero,
-        type,
-        etage,
-        surface,
-        nbPieces,
-        loyer,
-        charges,
-        coefficientCharges,
-        meuble,
-        description,
-        statut,
-        immeubleId,
-        immeubleNom,
-        bailCourant,
-        locataireCourant,
-        historique,
-      ];
+    id,
+    numero,
+    type,
+    etage,
+    surface,
+    nbPieces,
+    loyer,
+    charges,
+    coefficientCharges,
+    meuble,
+    description,
+    statut,
+    immeubleId,
+    immeubleNom,
+    bailCourant,
+    locataireCourant,
+    historique,
+  ];
 }
 
 /// Rentabilité sur une période (§ 25).
@@ -96,16 +97,22 @@ class RentabiliteAppartement extends Equatable {
   final num? resultatNet;
   final num? impayes;
 
-  const RentabiliteAppartement(
-      {this.loyersEncaisses,
-      this.chargesRecuperees,
-      this.depenses,
-      this.resultatNet,
-      this.impayes});
+  const RentabiliteAppartement({
+    this.loyersEncaisses,
+    this.chargesRecuperees,
+    this.depenses,
+    this.resultatNet,
+    this.impayes,
+  });
 
   @override
-  List<Object?> get props =>
-      [loyersEncaisses, chargesRecuperees, depenses, resultatNet, impayes];
+  List<Object?> get props => [
+    loyersEncaisses,
+    chargesRecuperees,
+    depenses,
+    resultatNet,
+    impayes,
+  ];
 }
 
 /// Événement de l'historique : bail, paiement, travaux, dépense, incident.
@@ -124,10 +131,11 @@ class FicheAppartement extends Equatable {
   final Appartement appartement;
   final RentabiliteAppartement rentabilite;
   final List<EvenementAppartement> historique;
-  const FicheAppartement(
-      {required this.appartement,
-      required this.rentabilite,
-      required this.historique});
+  const FicheAppartement({
+    required this.appartement,
+    required this.rentabilite,
+    required this.historique,
+  });
 
   @override
   List<Object?> get props => [appartement, rentabilite, historique];

@@ -14,6 +14,7 @@ import 'package:gestion_immo_mobile/features/paiement/domain/entities/paiement.d
 import 'package:gestion_immo_mobile/features/paiement/domain/usecases/get_rapprochements.dart';
 import 'package:gestion_immo_mobile/features/paiement/domain/usecases/rejeter_rapprochement.dart';
 import 'package:gestion_immo_mobile/features/paiement/domain/usecases/resoudre_rapprochement.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// File « À rapprocher » (§ 51.3) : paiements non identifiés et excédents.
 class RapprochementsPage extends StatefulWidget {
@@ -36,15 +37,18 @@ class _RapprochementsPageState extends State<RapprochementsPage> {
           children: [
             ListTile(
               leading: const Icon(Icons.link),
-              title: Text(e.type == 'excedent'
-                  ? 'Imputer le crédit à une échéance'
-                  : 'Rattacher à un bail'),
+              title: Text(
+                e.type == 'excedent'
+                    ? 'Imputer le crédit à une échéance'
+                    : 'Rattacher à un bail',
+              ),
               onTap: () => Navigator.pop(ctx, 'resoudre'),
             ),
             ListTile(
-                leading: const Icon(Icons.undo),
-                title: const Text('Rejeter et rembourser'),
-                onTap: () => Navigator.pop(ctx, 'rejeter')),
+              leading: const Icon(Icons.undo),
+              title: const Text('Rejeter et rembourser'),
+              onTap: () => Navigator.pop(ctx, 'rejeter'),
+            ),
           ],
         ),
       ),
@@ -58,20 +62,31 @@ class _RapprochementsPageState extends State<RapprochementsPage> {
         EcranFormulaire(
           titre: 'Rapprocher le paiement',
           intro: Text(
-              '${montant(e.montant)} — ${refs.libelle('type_rapprochement', e.type)}'),
+            '${montant(e.montant)} — ${refs.libelle('type_rapprochement', e.type)}',
+          ),
           initial: {if (e.bailId != null) 'lease_id': e.bailId},
           champs: [
             if (e.bailId == null)
-              Champ('lease_id', 'Bail',
-                  type: TypeChamp.entite,
-                  obligatoire: true,
-                  entite: sourceBaux()),
+              Champ(
+                'lease_id',
+                'Bail',
+                type: TypeChamp.entite,
+                obligatoire: true,
+                entite: sourceBaux(),
+              ),
             if (e.bailId != null)
-              Champ('rent_schedule_id', 'Échéance (facultatif)',
-                  type: TypeChamp.entite,
-                  entite: sourceEcheancesImpayees(e.bailId!)),
-            const Champ('note', 'Note',
-                type: TypeChamp.multiligne, maxLongueur: 1000),
+              Champ(
+                'rent_schedule_id',
+                'Échéance (facultatif)',
+                type: TypeChamp.entite,
+                entite: sourceEcheancesImpayees(e.bailId!),
+              ),
+            const Champ(
+              'note',
+              'Note',
+              type: TypeChamp.multiligne,
+              maxLongueur: 1000,
+            ),
           ],
           libelleEnvoi: 'Rapprocher',
           messageSucces: 'Paiement rapproché',
@@ -86,13 +101,20 @@ class _RapprochementsPageState extends State<RapprochementsPage> {
           titre: 'Rejeter et rembourser',
           initial: const {'refund_method': 'especes'},
           champs: const [
-            Champ('note', 'Motif',
-                type: TypeChamp.multiligne,
-                obligatoire: true,
-                minLongueur: 3,
-                maxLongueur: 1000),
-            Champ('refund_method', 'Moyen du remboursement',
-                type: TypeChamp.selection, referentiel: 'mode_paiement'),
+            Champ(
+              'note',
+              'Motif',
+              type: TypeChamp.multiligne,
+              obligatoire: true,
+              minLongueur: 3,
+              maxLongueur: 1000,
+            ),
+            Champ(
+              'refund_method',
+              'Moyen du remboursement',
+              type: TypeChamp.selection,
+              referentiel: 'mode_paiement',
+            ),
           ],
           libelleEnvoi: 'Rejeter',
           messageSucces: 'Paiement rejeté',
@@ -107,13 +129,16 @@ class _RapprochementsPageState extends State<RapprochementsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('À rapprocher')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('À rapprocher'),
+      ),
       body: Column(
         children: [
           Filtres(
             options: [
               for (final o in refs.options('statut_rapprochement'))
-                (o.code, o.label)
+                (o.code, o.label),
             ],
             valeur: _statut,
             onChange: (v) => setState(() => _statut = v),
@@ -126,18 +151,19 @@ class _RapprochementsPageState extends State<RapprochementsPage> {
               iconeVide: Icons.verified_outlined,
               charger: (page) =>
                   sl<GetRapprochements>()(page: page, statut: _statut),
-              element: (context, e) => ListTile(
-                title: Text(refs.libelle('type_rapprochement', e.type)),
-                subtitle: Text(
-                  [
-                    if (e.locataire != null) e.locataire!.nomComplet,
-                    if (e.telephonePayeur != null) e.telephonePayeur!,
-                    if (e.referenceRecue != null) 'Réf. ${e.referenceRecue}',
-                    dateHeure(e.creeLe),
-                  ].join(' · '),
+              element: (context, e) => TuileOption(
+                icone: Icons.compare_arrows,
+                titre: refs.libelle('type_rapprochement', e.type),
+                detail: [
+                  if (e.locataire != null) e.locataire!.nomComplet,
+                  if (e.telephonePayeur != null) e.telephonePayeur!,
+                  if (e.referenceRecue != null) 'Réf. ${e.referenceRecue}',
+                  dateHeure(e.creeLe),
+                ].join(' · '),
+                fin: Montant(
+                  e.montant,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                trailing: Montant(e.montant,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
                 onTap: e.statut == 'en_attente' ? () => _traiter(e) : null,
               ),
             ),

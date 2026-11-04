@@ -1,4 +1,5 @@
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import '../../domain/entities/caisse.dart';
 
 class MouvementCaisseModel extends MouvementCaisse {
@@ -29,17 +30,22 @@ class MouvementCaisseModel extends MouvementCaisse {
 }
 
 class SyntheseCaisseModel extends SyntheseCaisse {
-  const SyntheseCaisseModel(
-      {super.entrees,
-      super.sorties,
-      super.solde,
-      super.detailEntrees,
-      super.detailSorties,
-      super.cautionsDetenues});
+  const SyntheseCaisseModel({
+    super.entrees,
+    super.sorties,
+    super.solde,
+    super.detailEntrees,
+    super.detailSorties,
+    super.cautionsDetenues,
+  });
 
   static List<TotalCategorie> _totaux(dynamic v) => listeJson(v)
-      .map((d) => TotalCategorie(
-          categorie: d['category'] as String?, total: nombreOuNull(d['total'])))
+      .map(
+        (d) => TotalCategorie(
+          categorie: d['category'] as String?,
+          total: nombreOuNull(d['total']),
+        ),
+      )
       .toList();
 
   factory SyntheseCaisseModel.fromJson(Map<String, dynamic> json) =>

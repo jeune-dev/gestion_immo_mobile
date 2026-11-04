@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/analyser_incident.dart';
 import '../../domain/usecases/get_incident.dart';
 import '../../domain/usecases/rejeter_incident.dart';
@@ -47,13 +48,12 @@ class IncidentBloc extends Bloc<IncidentEvent, IncidentState> {
     Emitter<IncidentState> emit,
   ) async {
     final result = await analyserIncident(event.id, note: event.note);
-    await result.fold(
-      (failure) async => emit(IncidentActionError(failure)),
-      (_) async {
-        emit(IncidentSuccess(message: 'Incident en analyse'));
-        await _relire(event.id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(IncidentActionError(failure)), (
+      _,
+    ) async {
+      emit(IncidentSuccess(message: 'Incident en analyse'));
+      await _relire(event.id, emit);
+    });
   }
 
   Future<void> _onResoudreIncident(
@@ -61,13 +61,12 @@ class IncidentBloc extends Bloc<IncidentEvent, IncidentState> {
     Emitter<IncidentState> emit,
   ) async {
     final result = await resoudreIncident(event.id, note: event.note);
-    await result.fold(
-      (failure) async => emit(IncidentActionError(failure)),
-      (_) async {
-        emit(IncidentSuccess(message: 'Incident résolu'));
-        await _relire(event.id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(IncidentActionError(failure)), (
+      _,
+    ) async {
+      emit(IncidentSuccess(message: 'Incident résolu'));
+      await _relire(event.id, emit);
+    });
   }
 
   Future<void> _onRejeterIncident(
@@ -75,19 +74,19 @@ class IncidentBloc extends Bloc<IncidentEvent, IncidentState> {
     Emitter<IncidentState> emit,
   ) async {
     final result = await rejeterIncident(event.id, event.motif);
-    await result.fold(
-      (failure) async => emit(IncidentActionError(failure)),
-      (_) async {
-        emit(IncidentSuccess(message: 'Incident rejeté'));
-        await _relire(event.id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(IncidentActionError(failure)), (
+      _,
+    ) async {
+      emit(IncidentSuccess(message: 'Incident rejeté'));
+      await _relire(event.id, emit);
+    });
   }
 
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(String id, Emitter<IncidentState> emit) async {
-    final dejaAffichee = state is! IncidentInitial &&
+    final dejaAffichee =
+        state is! IncidentInitial &&
         state is! IncidentLoading &&
         state is! IncidentError;
     final result = await getIncident(id);

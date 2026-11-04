@@ -1,5 +1,6 @@
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import '../../domain/entities/caution.dart';
 
 class CautionModel extends Caution {

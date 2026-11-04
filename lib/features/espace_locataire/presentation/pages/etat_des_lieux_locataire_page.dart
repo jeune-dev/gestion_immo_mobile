@@ -14,6 +14,7 @@ import 'package:gestion_immo_mobile/features/espace_locataire/domain/usecases/te
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/etat_des_lieux_locataire_bloc.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/etat_des_lieux_locataire_event.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/etat_des_lieux_locataire_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// État des lieux côté locataire : consulter, accepter ou contester dans le délai (§ 52).
 class EtatDesLieuxLocatairePage extends StatelessWidget {
@@ -23,36 +24,39 @@ class EtatDesLieuxLocatairePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => di.sl<EtatDesLieuxLocataireBloc>()
-        ..add(LoadEtatDesLieuxLocataire(id)),
+      create: (_) =>
+          di.sl<EtatDesLieuxLocataireBloc>()
+            ..add(LoadEtatDesLieuxLocataire(id)),
       child:
           BlocConsumer<EtatDesLieuxLocataireBloc, EtatDesLieuxLocataireState>(
-        listener: (context, state) {
-          if (state is EtatDesLieuxLocataireSuccess) {
-            afficherSucces(context, state.message);
-          } else if (state is EtatDesLieuxLocataireActionError) {
-            afficherErreurApi(context, state.failure);
-          }
-        },
-        // Les états d'action (message…) ne redessinent pas l'écran.
-        buildWhen: (_, state) =>
-            state is EtatDesLieuxLocataireInitial ||
-            state is EtatDesLieuxLocataireLoading ||
-            state is EtatDesLieuxLocataireLoaded ||
-            state is EtatDesLieuxLocataireError,
-        builder: (context, state) {
-          if (state is EtatDesLieuxLocataireLoaded) {
-            return _buildFiche(context, state.etatDesLieux);
-          }
-          return VueChargement(
-            titre: 'État des lieux',
-            failure: state is EtatDesLieuxLocataireError ? state.failure : null,
-            onReessayer: () => context
-                .read<EtatDesLieuxLocataireBloc>()
-                .add(LoadEtatDesLieuxLocataire(id)),
-          );
-        },
-      ),
+            listener: (context, state) {
+              if (state is EtatDesLieuxLocataireSuccess) {
+                afficherSucces(context, state.message);
+              } else if (state is EtatDesLieuxLocataireActionError) {
+                afficherErreurApi(context, state.failure);
+              }
+            },
+            // Les états d'action (message…) ne redessinent pas l'écran.
+            buildWhen: (_, state) =>
+                state is EtatDesLieuxLocataireInitial ||
+                state is EtatDesLieuxLocataireLoading ||
+                state is EtatDesLieuxLocataireLoaded ||
+                state is EtatDesLieuxLocataireError,
+            builder: (context, state) {
+              if (state is EtatDesLieuxLocataireLoaded) {
+                return _buildFiche(context, state.etatDesLieux);
+              }
+              return VueChargement(
+                titre: 'État des lieux',
+                failure: state is EtatDesLieuxLocataireError
+                    ? state.failure
+                    : null,
+                onReessayer: () => context
+                    .read<EtatDesLieuxLocataireBloc>()
+                    .add(LoadEtatDesLieuxLocataire(id)),
+              );
+            },
+          ),
     );
   }
 
@@ -61,15 +65,17 @@ class EtatDesLieuxLocatairePage extends StatelessWidget {
     final aRepondre = e.statut == 'soumis';
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
         title: Text(refs.libelle('type_etat_des_lieux', e.type)),
         actions: [
           IconButton(
             tooltip: 'PDF',
             icon: const Icon(Icons.picture_as_pdf_outlined),
             onPressed: () => ouvrirPdf(
-                context,
-                () => di.sl<TelechargerMonEtatDesLieux>()(id),
-                'etat-des-lieux-${e.type}-v${e.version}.pdf'),
+              context,
+              () => di.sl<TelechargerMonEtatDesLieux>()(id),
+              'etat-des-lieux-${e.type}-v${e.version}.pdf',
+            ),
           ),
         ],
       ),
@@ -85,8 +91,7 @@ class EtatDesLieuxLocatairePage extends StatelessWidget {
                           final texte = await confirmer(
                             context,
                             titre: "Contester l'état des lieux",
-                            message:
-                                'Expliquez précisément ce qui ne correspond pas (10 caractères minimum).',
+                            message: 'Expliquez précisément ce qui ne correspond pas (10 caractères minimum).',
                             motif: true,
                             libelleMotif: 'Votre commentaire',
                             minMotif: 10,
@@ -107,8 +112,7 @@ class EtatDesLieuxLocatairePage extends StatelessWidget {
                           final ok = await confirmer(
                             context,
                             titre: "Accepter l'état des lieux",
-                            message:
-                                'Vous confirmez que ce document correspond à l’état du logement.',
+                            message: 'Vous confirmez que ce document correspond à l’état du logement.',
                             action: 'Accepter',
                           );
                           if (ok != null) {
@@ -128,23 +132,33 @@ class EtatDesLieuxLocatairePage extends StatelessWidget {
         children: [
           if (aRepondre) ...[
             Encadre(
-                'Sans réponse avant le ${dateHeure(e.limiteReponse)}, il sera considéré comme accepté.',
-                ton: TonStatut.avertissement),
+              'Sans réponse avant le ${dateHeure(e.limiteReponse)}, il sera considéré comme accepté.',
+              ton: TonStatut.avertissement,
+            ),
             const SizedBox(height: 12),
           ],
           Section(
             children: [
-              Ligne('Statut', null,
-                  widget: Statut(FamilleStatut.etatDesLieux,
-                      'statut_etat_des_lieux', e.statut)),
-              Ligne('Date', date(e.realiseLe)),
-              Ligne('Compteur d’eau',
-                  e.compteurEau == null ? null : '${e.compteurEau} m³'),
               Ligne(
-                  'Compteur d’électricité',
-                  e.compteurElectricite == null
-                      ? null
-                      : '${e.compteurElectricite} kWh'),
+                'Statut',
+                null,
+                widget: Statut(
+                  FamilleStatut.etatDesLieux,
+                  'statut_etat_des_lieux',
+                  e.statut,
+                ),
+              ),
+              Ligne('Date', date(e.realiseLe)),
+              Ligne(
+                'Compteur d’eau',
+                e.compteurEau == null ? null : '${e.compteurEau} m³',
+              ),
+              Ligne(
+                'Compteur d’électricité',
+                e.compteurElectricite == null
+                    ? null
+                    : '${e.compteurElectricite} kWh',
+              ),
               Ligne('Clés', e.nbCles == null ? null : '${e.nbCles}'),
               if (e.observations != null) Ligne('Observations', e.observations),
               if (e.contestation != null)
@@ -161,14 +175,18 @@ class EtatDesLieuxLocatairePage extends StatelessWidget {
                     ListTile(
                       dense: true,
                       title: Text(
-                          refs.libelle('element_etat_des_lieux', it.element)),
-                      subtitle:
-                          it.commentaire == null ? null : Text(it.commentaire!),
+                        refs.libelle('element_etat_des_lieux', it.element),
+                      ),
+                      subtitle: it.commentaire == null
+                          ? null
+                          : Text(it.commentaire!),
                       trailing: Text(refs.libelle('etat_element', it.etat)),
                       onTap: it.photos.isEmpty
                           ? null
                           : () => afficherImage(
-                              context, it.photos.first.document.id),
+                              context,
+                              it.photos.first.document.id,
+                            ),
                     ),
                 ],
               ),

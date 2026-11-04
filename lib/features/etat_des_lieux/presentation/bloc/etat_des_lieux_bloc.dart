@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/ajouter_element_edl.dart';
 import '../../domain/usecases/ajouter_photo_edl.dart';
 import '../../domain/usecases/ajouter_piece_edl.dart';
@@ -12,7 +13,9 @@ import '../../domain/usecases/supprimer_element_edl.dart';
 import '../../domain/usecases/supprimer_etat_des_lieux.dart';
 import '../../domain/usecases/supprimer_photo_edl.dart';
 import '../../domain/usecases/supprimer_piece_edl.dart';
+
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
+
 import 'etat_des_lieux_event.dart';
 import 'etat_des_lieux_state.dart';
 
@@ -139,8 +142,11 @@ class EtatDesLieuxBloc extends Bloc<EtatDesLieuxEvent, EtatDesLieuxState> {
     PreciserElementEvent event,
     Emitter<EtatDesLieuxState> emit,
   ) async {
-    final result =
-        await preciserElementEdl(event.id, event.elementId, event.precision);
+    final result = await preciserElementEdl(
+      event.id,
+      event.elementId,
+      event.precision,
+    );
     await result.fold(
       (failure) async => emit(EtatDesLieuxActionError(failure)),
       (_) async {
@@ -168,8 +174,11 @@ class EtatDesLieuxBloc extends Bloc<EtatDesLieuxEvent, EtatDesLieuxState> {
     AjouterPhotoEvent event,
     Emitter<EtatDesLieuxState> emit,
   ) async {
-    final result =
-        await ajouterPhotoEdl(event.id, event.elementId, event.chemin);
+    final result = await ajouterPhotoEdl(
+      event.id,
+      event.elementId,
+      event.chemin,
+    );
     await result.fold(
       (failure) async => emit(EtatDesLieuxActionError(failure)),
       (_) async {
@@ -236,7 +245,8 @@ class EtatDesLieuxBloc extends Bloc<EtatDesLieuxEvent, EtatDesLieuxState> {
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(String id, Emitter<EtatDesLieuxState> emit) async {
-    final dejaAffichee = state is! EtatDesLieuxInitial &&
+    final dejaAffichee =
+        state is! EtatDesLieuxInitial &&
         state is! EtatDesLieuxLoading &&
         state is! EtatDesLieuxError;
     final result = await getEtatDesLieux(id);

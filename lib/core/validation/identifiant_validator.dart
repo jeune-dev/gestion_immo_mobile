@@ -22,10 +22,10 @@ class ResultatValidation {
   const ResultatValidation._(this.niveau, this.valeur, this.message);
 
   const ResultatValidation.valide(String valeurNormalisee)
-      : this._(NiveauValidation.valide, valeurNormalisee, 'Saisie valide');
+    : this._(NiveauValidation.valide, valeurNormalisee, 'Saisie valide');
 
   const ResultatValidation.invalide(String raison)
-      : this._(NiveauValidation.invalide, null, raison);
+    : this._(NiveauValidation.invalide, null, raison);
 
   bool get estBloquant => niveau == NiveauValidation.invalide;
   bool get estAcceptable => niveau != NiveauValidation.invalide;
@@ -64,7 +64,8 @@ class IdentifiantValidator {
     }
     if (!RegExp(r'(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(brut)) {
       return const ResultatValidation.invalide(
-          'Une majuscule, une minuscule et un chiffre');
+        'Une majuscule, une minuscule et un chiffre',
+      );
     }
     return ResultatValidation.valide(brut);
   }
@@ -73,6 +74,16 @@ class IdentifiantValidator {
 
   /// Code numérique de [longueur] chiffres : double authentification et
   /// réinitialisation (6), invitation d'un locataire (8).
+  /// Code « mot de passe oublié » : 8 lettres ou chiffres ; casse et espaces
+  /// indifférents (le code est rendu en majuscules, sans espaces).
+  static ResultatValidation codeReinitialisation(String? saisie) {
+    final brut = (saisie ?? '').replaceAll(RegExp(r'\s'), '').toUpperCase();
+    if (!RegExp(r'^[A-Z0-9]{8}$').hasMatch(brut)) {
+      return ResultatValidation.invalide('8 lettres ou chiffres');
+    }
+    return ResultatValidation.valide(brut);
+  }
+
   static ResultatValidation code(String? saisie, {required int longueur}) {
     final brut = (saisie ?? '').trim();
     if (!RegExp('^\\d{$longueur}\$').hasMatch(brut)) {

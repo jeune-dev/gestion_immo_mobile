@@ -1,6 +1,7 @@
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
 import 'package:gestion_immo_mobile/features/documents/data/models/document_model.dart';
+
 import '../../domain/entities/etat_des_lieux.dart';
 
 class EtatDesLieuxModel extends EtatDesLieux {
@@ -26,19 +27,23 @@ class EtatDesLieuxModel extends EtatDesLieux {
   });
 
   static ElementEdl _element(Map<String, dynamic> i) => ElementEdl(
-        id: '${i['id']}',
-        element: i['element'] as String?,
-        precision: i['label'] as String?,
-        etat: i['condition'] as String?,
-        commentaire: i['comment'] as String?,
-        photos: listeJson(i['photos'])
-            .where((p) => p['document'] is Map)
-            .map((p) => PhotoEdl(
-                id: '${p['id']}',
-                document: DocumentModel.fromJson(
-                    Map<String, dynamic>.from(p['document'] as Map))))
-            .toList(),
-      );
+    id: '${i['id']}',
+    element: i['element'] as String?,
+    precision: i['label'] as String?,
+    etat: i['condition'] as String?,
+    commentaire: i['comment'] as String?,
+    photos: listeJson(i['photos'])
+        .where((p) => p['document'] is Map)
+        .map(
+          (p) => PhotoEdl(
+            id: '${p['id']}',
+            document: DocumentModel.fromJson(
+              Map<String, dynamic>.from(p['document'] as Map),
+            ),
+          ),
+        )
+        .toList(),
+  );
 
   factory EtatDesLieuxModel.fromJson(Map<String, dynamic> json) =>
       EtatDesLieuxModel(
@@ -60,22 +65,26 @@ class EtatDesLieuxModel extends EtatDesLieux {
         locataire: PersonneResume.depuis(json['tenant']),
         appartementNumero: (json['apartment'] as Map?)?['number']?.toString(),
         pieces: listeJson(json['rooms'])
-            .map((r) => PieceEdl(
+            .map(
+              (r) => PieceEdl(
                 id: '${r['id']}',
                 nom: '${r['name'] ?? ''}',
-                elements: listeJson(r['items']).map(_element).toList()))
+                elements: listeJson(r['items']).map(_element).toList(),
+              ),
+            )
             .toList(),
       );
 }
 
 class ComparaisonEdlModel extends ComparaisonEdl {
-  const ComparaisonEdlModel(
-      {super.elementsSortie,
-      super.identiques,
-      super.degrades,
-      super.ameliores,
-      super.absents,
-      super.ecarts});
+  const ComparaisonEdlModel({
+    super.elementsSortie,
+    super.identiques,
+    super.degrades,
+    super.ameliores,
+    super.absents,
+    super.ecarts,
+  });
 
   factory ComparaisonEdlModel.fromJson(Map<String, dynamic> json) {
     final resume = (json['resume'] as Map?) ?? const {};

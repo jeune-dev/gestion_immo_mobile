@@ -1,4 +1,5 @@
 import 'package:gestion_immo_mobile/core/config/user_role.dart';
+
 import '../../domain/entities/compte.dart';
 import '../../domain/entities/droits_abonnement.dart';
 import '../../domain/entities/espace_proprietaire.dart';
@@ -12,6 +13,7 @@ class UtilisateurModel extends Utilisateur {
     required super.nom,
     super.email,
     super.telephone,
+    super.photoUrl,
     super.langue,
     super.doitChangerMotDePasse,
     super.doubleAuthentificationActive,
@@ -25,6 +27,7 @@ class UtilisateurModel extends Utilisateur {
         nom: json['last_name'] as String? ?? '',
         email: json['email'] as String?,
         telephone: json['phone'] as String?,
+        photoUrl: json['avatar_url'] as String?,
         langue: json['language'] as String? ?? 'fr',
         doitChangerMotDePasse: json['must_change_password'] == true,
         doubleAuthentificationActive:
@@ -33,12 +36,13 @@ class UtilisateurModel extends Utilisateur {
 }
 
 class EspaceProprietaireModel extends EspaceProprietaire {
-  const EspaceProprietaireModel(
-      {required super.id,
-      required super.nomAffiche,
-      super.societe,
-      super.ville,
-      super.statut});
+  const EspaceProprietaireModel({
+    required super.id,
+    required super.nomAffiche,
+    super.societe,
+    super.ville,
+    super.statut,
+  });
 
   factory EspaceProprietaireModel.fromJson(Map<String, dynamic> json) =>
       EspaceProprietaireModel(
@@ -51,8 +55,12 @@ class EspaceProprietaireModel extends EspaceProprietaire {
 }
 
 class DroitsAbonnementModel extends DroitsAbonnement {
-  const DroitsAbonnementModel(
-      {required super.actif, super.statut, super.plan, super.finPeriode});
+  const DroitsAbonnementModel({
+    required super.actif,
+    super.statut,
+    super.plan,
+    super.finPeriode,
+  });
 
   factory DroitsAbonnementModel.fromJson(Map<String, dynamic> json) {
     final abonnement = json['abonnement'] as Map?;
@@ -67,19 +75,25 @@ class DroitsAbonnementModel extends DroitsAbonnement {
 }
 
 class CompteModel extends Compte {
-  const CompteModel(
-      {required super.utilisateur, super.espace, super.abonnement});
+  const CompteModel({
+    required super.utilisateur,
+    super.espace,
+    super.abonnement,
+  });
 
   factory CompteModel.fromJson(Map<String, dynamic> json) => CompteModel(
-        utilisateur: UtilisateurModel.fromJson(
-            Map<String, dynamic>.from(json['user'] as Map)),
-        espace: json['owner'] == null
-            ? null
-            : EspaceProprietaireModel.fromJson(
-                Map<String, dynamic>.from(json['owner'] as Map)),
-        abonnement: json['abonnement'] == null
-            ? null
-            : DroitsAbonnementModel.fromJson(
-                Map<String, dynamic>.from(json['abonnement'] as Map)),
-      );
+    utilisateur: UtilisateurModel.fromJson(
+      Map<String, dynamic>.from(json['user'] as Map),
+    ),
+    espace: json['owner'] == null
+        ? null
+        : EspaceProprietaireModel.fromJson(
+            Map<String, dynamic>.from(json['owner'] as Map),
+          ),
+    abonnement: json['abonnement'] == null
+        ? null
+        : DroitsAbonnementModel.fromJson(
+            Map<String, dynamic>.from(json['abonnement'] as Map),
+          ),
+  );
 }

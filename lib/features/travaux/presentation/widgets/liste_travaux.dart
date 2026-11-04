@@ -29,7 +29,7 @@ class _ListeTravauxState extends State<ListeTravaux> {
           options: [
             ('ouverts', 'En cours'),
             ('', 'Tous'),
-            for (final o in refs.options('statut_travaux')) (o.code, o.label)
+            for (final o in refs.options('statut_travaux')) (o.code, o.label),
           ],
           valeur: _statut,
           onChange: (v) => setState(() => _statut = v),
@@ -42,25 +42,25 @@ class _ListeTravauxState extends State<ListeTravaux> {
             iconeVide: Icons.handyman_outlined,
             charger: (page) async {
               final r = await sl<GetTravauxListe>()(
-                  page: page,
-                  statut:
-                      _statut == 'ouverts' || _statut.isEmpty ? null : _statut);
+                page: page,
+                statut: _statut == 'ouverts' || _statut.isEmpty
+                    ? null
+                    : _statut,
+              );
               if (_statut != 'ouverts') return r;
               // « En cours » : tout ce qui n'est ni terminé ni annulé
               return r.map((p) => p.filtrer((t) => !t.ferme));
             },
-            element: (context, t) => ListTile(
-              title: Text('${t.reference ?? ''} · ${t.titre ?? ''}'),
-              subtitle: Text(
-                [
-                  t.immeubleNom,
-                  if (t.appartementNumero != null)
-                    'Appart. ${t.appartementNumero}',
-                  refs.libelle('priorite', t.priorite),
-                ].whereType<String>().join(' · '),
-              ),
-              trailing:
-                  Statut(FamilleStatut.travaux, 'statut_travaux', t.statut),
+            element: (context, t) => TuileOption(
+              icone: Icons.handyman_outlined,
+              titre: '${t.reference ?? ''} · ${t.titre ?? ''}',
+              detail: [
+                t.immeubleNom,
+                if (t.appartementNumero != null)
+                  'Appart. ${t.appartementNumero}',
+                refs.libelle('priorite', t.priorite),
+              ].whereType<String>().join(' · '),
+              fin: Statut(FamilleStatut.travaux, 'statut_travaux', t.statut),
               onTap: () async {
                 await ouvrirTravaux(context, t.id);
                 widget.cle.currentState?.recharger();

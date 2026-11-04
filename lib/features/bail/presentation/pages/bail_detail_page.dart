@@ -26,6 +26,7 @@ import 'package:gestion_immo_mobile/features/bail/presentation/bloc/bail_bloc.da
 import 'package:gestion_immo_mobile/features/bail/presentation/bloc/bail_event.dart';
 import 'package:gestion_immo_mobile/features/bail/presentation/bloc/bail_state.dart';
 import 'package:gestion_immo_mobile/features/bail/presentation/widgets/formulaire_bail.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Contrat de location (§ 10) et son cycle : brouillon → actif → terminé → clos.
 class BailDetailPage extends StatelessWidget {
@@ -67,7 +68,9 @@ class BailDetailPage extends StatelessWidget {
   }
 
   void _afficherAvertissements(
-      BuildContext context, AvertissementsActivationLoaded state) {
+    BuildContext context,
+    AvertissementsActivationLoaded state,
+  ) {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -75,7 +78,9 @@ class BailDetailPage extends StatelessWidget {
         content: Text(state.messages.map((m) => '• $m').join('\n')),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('OK'))
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('OK'),
+          ),
         ],
       ),
     );
@@ -83,10 +88,7 @@ class BailDetailPage extends StatelessWidget {
 
   Widget _buildFiche(BuildContext context, FicheBail fiche) {
     final bloc = context.read<BailBloc>();
-    return _Fiche(
-      fiche: fiche,
-      recharger: () => bloc.add(RafraichirBail(id)),
-    );
+    return _Fiche(fiche: fiche, recharger: () => bloc.add(RafraichirBail(id)));
   }
 }
 
@@ -134,8 +136,7 @@ class _Fiche extends StatelessWidget {
             final ok = await confirmer(
               context,
               titre: 'Clôturer le bail',
-              message:
-                  'Possible seulement quand la caution est restituée ou que le litige est documenté.',
+              message: 'Possible seulement quand la caution est restituée ou que le litige est documenté.',
               action: 'Clôturer',
             );
             if (ok != null) bloc.add(CloturerBailEvent(fiche.bail.id));
@@ -162,6 +163,7 @@ class _Fiche extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
         title: Text(b.reference ?? 'Bail'),
         actions: [MenuActions(actions: actions)],
       ),
@@ -171,8 +173,7 @@ class _Fiche extends StatelessWidget {
                 final ok = await confirmer(
                   context,
                   titre: 'Activer le bail',
-                  message:
-                      "L'appartement passe « Occupé », les échéances sont générées sur 12 mois et la caution est ouverte.",
+                  message: "L'appartement passe « Occupé », les échéances sont générées sur 12 mois et la caution est ouverte.",
                   action: 'Activer',
                 );
                 if (ok != null) bloc.add(ActiverBailEvent(fiche.bail.id));
@@ -181,30 +182,30 @@ class _Fiche extends StatelessWidget {
               label: const Text('Activer le bail'),
             )
           : statut == 'actif'
-              ? FloatingActionButton.extended(
-                  onPressed: () async {
-                    if (await encaisser(context, bail: b)) recharger();
-                  },
-                  icon: const Icon(Icons.payments_outlined),
-                  label: const Text('Encaisser'),
-                )
-              : null,
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                if (await encaisser(context, bail: b)) recharger();
+              },
+              icon: const Icon(Icons.payments_outlined),
+              label: const Text('Encaisser'),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: () async => recharger(),
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
           children: [
+            EnTeteFiche(
+              surtitre: refs.libelle('type_bail', b.typeBail),
+              titre: nomDe(b.locataire),
+              detail:
+                  'Appartement ${b.logement?.numero ?? ''} · ${montant(b.loyer)}',
+              statut: Statut(FamilleStatut.bail, 'statut_bail', statut),
+            ),
+            const SizedBox(height: AppTheme.espaceLg),
             Section(
+              titre: 'Informations',
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                        child: Text(refs.libelle('type_bail', b.typeBail),
-                            style: Theme.of(context).textTheme.titleMedium)),
-                    Statut(FamilleStatut.bail, 'statut_bail', statut),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.espaceSm),
                 Ligne(
                   'Locataire',
                   null,
@@ -212,17 +213,25 @@ class _Fiche extends StatelessWidget {
                     onPressed: b.locataire == null
                         ? null
                         : () => ouvrir(
-                            context, LocataireDetailPage(id: b.locataire!.id)),
+                            context,
+                            LocataireDetailPage(id: b.locataire!.id),
+                          ),
                     child: Text(nomDe(b.locataire)),
                   ),
                 ),
-                Ligne('Logement',
-                    'Appartement ${b.logement?.numero ?? ''} · ${b.logement?.immeubleNom ?? ''}'),
-                Ligne('Période',
-                    '${date(b.debut)} → ${b.fin == null ? 'durée indéterminée' : date(b.fin)}'),
+                Ligne(
+                  'Logement',
+                  'Appartement ${b.logement?.numero ?? ''} · ${b.logement?.immeubleNom ?? ''}',
+                ),
+                Ligne(
+                  'Période',
+                  '${date(b.debut)} → ${b.fin == null ? 'durée indéterminée' : date(b.fin)}',
+                ),
                 if (b.sortieLe != null) Ligne('Sorti le', date(b.sortieLe)),
-                Ligne('Loyer',
-                    '${montant(b.loyer)} · ${refs.libelle('periodicite', b.periodicite)}'),
+                Ligne(
+                  'Loyer',
+                  '${montant(b.loyer)} · ${refs.libelle('periodicite', b.periodicite)}',
+                ),
                 Ligne('Charges', montant(b.charges)),
                 Ligne("Jour d'échéance", 'le ${b.jourEcheance ?? '—'}'),
                 Ligne('Préavis', '${b.preavisMois ?? '—'} mois'),
@@ -236,7 +245,9 @@ class _Fiche extends StatelessWidget {
                 titre: 'Loyers',
                 action: TextButton(
                   onPressed: () => ouvrir(
-                      context, EcheancesPage(bailId: b.id, titre: b.reference)),
+                    context,
+                    EcheancesPage(bailId: b.id, titre: b.reference),
+                  ),
                   child: const Text('Échéances'),
                 ),
                 children: [
@@ -246,10 +257,11 @@ class _Fiche extends StatelessWidget {
                     widget: Montant(
                       b.resteDu,
                       style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: (b.resteDu ?? 0) > 0
-                              ? context.palette.danger
-                              : null),
+                        fontWeight: FontWeight.w600,
+                        color: (b.resteDu ?? 0) > 0
+                            ? context.palette.danger
+                            : null,
+                      ),
                     ),
                   ),
                   Ligne('Total encaissé', montant(b.totalEncaisse)),
@@ -263,15 +275,19 @@ class _Fiche extends StatelessWidget {
                 children: [
                   ListTile(
                     title: Text(
-                        '${montant(caution.recue)} reçus sur ${montant(caution.attendue)}'),
-                    subtitle: (caution.retenue ?? 0) +
-                                (caution.restituee ?? 0) >
-                            0
+                      '${montant(caution.recue)} reçus sur ${montant(caution.attendue)}',
+                    ),
+                    subtitle:
+                        (caution.retenue ?? 0) + (caution.restituee ?? 0) > 0
                         ? Text(
-                            'Retenu ${montant(caution.retenue)} · restitué ${montant(caution.restituee)}')
+                            'Retenu ${montant(caution.retenue)} · restitué ${montant(caution.restituee)}',
+                          )
                         : null,
-                    trailing: Statut(FamilleStatut.caution, 'statut_caution',
-                        caution.statut),
+                    trailing: Statut(
+                      FamilleStatut.caution,
+                      'statut_caution',
+                      caution.statut,
+                    ),
                     onTap: () async {
                       await ouvrir(context, CautionDetailPage(id: caution.id));
                       recharger();
@@ -291,10 +307,13 @@ class _Fiche extends StatelessWidget {
                         final type = statut == 'brouillon'
                             ? 'entree'
                             : statut == 'termine'
-                                ? 'sortie'
-                                : null;
-                        if (await creerEtatDesLieux(context,
-                                bailId: b.id, type: type) !=
+                            ? 'sortie'
+                            : null;
+                        if (await creerEtatDesLieux(
+                              context,
+                              bailId: b.id,
+                              type: type,
+                            ) !=
                             null) {
                           recharger();
                         }
@@ -305,12 +324,16 @@ class _Fiche extends StatelessWidget {
                 if (b.etatsDesLieux.isEmpty)
                   const ListTile(title: Text('Aucun état des lieux')),
                 for (final i in b.etatsDesLieux)
-                  ListTile(
-                    title: Text(
-                        '${refs.libelle('type_etat_des_lieux', i.type)} · version ${i.version ?? ''}'),
-                    subtitle: Text(date(i.date)),
-                    trailing: Statut(FamilleStatut.etatDesLieux,
-                        'statut_etat_des_lieux', i.statut),
+                  TuileOption(
+                    icone: Icons.description_outlined,
+                    titre:
+                        '${refs.libelle('type_etat_des_lieux', i.type)} · version ${i.version ?? ''}',
+                    detail: date(i.date),
+                    fin: Statut(
+                      FamilleStatut.etatDesLieux,
+                      'statut_etat_des_lieux',
+                      i.statut,
+                    ),
                     onTap: () async {
                       await ouvrir(context, EtatDesLieuxDetailPage(id: i.id));
                       recharger();
@@ -340,27 +363,31 @@ class _Fiche extends StatelessWidget {
                 if (fiche.contrats.isEmpty)
                   const ListTile(title: Text('Aucun contrat généré')),
                 for (final c in fiche.contrats)
-                  ListTile(
-                    leading: const Icon(Icons.picture_as_pdf_outlined),
-                    title: Text('Contrat version ${c.version}'),
-                    subtitle: Text(
-                        'Modèle v${c.versionModele ?? ''} · ${date(c.creeLe)}'),
-                    trailing: IconButton(
+                  TuileOption(
+                    icone: Icons.description_outlined,
+                    titre: 'Contrat version ${c.version}',
+                    detail:
+                        'Modèle v${c.versionModele ?? ''} · ${date(c.creeLe)}',
+                    fin: IconButton(
                       tooltip: 'Partager',
                       icon: const Icon(Icons.share_outlined),
                       onPressed: () => ouvrirFichierDocument(
-                          context,
-                          c.documentId,
-                          'contrat-${b.reference}-v${c.version}.pdf',
-                          partager: true),
+                        context,
+                        c.documentId,
+                        'contrat-${b.reference}-v${c.version}.pdf',
+                        partager: true,
+                      ),
                     ),
-                    onTap: () => ouvrirFichierDocument(context, c.documentId,
-                        'contrat-${b.reference}-v${c.version}.pdf'),
+                    onTap: () => ouvrirFichierDocument(
+                      context,
+                      c.documentId,
+                      'contrat-${b.reference}-v${c.version}.pdf',
+                    ),
                   ),
               ],
             ),
             const SizedBox(height: AppTheme.espaceLg),
-            SectionDocuments(type: 'lease', id: b.id),
+            SectionDocuments(type: 'lease', id: b.id, partagerPhotos: true),
             if (statut == 'termine') ...[
               const SizedBox(height: AppTheme.espaceLg),
               const Encadre(

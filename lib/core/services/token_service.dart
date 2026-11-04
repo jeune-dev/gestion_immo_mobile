@@ -12,7 +12,7 @@ class TokenService {
   bool _charge = false;
 
   TokenService([FlutterSecureStorage? stockage])
-      : _stockage = stockage ?? const FlutterSecureStorage();
+    : _stockage = stockage ?? const FlutterSecureStorage();
 
   Future<String?> lireRefresh() async {
     if (!_charge) {

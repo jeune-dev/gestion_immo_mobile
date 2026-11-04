@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
+import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
-import 'package:gestion_immo_mobile/core/theme/statuts.dart';
 import 'package:gestion_immo_mobile/core/utils/choisir_photo.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
 import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/core/widgets/actions.dart';
 import 'package:gestion_immo_mobile/core/widgets/chargement.dart';
 import 'package:gestion_immo_mobile/core/widgets/formulaire.dart';
+import 'package:gestion_immo_mobile/core/widgets/navigation.dart';
 import 'package:gestion_immo_mobile/injection_container.dart' as di;
 import 'package:gestion_immo_mobile/features/echeance/domain/entities/echeance.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/domain/entities/espace_locataire.dart';
@@ -20,11 +22,17 @@ import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/paiement_locataire_event.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/paiement_locataire_state.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/suivi_transaction_page.dart';
+import 'package:gestion_immo_mobile/features/espace_locataire/presentation/widgets/choix_paiement.dart';
+import 'package:gestion_immo_mobile/features/messagerie/presentation/pages/messagerie_page.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Paiement d'une échéance par le locataire (§ 12, § 51). Jamais hors ligne :
 /// toute confirmation vient du serveur. Renvoie `true` si un paiement a été initié.
-Future<bool?> payer(BuildContext context,
-    {required Echeance echeance, required String bailId}) {
+Future<bool?> payer(
+  BuildContext context, {
+  required Echeance echeance,
+  required String bailId,
+}) {
   return Navigator.of(context).push<bool>(
     MaterialPageRoute(
       builder: (_) => PaiementPage(echeance: echeance, bailId: bailId),
@@ -43,17 +51,27 @@ class PaiementPage extends StatelessWidget {
     final r = await EcranFormulaire.ouvrir<Object>(
       context,
       EcranFormulaire(
-        titre:
-            'Déclarer mon paiement ${refs.libelle('portefeuille', moyen.portefeuille)}',
+        titre: 'Paiement ${refs.libelle('portefeuille', moyen.portefeuille)}',
         initial: {'amount': echeance.reste},
         intro: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Encadre(
-              'Envoyez ${montant(echeance.reste)} au ${moyen.numero ?? ''} (${moyen.libelle ?? refs.libelle('portefeuille', moyen.portefeuille)}), '
-              'puis indiquez ci-dessous le numéro de transaction reçu par SMS. Votre propriétaire validera le paiement.',
+            const EtapesPaiement(etape: 2),
+            const SizedBox(height: AppTheme.espaceLg),
+            Section(
+              titre: 'Envoyez le paiement',
+              children: [
+                _LigneACopier('Numéro', moyen.numero ?? ''),
+                _LigneACopier('Montant', montant(echeance.reste)),
+                if (moyen.libelle != null) Ligne('Au nom de', moyen.libelle),
+              ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.espaceLg),
+            Text(
+              'Puis déclarez-le : votre propriétaire le validera.',
+              style: TextStyle(color: context.palette.texteSecondaire),
+            ),
+            const SizedBox(height: AppTheme.espaceMd),
             StatefulBuilder(
               builder: (ctx, setState) => OutlinedButton.icon(
                 onPressed: () async {
@@ -61,26 +79,44 @@ class PaiementPage extends StatelessWidget {
                   if (p != null && ctx.mounted) setState(() => photo = p.path);
                 },
                 icon: Icon(
-                    photo == null ? Icons.add_a_photo_outlined : Icons.check),
-                label: Text(photo == null
-                    ? 'Joindre la capture du reçu (facultatif)'
-                    : 'Capture jointe'),
+                  photo == null ? Icons.add_a_photo_outlined : Icons.check,
+                ),
+                label: Text(
+                  photo == null
+                      ? 'Joindre la capture du reçu (facultatif)'
+                      : 'Capture jointe',
+                ),
               ),
             ),
           ],
         ),
         champs: const [
-          Champ('provider_transaction_id', 'Numéro de transaction',
-              obligatoire: true,
-              minLongueur: 4,
-              maxLongueur: 100,
-              format: (
-                r'^[A-Za-z0-9_\-./]+$',
-                'Lettres, chiffres et . _ - / uniquement, sans espace'
-              )),
-          Champ('amount', 'Montant envoyé',
-              type: TypeChamp.montant, obligatoire: true, min: 1),
-          Champ('payer_phone', 'Numéro qui a payé', type: TypeChamp.telephone),
+          Champ(
+            'provider_transaction_id',
+            'Numéro de transaction',
+            obligatoire: true,
+            minLongueur: 4,
+            maxLongueur: 100,
+            indice: 'Reçu par SMS après votre envoi',
+            icone: Icons.tag,
+            format: (
+              r'^[A-Za-z0-9_\-./]+$',
+              'Lettres, chiffres et . _ - / uniquement, sans espace',
+            ),
+          ),
+          Champ(
+            'amount',
+            'Montant envoyé',
+            type: TypeChamp.montant,
+            obligatoire: true,
+            min: 1,
+          ),
+          Champ(
+            'payer_phone',
+            'Numéro qui a payé',
+            type: TypeChamp.telephone,
+            icone: Icons.phone_outlined,
+          ),
         ],
         libelleEnvoi: 'Déclarer le paiement',
         messageSucces: 'Paiement déclaré : votre propriétaire va le vérifier.',
@@ -88,9 +124,8 @@ class PaiementPage extends StatelessWidget {
           (await di.sl<DeclarerPreuvePaiement>()({
             ...c,
             'rent_schedule_id': echeance.id,
-            'wallet': moyen.portefeuille
-          }, capture: photo))
-              .ouLeve();
+            'wallet': moyen.portefeuille,
+          }, capture: photo)).ouLeve();
           return true;
         },
       ),
@@ -121,15 +156,18 @@ class PaiementPage extends StatelessWidget {
             state is PaiementLocataireError,
         builder: (context, state) {
           if (state is PaiementLocataireLoaded) {
-            return _buildFiche(context, state.moyens,
-                paiementEnCours: state.paiementEnCours);
+            return _buildFiche(
+              context,
+              state.moyens,
+              paiementEnCours: state.paiementEnCours,
+            );
           }
           return VueChargement(
             titre: 'Payer',
             failure: state is PaiementLocataireError ? state.failure : null,
-            onReessayer: () => context
-                .read<PaiementLocataireBloc>()
-                .add(LoadPaiementLocataire(bailId)),
+            onReessayer: () => context.read<PaiementLocataireBloc>().add(
+              LoadPaiementLocataire(bailId),
+            ),
           );
         },
       ),
@@ -144,8 +182,7 @@ class PaiementPage extends StatelessWidget {
   ) async {
     final url = state.demande.checkoutUrl;
     if (url != null) {
-      await ouvrirLien(context, url,
-          mode: LaunchMode.externalApplication);
+      await ouvrirLien(context, url, mode: LaunchMode.externalApplication);
     }
     if (!context.mounted) return;
     await Navigator.of(context).pushReplacement(
@@ -158,81 +195,49 @@ class PaiementPage extends StatelessWidget {
     );
   }
 
-  Widget _buildFiche(BuildContext context, MoyensPaiementLocataire m,
-      {bool paiementEnCours = false}) {
+  Widget _buildFiche(
+    BuildContext context,
+    MoyensPaiementLocataire m, {
+    bool paiementEnCours = false,
+  }) {
     final bloc = context.read<PaiementLocataireBloc>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Payer mon loyer')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Section(
-            children: [
-              Text(echeance.libelle ?? '',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 4),
-              Montant(echeance.reste,
-                  style: const TextStyle(
-                      fontSize: 28, fontWeight: FontWeight.w600)),
-              Text('Bénéficiaire : ${m.beneficiaire ?? ''}'),
-            ],
-          ),
-          const SizedBox(height: AppTheme.espaceLg),
-          if (m.integres.isNotEmpty) ...[
-            Text('Payer maintenant',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            for (final w in m.integres)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52)),
-                  onPressed: paiementEnCours
-                      ? null
-                      : () => bloc.add(PayerEnLigneEvent(
-                          bailId, echeance.id, echeance.reste, w)),
-                  icon: paiementEnCours
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.phone_iphone),
-                  label: Text('Payer avec ${refs.libelle('portefeuille', w)}'),
-                ),
-              ),
-            const SizedBox(height: AppTheme.espaceLg),
-          ],
-          if (m.preuves.isNotEmpty) ...[
-            Text("J'ai déjà payé directement",
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            for (final p in m.preuves)
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.receipt_outlined),
-                  title: Text(p.libelle ??
-                      refs.libelle('portefeuille', p.portefeuille)),
-                  subtitle: Text('Envoyer au ${p.numero ?? ''}'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _preuve(context, p),
-                ),
-              ),
-            const SizedBox(height: AppTheme.espaceLg),
-          ],
-          if (m.especes)
-            const Encadre(
-              'Vous pouvez aussi payer en espèces à votre propriétaire : il enregistre le paiement et votre quittance apparaît ici.',
-            ),
-          if (m.integres.isEmpty && m.preuves.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
-              child: Encadre(
-                  'Votre propriétaire n’a pas encore activé le paiement par Wave ou Orange Money.',
-                  ton: TonStatut.avertissement),
-            ),
-        ],
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('Payer mon loyer'),
+      ),
+      body: ChoixPaiement(
+        echeance: echeance,
+        moyens: m,
+        enCours: paiementEnCours,
+        onPayerEnLigne: (w) =>
+            bloc.add(PayerEnLigneEvent(bailId, echeance.id, echeance.reste, w)),
+        onDeclarer: (p) => _preuve(context, p),
+        onContacter: () =>
+            ouvrir(context, const MessageriePage(espaceLocataire: true)),
       ),
     );
   }
+}
+
+/// Ligne d'instruction avec un bouton pour copier la valeur.
+class _LigneACopier extends StatelessWidget {
+  final String libelle;
+  final String valeur;
+  const _LigneACopier(this.libelle, this.valeur);
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(child: Ligne(libelle, valeur)),
+      IconButton(
+        tooltip: 'Copier',
+        icon: const Icon(Icons.copy, size: 18),
+        onPressed: () async {
+          await Clipboard.setData(ClipboardData(text: valeur));
+          if (context.mounted) afficherSucces(context, '$libelle copié');
+        },
+      ),
+    ],
+  );
 }

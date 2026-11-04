@@ -9,6 +9,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'package:gestion_immo_mobile/features/notifications/presentation/compteur_notifications.dart';
 import 'package:gestion_immo_mobile/core/connection/network_info.dart';
 import 'package:gestion_immo_mobile/core/routes/app_router.dart';
 import 'package:gestion_immo_mobile/core/services/file_attente_service.dart';
@@ -39,8 +40,9 @@ Future<void> main() async {
 
 /// Police Inter (charte § 2) appliquée au thème de la charte, sans le modifier.
 ThemeData _avecInter(ThemeData t) => t.copyWith(
-    textTheme: GoogleFonts.interTextTheme(t.textTheme),
-    primaryTextTheme: GoogleFonts.interTextTheme(t.primaryTextTheme));
+  textTheme: GoogleFonts.interTextTheme(t.textTheme),
+  primaryTextTheme: GoogleFonts.interTextTheme(t.primaryTextTheme),
+);
 
 class GestionImmoApp extends StatefulWidget {
   const GestionImmoApp({super.key});
@@ -76,7 +78,10 @@ class _GestionImmoAppState extends State<GestionImmoApp>
   /// Retour au premier plan : on tente de synchroniser les opérations créées hors ligne.
   @override
   void didChangeAppLifecycleState(AppLifecycleState etat) {
-    if (etat == AppLifecycleState.resumed) _synchroniser();
+    if (etat == AppLifecycleState.resumed) {
+      _synchroniser();
+      if (_auth.state.connecte) CompteurNotifications.rafraichir();
+    }
   }
 
   void _synchroniser() {
@@ -88,7 +93,7 @@ class _GestionImmoAppState extends State<GestionImmoApp>
     return BlocProvider.value(
       value: _auth,
       child: MaterialApp.router(
-        title: 'Gestion Immo',
+        title: 'Kërimmo',
         debugShowCheckedModeBanner: false,
         theme: _avecInter(AppTheme.clair),
         darkTheme: _avecInter(AppTheme.sombre),
@@ -101,7 +106,24 @@ class _GestionImmoAppState extends State<GestionImmoApp>
           GlobalCupertinoLocalizations.delegate,
         ],
         routerConfig: _router,
+        scrollBehavior: const _DefilementApp(),
+        // Toucher en dehors d'un champ ferme le clavier, dans toute l'application.
+        builder: (context, child) => GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+          child: child,
+        ),
       ),
     );
   }
+}
+
+/// Faire défiler un écran ferme aussi le clavier.
+class _DefilementApp extends MaterialScrollBehavior {
+  const _DefilementApp();
+
+  @override
+  ScrollViewKeyboardDismissBehavior getKeyboardDismissBehavior(
+    BuildContext context,
+  ) => ScrollViewKeyboardDismissBehavior.onDrag;
 }

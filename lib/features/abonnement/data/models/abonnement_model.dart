@@ -1,4 +1,5 @@
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import '../../domain/entities/abonnement.dart';
 
 class AbonnementModel {
@@ -7,7 +8,8 @@ class AbonnementModel {
   static Quota? _quota(dynamic u) => u is Map
       ? Quota(
           utilise: entier(u['used']),
-          max: u['max'] == null ? null : entier(u['max']))
+          max: u['max'] == null ? null : entier(u['max']),
+        )
       : null;
 
   static EtatAbonnement etat(Map<String, dynamic> a) {
@@ -27,17 +29,20 @@ class AbonnementModel {
   }
 
   static PlanAbonnement plan(Map<String, dynamic> p) => PlanAbonnement(
-        code: '${p['code']}',
-        nom: '${p['name'] ?? ''}',
-        prix: entier(p['price']),
-        periodeFacturation: p['billing_period'] as String?,
-        maxImmeubles:
-            p['max_buildings'] == null ? null : entier(p['max_buildings']),
-        maxAppartements:
-            p['max_apartments'] == null ? null : entier(p['max_apartments']),
-        fonctionnalites:
-            ((p['features'] as List?) ?? const []).map((f) => '$f').toList(),
-      );
+    code: '${p['code']}',
+    nom: '${p['name'] ?? ''}',
+    prix: entier(p['price']),
+    periodeFacturation: p['billing_period'] as String?,
+    maxImmeubles: p['max_buildings'] == null
+        ? null
+        : entier(p['max_buildings']),
+    maxAppartements: p['max_apartments'] == null
+        ? null
+        : entier(p['max_apartments']),
+    fonctionnalites: ((p['features'] as List?) ?? const [])
+        .map((f) => '$f')
+        .toList(),
+  );
 
   static PaiementAbonnement paiement(Map<String, dynamic> p) =>
       PaiementAbonnement(

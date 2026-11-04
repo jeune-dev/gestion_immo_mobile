@@ -34,14 +34,14 @@ class Echeance extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        bailId,
-        libelle,
-        montantDu,
-        montantPaye,
-        dateEcheance,
-        statut,
-        locataire,
-        logementNumero
-      ];
+    id,
+    bailId,
+    libelle,
+    montantDu,
+    montantPaye,
+    dateEcheance,
+    statut,
+    locataire,
+    logementNumero,
+  ];
 }

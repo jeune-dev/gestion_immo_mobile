@@ -20,6 +20,25 @@ void main() {
     return envois;
   }
 
+  testWidgets('le bouton d’envoi reste au-dessus du clavier', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: MediaQuery(
+        data: const MediaQueryData(
+          size: Size(400, 800),
+          viewInsets: EdgeInsets.only(bottom: 300),
+        ),
+        child: EcranFormulaire(
+          titre: 'Test',
+          champs: const [Champ('ville', 'Ville')],
+          envoyer: (_) async {},
+        ),
+      ),
+    ));
+    final bouton = tester.getBottomLeft(find.text('Enregistrer'));
+    expect(bouton.dy, lessThan(tester.view.physicalSize.height /
+            tester.view.devicePixelRatio - 300));
+  });
+
   testWidgets('longueur minimale du schéma de l’API', (tester) async {
     const champ = Champ('response', 'Réponse', minLongueur: 5);
     expect(await soumettre(tester, champ, 'abc'), isEmpty);

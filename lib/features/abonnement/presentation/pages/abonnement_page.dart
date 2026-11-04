@@ -17,6 +17,7 @@ import 'package:gestion_immo_mobile/features/abonnement/domain/entities/abonneme
 import 'package:gestion_immo_mobile/features/abonnement/presentation/bloc/abonnement_bloc.dart';
 import 'package:gestion_immo_mobile/features/abonnement/presentation/bloc/abonnement_event.dart';
 import 'package:gestion_immo_mobile/features/abonnement/presentation/bloc/abonnement_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Abonnement SaaS (§ 31) : plan en cours, consommation, renouvellement par PayDunya.
 /// Consultable même abonnement échu : c'est le moyen d'en sortir.
@@ -38,8 +39,10 @@ class AbonnementPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Plan ${plan.nom}',
-                    style: Theme.of(ctx).textTheme.titleLarge),
+                Text(
+                  'Plan ${plan.nom}',
+                  style: Theme.of(ctx).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 16),
                 Text('Durée', style: Theme.of(ctx).textTheme.titleMedium),
                 Wrap(
@@ -47,9 +50,10 @@ class AbonnementPage extends StatelessWidget {
                   children: [
                     for (final m in [1, 3, 6, 12])
                       ChoiceChip(
-                          label: Text('$m mois'),
-                          selected: mois == m,
-                          onSelected: (_) => setState(() => mois = m)),
+                        label: Text('$m mois'),
+                        selected: mois == m,
+                        onSelected: (_) => setState(() => mois = m),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -58,23 +62,26 @@ class AbonnementPage extends StatelessWidget {
                   spacing: 8,
                   children: [
                     ChoiceChip(
-                        label: const Text('Au choix'),
-                        selected: portefeuille == null,
-                        onSelected: (_) => setState(() => portefeuille = null)),
+                      label: const Text('Au choix'),
+                      selected: portefeuille == null,
+                      onSelected: (_) => setState(() => portefeuille = null),
+                    ),
                     for (final o in refs.options('portefeuille'))
                       ChoiceChip(
-                          label: Text(o.label),
-                          selected: portefeuille == o.code,
-                          onSelected: (_) =>
-                              setState(() => portefeuille = o.code)),
+                        label: Text(o.label),
+                        selected: portefeuille == o.code,
+                        onSelected: (_) =>
+                            setState(() => portefeuille = o.code),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Ligne('Total', montant(plan.prix * mois)),
                 const SizedBox(height: 16),
                 FilledButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text('Payer')),
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Payer'),
+                ),
               ],
             ),
           ),
@@ -122,12 +129,15 @@ class AbonnementPage extends StatelessWidget {
   }
 
   Future<void> _ouvrirPaiement(
-      BuildContext context, LienPaiementAbonnementLoaded state) async {
-    await ouvrirLien(context, state.url,
-        mode: LaunchMode.externalApplication);
+    BuildContext context,
+    LienPaiementAbonnementLoaded state,
+  ) async {
+    await ouvrirLien(context, state.url, mode: LaunchMode.externalApplication);
     if (context.mounted) {
-      afficherSucces(context,
-          'Après le paiement, revenez ici : votre abonnement sera mis à jour automatiquement.');
+      afficherSucces(
+        context,
+        'Après le paiement, revenez ici : votre abonnement sera mis à jour automatiquement.',
+      );
       // Le compte en session est relu : la bannière « lecture seule » suit le nouveau statut
       context.read<AuthBloc>().add(CompteRechargeDemande());
     }
@@ -145,14 +155,16 @@ class AbonnementPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                '$libelle : ${u.utilise}${u.max == null ? ' (illimité)' : ' / ${u.max}'}'),
+              '$libelle : ${u.utilise}${u.max == null ? ' (illimité)' : ' / ${u.max}'}',
+            ),
             if (u.max != null) ...[
               const SizedBox(height: 4),
               ClipRRect(
                 borderRadius: BorderRadius.circular(999),
                 child: LinearProgressIndicator(
-                    value: (u.utilise / u.max!).clamp(0, 1).toDouble(),
-                    minHeight: 6),
+                  value: (u.utilise / u.max!).clamp(0, 1).toDouble(),
+                  minHeight: 6,
+                ),
               ),
             ],
           ],
@@ -161,7 +173,10 @@ class AbonnementPage extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon abonnement')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('Mon abonnement'),
+      ),
       body: RefreshIndicator(
         onRefresh: () async => bloc.add(RafraichirAbonnement()),
         child: ListView(
@@ -179,16 +194,23 @@ class AbonnementPage extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                        child: Text('Plan ${a.planNom ?? '—'}',
-                            style: Theme.of(context).textTheme.titleLarge)),
-                    Statut(FamilleStatut.abonnement, 'statut_abonnement',
-                        a.statut),
+                      child: Text(
+                        'Plan ${a.planNom ?? '—'}',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    Statut(
+                      FamilleStatut.abonnement,
+                      'statut_abonnement',
+                      a.statut,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Ligne(
-                    a.statut == 'essai' ? "Fin de l'essai" : 'Valable jusqu’au',
-                    date(a.finPeriode)),
+                  a.statut == 'essai' ? "Fin de l'essai" : 'Valable jusqu’au',
+                  date(a.finPeriode),
+                ),
                 const SizedBox(height: 12),
                 jauge('Immeubles', a.immeubles),
                 jauge('Appartements', a.appartements),
@@ -196,8 +218,10 @@ class AbonnementPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Text('Choisir un plan',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Choisir un plan',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             for (final p in fiche.plans)
               Card(
@@ -209,9 +233,11 @@ class AbonnementPage extends StatelessWidget {
                       Row(
                         children: [
                           Expanded(
-                              child: Text(p.nom,
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium)),
+                            child: Text(
+                              p.nom,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ),
                           if (p.code == a.planCode)
                             const Pastille('Plan actuel', ton: TonStatut.info),
                         ],
@@ -220,8 +246,9 @@ class AbonnementPage extends StatelessWidget {
                       Text(
                         '${montant(p.prix)} / ${refs.libelle('periode_facturation', p.periodeFacturation).toLowerCase()}',
                         style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.w600)
-                            .merge(chiffresFixes),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ).merge(chiffresFixes),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -239,18 +266,22 @@ class AbonnementPage extends StatelessWidget {
                           p.fonctionnalites
                               .map((f) => refs.libelle('fonctionnalite', f))
                               .join(' · '),
-                          style:
-                              TextStyle(color: context.palette.texteSecondaire),
+                          style: TextStyle(
+                            color: context.palette.texteSecondaire,
+                          ),
                         ),
                       const SizedBox(height: 12),
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton(
-                          onPressed:
-                              p.prix == 0 ? null : () => _souscrire(context, p),
-                          child: Text(p.code == a.planCode
-                              ? 'Renouveler'
-                              : 'Choisir ce plan'),
+                          onPressed: p.prix == 0
+                              ? null
+                              : () => _souscrire(context, p),
+                          child: Text(
+                            p.code == a.planCode
+                                ? 'Renouveler'
+                                : 'Choisir ce plan',
+                          ),
                         ),
                       ),
                     ],
@@ -265,24 +296,27 @@ class AbonnementPage extends StatelessWidget {
                 if (fiche.paiements.isEmpty)
                   const ListTile(title: Text('Aucun paiement')),
                 for (final p in fiche.paiements)
-                  ListTile(
-                    title: Text('${p.planNom ?? ''} · ${p.mois} mois'),
-                    subtitle:
-                        Text('${p.reference ?? ''} · ${dateHeure(p.date)}'),
-                    trailing: Column(
+                  TuileOption(
+                    icone: Icons.receipt_long_outlined,
+                    titre: '${p.planNom ?? ''} · ${p.mois} mois',
+                    detail: '${p.reference ?? ''} · ${dateHeure(p.date)}',
+                    fin: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Montant(p.montant),
                         Text(
-                            refs.libelle(
-                                'statut_paiement_abonnement', p.statut),
-                            style: const TextStyle(fontSize: 12)),
+                          refs.libelle('statut_paiement_abonnement', p.statut),
+                          style: const TextStyle(fontSize: 12),
+                        ),
                       ],
                     ),
                     onTap: p.statut == 'initie' && p.checkoutUrl != null
-                        ? () => ouvrirLien(context, p.checkoutUrl!,
-                            mode: LaunchMode.externalApplication)
+                        ? () => ouvrirLien(
+                            context,
+                            p.checkoutUrl!,
+                            mode: LaunchMode.externalApplication,
+                          )
                         : null,
                   ),
               ],

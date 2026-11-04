@@ -9,30 +9,40 @@ import 'package:gestion_immo_mobile/core/widgets/actions.dart';
 import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/documents/domain/entities/document_app.dart';
 import 'package:gestion_immo_mobile/features/documents/domain/usecases/telecharger_document.dart';
+import 'package:gestion_immo_mobile/features/documents/presentation/widgets/video_api.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Image servie par l'API (miniature d'abord, § 37) : chargée avec le jeton.
 class ImageApi extends StatefulWidget {
   final String documentId;
   final String taille;
   final BoxFit fit;
-  const ImageApi(this.documentId,
-      {super.key, this.taille = 'miniature', this.fit = BoxFit.cover});
+  const ImageApi(
+    this.documentId, {
+    super.key,
+    this.taille = 'miniature',
+    this.fit = BoxFit.cover,
+  });
 
   @override
   State<ImageApi> createState() => _ImageApiState();
 }
 
 class _ImageApiState extends State<ImageApi> {
-  late Future<Either<Failure, Uint8List>> _image =
-      sl<TelechargerDocument>()(widget.documentId, taille: widget.taille);
+  late Future<Either<Failure, Uint8List>> _image = sl<TelechargerDocument>()(
+    widget.documentId,
+    taille: widget.taille,
+  );
 
   @override
   void didUpdateWidget(covariant ImageApi ancien) {
     super.didUpdateWidget(ancien);
     if (ancien.documentId != widget.documentId ||
         ancien.taille != widget.taille) {
-      _image =
-          sl<TelechargerDocument>()(widget.documentId, taille: widget.taille);
+      _image = sl<TelechargerDocument>()(
+        widget.documentId,
+        taille: widget.taille,
+      );
     }
   }
 
@@ -48,9 +58,10 @@ class _ImageApiState extends State<ImageApi> {
         return Container(
           color: context.palette.surfaceAlt,
           child: Center(
-              child: s.data?.isLeft() ?? false
-                  ? const Icon(Icons.broken_image_outlined)
-                  : const CircularProgressIndicator(strokeWidth: 2)),
+            child: s.data?.isLeft() ?? false
+                ? const Icon(Icons.broken_image_outlined)
+                : const CircularProgressIndicator(strokeWidth: 2),
+          ),
         );
       },
     );
@@ -61,11 +72,14 @@ void afficherImage(BuildContext context, String documentId) {
   Navigator.of(context).push(
     MaterialPageRoute(
       builder: (_) => Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(flexibleSpace: const FondMarque()),
         body: InteractiveViewer(
           child: Center(
-            child:
-                ImageApi(documentId, taille: 'originale', fit: BoxFit.contain),
+            child: ImageApi(
+              documentId,
+              taille: 'originale',
+              fit: BoxFit.contain,
+            ),
           ),
         ),
       ),
@@ -73,15 +87,22 @@ void afficherImage(BuildContext context, String documentId) {
   );
 }
 
-/// Ouvre un document stocké : image en plein écran, PDF dans le lecteur.
+/// Ouvre un document stocké : image en plein écran, vidéo, PDF dans le lecteur.
 void ouvrirDocument(BuildContext context, DocumentApp doc) {
   if (doc.estImage) return afficherImage(context, doc.id);
+  if (doc.estVideo) return ouvrirVideo(context, doc);
   ouvrirFichierDocument(context, doc.id, doc.nomOrigine ?? 'document.pdf');
 }
 
 /// PDF d'un document (contrat, justificatif…) ouvert dans le lecteur du téléphone.
 void ouvrirFichierDocument(
-        BuildContext context, String documentId, String nomFichier,
-        {bool partager = false}) =>
-    ouvrirPdf(context, () => sl<TelechargerDocument>()(documentId), nomFichier,
-        partager: partager);
+  BuildContext context,
+  String documentId,
+  String nomFichier, {
+  bool partager = false,
+}) => ouvrirPdf(
+  context,
+  () => sl<TelechargerDocument>()(documentId),
+  nomFichier,
+  partager: partager,
+);

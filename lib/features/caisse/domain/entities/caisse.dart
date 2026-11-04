@@ -27,8 +27,17 @@ class MouvementCaisse extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      [id, entree, libelle, date, categorie, moyen, montant, annule, manuel];
+  List<Object?> get props => [
+    id,
+    entree,
+    libelle,
+    date,
+    categorie,
+    moyen,
+    montant,
+    annule,
+    manuel,
+  ];
 }
 
 class TotalCategorie extends Equatable {
@@ -51,15 +60,22 @@ class SyntheseCaisse extends Equatable {
   /// Cautions détenues : hors revenus.
   final num? cautionsDetenues;
 
-  const SyntheseCaisse(
-      {this.entrees,
-      this.sorties,
-      this.solde,
-      this.detailEntrees = const [],
-      this.detailSorties = const [],
-      this.cautionsDetenues});
+  const SyntheseCaisse({
+    this.entrees,
+    this.sorties,
+    this.solde,
+    this.detailEntrees = const [],
+    this.detailSorties = const [],
+    this.cautionsDetenues,
+  });
 
   @override
-  List<Object?> get props =>
-      [entrees, sorties, solde, detailEntrees, detailSorties, cautionsDetenues];
+  List<Object?> get props => [
+    entrees,
+    sorties,
+    solde,
+    detailEntrees,
+    detailSorties,
+    cautionsDetenues,
+  ];
 }

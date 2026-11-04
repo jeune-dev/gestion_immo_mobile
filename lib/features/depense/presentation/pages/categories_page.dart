@@ -14,28 +14,41 @@ import 'package:gestion_immo_mobile/features/depense/domain/usecases/modifier_ca
 import 'package:gestion_immo_mobile/features/depense/presentation/bloc/categories_bloc.dart';
 import 'package:gestion_immo_mobile/features/depense/presentation/bloc/categories_event.dart';
 import 'package:gestion_immo_mobile/features/depense/presentation/bloc/categories_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Catégories de dépenses : catalogue commun + catégories propres au propriétaire.
 class CategoriesPage extends StatelessWidget {
   const CategoriesPage({super.key});
 
-  Future<void> _formulaire(BuildContext context, VoidCallback recharger,
-      {CategorieDepense? existant}) async {
+  Future<void> _formulaire(
+    BuildContext context,
+    VoidCallback recharger, {
+    CategorieDepense? existant,
+  }) async {
     final r = await EcranFormulaire.ouvrir<Object>(
       context,
       EcranFormulaire(
-        titre:
-            existant == null ? 'Nouvelle catégorie' : 'Modifier la catégorie',
+        titre: existant == null
+            ? 'Nouvelle catégorie'
+            : 'Modifier la catégorie',
         initial: existant == null
             ? const {}
             : {'name': existant.nom, 'cash_group': existant.groupeCaisse},
         champs: const [
-          Champ('name', 'Nom',
-              obligatoire: true, minLongueur: 2, maxLongueur: 100),
-          Champ('cash_group', 'Groupe de caisse',
-              type: TypeChamp.selection,
-              referentiel: 'groupe_caisse_sortie',
-              obligatoire: true),
+          Champ(
+            'name',
+            'Nom',
+            obligatoire: true,
+            minLongueur: 2,
+            maxLongueur: 100,
+          ),
+          Champ(
+            'cash_group',
+            'Groupe de caisse',
+            type: TypeChamp.selection,
+            referentiel: 'groupe_caisse_sortie',
+            obligatoire: true,
+          ),
         ],
         messageSucces: 'Catégorie enregistrée',
         envoyer: (c) async {
@@ -86,7 +99,10 @@ class CategoriesPage extends StatelessWidget {
   Widget _buildFiche(BuildContext context, List<CategorieDepense> cats) {
     final bloc = context.read<CategoriesBloc>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Catégories de dépenses')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('Catégories de dépenses'),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () =>
             _formulaire(context, () => bloc.add(RafraichirCategories())),
@@ -97,25 +113,28 @@ class CategoriesPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
         children: [
           for (final c in cats)
-            ListTile(
-              title: Text(c.nom),
-              subtitle: Text(
-                  '${refs.libelle('groupe_caisse_sortie', c.groupeCaisse)}${c.catalogue ? ' · catalogue' : ''}'),
-              trailing: c.active
+            TuileOption(
+              icone: Icons.category_outlined,
+              titre: c.nom,
+              detail:
+                  '${refs.libelle('groupe_caisse_sortie', c.groupeCaisse)}${c.catalogue ? ' · catalogue' : ''}',
+              fin: c.active
                   ? (c.catalogue
-                      ? null
-                      : IconButton(
-                          tooltip: 'Désactiver',
-                          icon: const Icon(Icons.visibility_off_outlined),
-                          onPressed: () =>
-                              bloc.add(DesactiverCategorieEvent(c.id)),
-                        ))
+                        ? null
+                        : IconButton(
+                            tooltip: 'Désactiver',
+                            icon: const Icon(Icons.visibility_off_outlined),
+                            onPressed: () =>
+                                bloc.add(DesactiverCategorieEvent(c.id)),
+                          ))
                   : const Pastille('Inactive'),
               onTap: c.catalogue
                   ? null
                   : () => _formulaire(
-                      context, () => bloc.add(RafraichirCategories()),
-                      existant: c),
+                      context,
+                      () => bloc.add(RafraichirCategories()),
+                      existant: c,
+                    ),
             ),
         ],
       ),

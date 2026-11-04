@@ -11,6 +11,7 @@ import 'package:gestion_immo_mobile/features/parametres/domain/entities/parametr
 import 'package:gestion_immo_mobile/features/parametres/presentation/bloc/parametres_bloc.dart';
 import 'package:gestion_immo_mobile/features/parametres/presentation/bloc/parametres_event.dart';
 import 'package:gestion_immo_mobile/features/parametres/presentation/bloc/parametres_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Règles de gestion du propriétaire (relances § 14, état des lieux § 52.4, caution § 55, canaux § 54.3).
 class ParametresPage extends StatelessWidget {
@@ -56,15 +57,26 @@ class ParametresPage extends StatelessWidget {
     void maj(Map<String, dynamic> corps) =>
         bloc.add(ModifierReglagesEvent(corps));
     Future<void> entierChamp(
-        String cle, String titre, int? valeur, int min, int max) async {
+      String cle,
+      String titre,
+      int? valeur,
+      int min,
+      int max,
+    ) async {
       final r = await EcranFormulaire.ouvrir<Map<String, dynamic>>(
         context,
         EcranFormulaire(
           titre: titre,
           initial: {cle: valeur},
           champs: [
-            Champ(cle, titre,
-                type: TypeChamp.entier, obligatoire: true, min: min, max: max)
+            Champ(
+              cle,
+              titre,
+              type: TypeChamp.entier,
+              obligatoire: true,
+              min: min,
+              max: max,
+            ),
           ],
           envoyer: (c) async => c,
         ),
@@ -75,13 +87,16 @@ class ParametresPage extends StatelessWidget {
     String libelleDelai(int j) => j < 0
         ? 'J$j'
         : j == 0
-            ? 'Jour J'
-            : 'J+$j';
+        ? 'Jour J'
+        : 'J+$j';
     final s = p.reglages;
     final relances = s.relances.toSet();
     final canaux = s.ordreCanaux;
     return Scaffold(
-      appBar: AppBar(title: const Text('Règles de gestion')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('Règles de gestion'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -89,7 +104,8 @@ class ParametresPage extends StatelessWidget {
             titre: 'Relances automatiques de loyer',
             children: [
               const Text(
-                  'Le locataire est relancé avant et après la date d’échéance aux jours choisis.'),
+                'Le locataire est relancé avant et après la date d’échéance aux jours choisis.',
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 6,
@@ -104,7 +120,9 @@ class ParametresPage extends StatelessWidget {
                         v ? n.add(j) : n.remove(j);
                         if (n.isEmpty) {
                           return afficherErreur(
-                              context, 'Gardez au moins une relance');
+                            context,
+                            'Gardez au moins une relance',
+                          );
                         }
                         maj({'reminder_offsets': (n.toList()..sort())});
                       },
@@ -117,37 +135,61 @@ class ParametresPage extends StatelessWidget {
           Card(
             child: Column(
               children: [
-                ListTile(
-                  title: const Text('Préavis avant échéance'),
-                  subtitle: Text(
-                      '${s.preavisEcheance ?? '—'} jour(s) avant, l’échéance passe « À payer »'),
-                  onTap: () => entierChamp('schedule_notice_days',
-                      'Préavis (jours)', s.preavisEcheance, 0, 30),
-                ),
-                ListTile(
-                  title: const Text('Délai de grâce'),
-                  subtitle: Text(
-                      '« En retard » ${s.delaiGrace ?? '—'} jour(s) après l’échéance'),
-                  onTap: () => entierChamp('late_grace_days',
-                      'Délai de grâce (jours)', s.delaiGrace, 0, 30),
-                ),
-                ListTile(
-                  title: const Text("Délai de réponse à l'état des lieux"),
-                  subtitle: Text(
-                      '${s.delaiReponseEdl ?? '—'} jour(s), puis acceptation tacite'),
-                  onTap: () => entierChamp('inspection_response_days',
-                      'Délai de réponse (jours)', s.delaiReponseEdl, 1, 60),
-                ),
-                ListTile(
-                  title: const Text('Restitution de la caution'),
-                  subtitle: Text(
-                      'Sous ${s.delaiRestitutionCaution ?? '—'} jour(s) après la fin du bail'),
+                TuileOption(
+                  sansMarge: true,
+                  icone: Icons.tune,
+                  titre: 'Préavis avant échéance',
+                  detail:
+                      '${s.preavisEcheance ?? '—'} jour(s) avant, l’échéance passe « À payer »',
                   onTap: () => entierChamp(
-                      'deposit_refund_days',
-                      'Délai de restitution (jours)',
-                      s.delaiRestitutionCaution,
-                      1,
-                      180),
+                    'schedule_notice_days',
+                    'Préavis (jours)',
+                    s.preavisEcheance,
+                    0,
+                    30,
+                  ),
+                ),
+                TuileOption(
+                  sansMarge: true,
+                  icone: Icons.tune,
+                  titre: 'Délai de grâce',
+                  detail:
+                      '« En retard » ${s.delaiGrace ?? '—'} jour(s) après l’échéance',
+                  onTap: () => entierChamp(
+                    'late_grace_days',
+                    'Délai de grâce (jours)',
+                    s.delaiGrace,
+                    0,
+                    30,
+                  ),
+                ),
+                TuileOption(
+                  sansMarge: true,
+                  icone: Icons.tune,
+                  titre: "Délai de réponse à l'état des lieux",
+                  detail:
+                      '${s.delaiReponseEdl ?? '—'} jour(s), puis acceptation tacite',
+                  onTap: () => entierChamp(
+                    'inspection_response_days',
+                    'Délai de réponse (jours)',
+                    s.delaiReponseEdl,
+                    1,
+                    60,
+                  ),
+                ),
+                TuileOption(
+                  sansMarge: true,
+                  icone: Icons.tune,
+                  titre: 'Restitution de la caution',
+                  detail:
+                      'Sous ${s.delaiRestitutionCaution ?? '—'} jour(s) après la fin du bail',
+                  onTap: () => entierChamp(
+                    'deposit_refund_days',
+                    'Délai de restitution (jours)',
+                    s.delaiRestitutionCaution,
+                    1,
+                    180,
+                  ),
                 ),
               ],
             ),
@@ -163,9 +205,10 @@ class ParametresPage extends StatelessWidget {
                   children: [
                     for (final o in refs.options('politique_edl_entree'))
                       RadioListTile<String>(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(o.label),
-                          value: o.code),
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(o.label),
+                        value: o.code,
+                      ),
                   ],
                 ),
               ),
@@ -176,11 +219,12 @@ class ParametresPage extends StatelessWidget {
             titre: 'Canaux de notification des locataires',
             children: [
               const Text(
-                  'Ordre d’essai des canaux (WhatsApp uniquement avec le consentement du locataire).'),
+                'Ordre d’essai des canaux (WhatsApp uniquement avec le consentement du locataire).',
+              ),
               for (final c in const [
                 OptionRef('push', 'Notification push'),
                 OptionRef('whatsapp', 'WhatsApp'),
-                OptionRef('sms', 'SMS')
+                OptionRef('sms', 'SMS'),
               ])
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
@@ -194,7 +238,9 @@ class ParametresPage extends StatelessWidget {
                     v == true ? n.add(c.code) : n.remove(c.code);
                     if (n.isEmpty) {
                       return afficherErreur(
-                          context, 'Gardez au moins un canal');
+                        context,
+                        'Gardez au moins un canal',
+                      );
                     }
                     maj({'channel_order': n});
                   },
@@ -207,9 +253,10 @@ class ParametresPage extends StatelessWidget {
                   children: [
                     for (final o in refs.options('strategie_envoi'))
                       RadioListTile<String>(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(o.label),
-                          value: o.code),
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(o.label),
+                        value: o.code,
+                      ),
                   ],
                 ),
               ),

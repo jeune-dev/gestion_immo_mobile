@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/desactiver_categorie_depense.dart';
 import '../../domain/usecases/get_categories_depenses.dart';
 import 'categories_event.dart';
@@ -39,19 +40,19 @@ class CategoriesBloc extends Bloc<CategoriesEvent, CategoriesState> {
     Emitter<CategoriesState> emit,
   ) async {
     final result = await desactiverCategorieDepense(event.categorieId);
-    await result.fold(
-      (failure) async => emit(CategoriesActionError(failure)),
-      (_) async {
-        emit(CategoriesSuccess(message: 'Catégorie désactivée'));
-        await _relire(emit);
-      },
-    );
+    await result.fold((failure) async => emit(CategoriesActionError(failure)), (
+      _,
+    ) async {
+      emit(CategoriesSuccess(message: 'Catégorie désactivée'));
+      await _relire(emit);
+    });
   }
 
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(Emitter<CategoriesState> emit) async {
-    final dejaAffichee = state is! CategoriesInitial &&
+    final dejaAffichee =
+        state is! CategoriesInitial &&
         state is! CategoriesLoading &&
         state is! CategoriesError;
     final result = await getCategoriesDepenses(inclureInactives: true);

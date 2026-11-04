@@ -15,13 +15,30 @@ class AjouterPhotoDocumentEvent extends DocumentsEvent {
   AjouterPhotoDocumentEvent(this.type, this.id, this.chemin);
 }
 
+class AjouterPhotosDocumentEvent extends DocumentsEvent {
+  final String type;
+  final String id;
+  final List<String> chemins;
+  final bool visibleLocataire;
+  AjouterPhotosDocumentEvent(
+    this.type,
+    this.id,
+    this.chemins, {
+    this.visibleLocataire = false,
+  });
+}
+
 class ChangerVisibiliteDocumentEvent extends DocumentsEvent {
   final String type;
   final String id;
   final String documentId;
   final bool visible;
   ChangerVisibiliteDocumentEvent(
-      this.type, this.id, this.documentId, this.visible);
+    this.type,
+    this.id,
+    this.documentId,
+    this.visible,
+  );
 }
 
 class SupprimerDocumentEvent extends DocumentsEvent {

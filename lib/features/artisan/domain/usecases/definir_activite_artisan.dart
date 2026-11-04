@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
+
 import '../repositories/artisan_repository.dart';
 
 class DefinirActiviteArtisan {

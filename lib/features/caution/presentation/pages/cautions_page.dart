@@ -11,6 +11,7 @@ import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/caution/domain/entities/caution.dart';
 import 'package:gestion_immo_mobile/features/caution/domain/usecases/get_cautions.dart';
 import 'package:gestion_immo_mobile/features/caution/presentation/pages/caution_detail_page.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Cautions (§ 55) : versées, détenues, retenues (justifiées), restituées ou en litige.
 class CautionsPage extends StatefulWidget {
@@ -27,13 +28,16 @@ class _CautionsPageState extends State<CautionsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Cautions')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('Cautions'),
+      ),
       body: Column(
         children: [
           Filtres(
             options: [
               ('', 'Toutes'),
-              for (final o in refs.options('statut_caution')) (o.code, o.label)
+              for (final o in refs.options('statut_caution')) (o.code, o.label),
             ],
             valeur: _statut,
             onChange: (v) => setState(() => _statut = v),
@@ -45,13 +49,14 @@ class _CautionsPageState extends State<CautionsPage> {
               vide: 'Aucune caution',
               iconeVide: Icons.savings_outlined,
               charger: (page) => sl<GetCautions>()(
-                  page: page, statut: _statut.isEmpty ? null : _statut),
-              element: (context, c) => ListTile(
-                title: Text('${nomDe(c.locataire)} · ${c.bailReference ?? ''}'),
-                subtitle:
-                    Text('Reçu ${montant(c.recue)} sur ${montant(c.attendue)}'),
-                trailing:
-                    Statut(FamilleStatut.caution, 'statut_caution', c.statut),
+                page: page,
+                statut: _statut.isEmpty ? null : _statut,
+              ),
+              element: (context, c) => TuileOption(
+                icone: Icons.savings_outlined,
+                titre: '${nomDe(c.locataire)} · ${c.bailReference ?? ''}',
+                detail: 'Reçu ${montant(c.recue)} sur ${montant(c.attendue)}',
+                fin: Statut(FamilleStatut.caution, 'statut_caution', c.statut),
                 onTap: () async {
                   await ouvrir(context, CautionDetailPage(id: c.id));
                   _liste.currentState?.recharger();

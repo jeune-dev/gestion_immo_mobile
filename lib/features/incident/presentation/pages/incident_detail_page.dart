@@ -9,13 +9,14 @@ import 'package:gestion_immo_mobile/core/widgets/actions.dart';
 import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/core/widgets/chargement.dart';
 import 'package:gestion_immo_mobile/injection_container.dart' as di;
-import 'package:gestion_immo_mobile/features/documents/presentation/widgets/image_api.dart';
+import 'package:gestion_immo_mobile/features/documents/presentation/widgets/video_api.dart';
 import 'package:gestion_immo_mobile/features/travaux/presentation/pages/travaux_detail_page.dart';
 import 'package:gestion_immo_mobile/features/incident/domain/entities/incident.dart';
 import 'package:gestion_immo_mobile/features/incident/presentation/bloc/incident_bloc.dart';
 import 'package:gestion_immo_mobile/features/incident/presentation/bloc/incident_event.dart';
 import 'package:gestion_immo_mobile/features/incident/presentation/bloc/incident_state.dart';
 import 'package:gestion_immo_mobile/features/incident/presentation/widgets/formulaires_incident.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 class IncidentDetailPage extends StatelessWidget {
   final String id;
@@ -57,41 +58,51 @@ class IncidentDetailPage extends StatelessWidget {
   Widget _buildFiche(BuildContext context, Incident i) {
     final bloc = context.read<IncidentBloc>();
     Future<String?> note(String titre, {bool motif = false}) => confirmer(
-          context,
-          titre: titre,
-          message: motif
-              ? 'Le locataire sera informé du motif.'
-              : 'Ajoutez une note pour le locataire (facultatif).',
-          motif: true,
-          motifObligatoire: motif,
-          libelleMotif: motif ? 'Motif' : 'Note',
-          danger: motif,
-        );
+      context,
+      titre: titre,
+      message: motif
+          ? 'Le locataire sera informé du motif.'
+          : 'Ajoutez une note pour le locataire (facultatif).',
+      motif: true,
+      motifObligatoire: motif,
+      libelleMotif: motif ? 'Motif' : 'Note',
+      danger: motif,
+    );
     final statut = i.statut;
     return Scaffold(
-      appBar: AppBar(title: Text(i.reference ?? 'Incident')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: Text(i.reference ?? 'Incident'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          EnTeteFiche(
+            surtitre: refs.libelle('categorie_incident', i.categorie),
+            titre: i.titre ?? 'Incident',
+            detail: '${i.reference ?? ''} · ${dateHeure(i.creeLe)}',
+            statut: Statut(FamilleStatut.incident, 'statut_incident', statut),
+          ),
+          const SizedBox(height: AppTheme.espaceLg),
+          if ((i.description ?? '').isNotEmpty) ...[
+            Section(titre: 'Description', children: [Text(i.description!)]),
+            const SizedBox(height: AppTheme.espaceLg),
+          ],
           Section(
+            titre: 'Informations',
             children: [
-              Row(
-                children: [
-                  Expanded(
-                      child: Text(i.titre ?? '',
-                          style: Theme.of(context).textTheme.titleMedium)),
-                  Statut(FamilleStatut.incident, 'statut_incident', statut),
-                ],
-              ),
-              const SizedBox(height: AppTheme.espaceSm),
-              Text(i.description ?? ''),
-              const SizedBox(height: AppTheme.espaceSm),
               Ligne(
-                  'Catégorie', refs.libelle('categorie_incident', i.categorie)),
-              Ligne('Logement',
-                  '${i.immeubleNom ?? ''}${i.appartementNumero != null ? ' · ${i.appartementNumero}' : ''}'),
-              Ligne('Signalé par',
-                  i.locataire == null ? 'Vous' : i.locataire!.nomComplet),
+                'Catégorie',
+                refs.libelle('categorie_incident', i.categorie),
+              ),
+              Ligne(
+                'Logement',
+                '${i.immeubleNom ?? ''}${i.appartementNumero != null ? ' · ${i.appartementNumero}' : ''}',
+              ),
+              Ligne(
+                'Signalé par',
+                i.locataire == null ? 'Vous' : i.locataire!.nomComplet,
+              ),
               Ligne('Signalé le', dateHeure(i.creeLe)),
               if (i.note != null) Ligne('Note', i.note),
               if (i.motifRejet != null) Ligne('Motif du rejet', i.motifRejet),
@@ -107,18 +118,7 @@ class IncidentDetailPage extends StatelessWidget {
                   runSpacing: 8,
                   children: [
                     for (final d in i.pieces)
-                      InkWell(
-                        onTap: () => ouvrirDocument(context, d),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(AppTheme.rayon),
-                          child: SizedBox(
-                              width: 88,
-                              height: 88,
-                              child: d.estImage
-                                  ? ImageApi(d.id)
-                                  : const Icon(Icons.videocam_outlined)),
-                        ),
-                      ),
+                      SizedBox.square(dimension: 88, child: VignettePiece(d)),
                   ],
                 ),
               ],
@@ -131,10 +131,14 @@ class IncidentDetailPage extends StatelessWidget {
               padding: false,
               children: [
                 for (final w in i.travaux)
-                  ListTile(
-                    title: Text('${w.reference ?? ''} ${w.titre ?? ''}'),
-                    trailing: Statut(
-                        FamilleStatut.travaux, 'statut_travaux', w.statut),
+                  TuileOption(
+                    icone: Icons.handyman_outlined,
+                    titre: '${w.reference ?? ''} ${w.titre ?? ''}',
+                    fin: Statut(
+                      FamilleStatut.travaux,
+                      'statut_travaux',
+                      w.statut,
+                    ),
                     onTap: () => ouvrirTravaux(context, w.id),
                   ),
               ],
@@ -147,7 +151,8 @@ class IncidentDetailPage extends StatelessWidget {
                 final texte = await note('Prendre en charge');
                 if (texte != null) {
                   bloc.add(
-                      AnalyserIncidentEvent(id, texte.isEmpty ? null : texte));
+                    AnalyserIncidentEvent(id, texte.isEmpty ? null : texte),
+                  );
                 }
               },
               icon: const Icon(Icons.search),
@@ -165,15 +170,19 @@ class IncidentDetailPage extends StatelessWidget {
               label: const Text('Planifier des travaux'),
             ),
           ],
-          if (['signale', 'en_analyse', 'travaux_planifies']
-              .contains(statut)) ...[
+          if ([
+            'signale',
+            'en_analyse',
+            'travaux_planifies',
+          ].contains(statut)) ...[
             const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: () async {
                 final texte = await note("Marquer l'incident comme résolu");
                 if (texte != null) {
                   bloc.add(
-                      ResoudreIncidentEvent(id, texte.isEmpty ? null : texte));
+                    ResoudreIncidentEvent(id, texte.isEmpty ? null : texte),
+                  );
                 }
               },
               icon: const Icon(Icons.check),
@@ -186,8 +195,10 @@ class IncidentDetailPage extends StatelessWidget {
                 final motif = await note("Rejeter l'incident", motif: true);
                 if (motif != null) bloc.add(RejeterIncidentEvent(id, motif));
               },
-              child: Text('Rejeter',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              child: Text(
+                'Rejeter',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ),
         ],
       ),

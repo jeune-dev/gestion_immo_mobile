@@ -9,10 +9,14 @@ extension EitherOuLeve<T> on Either<Failure, T> {
 
 /// Lance deux lectures en parallèle ; échoue dès que l'une échoue.
 Future<Either<Failure, (A, B)>> ensemble<A, B>(
-    Future<Either<Failure, A>> a, Future<Either<Failure, B>> b) async {
+  Future<Either<Failure, A>> a,
+  Future<Either<Failure, B>> b,
+) async {
   final (ra, rb) = await (a, b).wait;
   return ra.fold(
-      (f) => Left(f), (va) => rb.fold((f) => Left(f), (vb) => Right((va, vb))));
+    (f) => Left(f),
+    (va) => rb.fold((f) => Left(f), (vb) => Right((va, vb))),
+  );
 }
 
 /// Variante à trois lectures.
@@ -23,7 +27,10 @@ Future<Either<Failure, (A, B, C)>> ensemble3<A, B, C>(
 ) async {
   final (ra, rb, rc) = await (a, b, c).wait;
   return ra.fold(
+    (f) => Left(f),
+    (va) => rb.fold(
       (f) => Left(f),
-      (va) => rb.fold((f) => Left(f),
-          (vb) => rc.fold((f) => Left(f), (vc) => Right((va, vb, vc)))));
+      (vb) => rc.fold((f) => Left(f), (vc) => Right((va, vb, vc))),
+    ),
+  );
 }

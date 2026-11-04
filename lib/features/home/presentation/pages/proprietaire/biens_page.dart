@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:gestion_immo_mobile/core/widgets/base.dart';
+import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 import 'package:gestion_immo_mobile/core/widgets/chargement.dart';
@@ -17,11 +19,14 @@ import 'package:gestion_immo_mobile/features/immeuble/domain/entities/immeuble.d
 import 'package:gestion_immo_mobile/features/immeuble/domain/usecases/get_immeubles.dart';
 import 'package:gestion_immo_mobile/features/immeuble/presentation/pages/immeuble_detail_page.dart';
 import 'package:gestion_immo_mobile/features/immeuble/presentation/widgets/formulaire_immeuble.dart';
+import 'package:gestion_immo_mobile/features/immeuble/presentation/widgets/photo_immeuble.dart';
 import 'package:gestion_immo_mobile/features/locataire/domain/entities/locataire.dart';
 import 'package:gestion_immo_mobile/features/locataire/domain/usecases/get_locataires.dart';
 import 'package:gestion_immo_mobile/features/locataire/presentation/pages/locataire_detail_page.dart';
 import 'package:gestion_immo_mobile/features/locataire/presentation/widgets/dialogue_invitation.dart';
 import 'package:gestion_immo_mobile/features/locataire/presentation/widgets/formulaire_locataire.dart';
+import 'package:gestion_immo_mobile/core/widgets/logo.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Onglet « Biens » : immeubles, appartements, locataires, baux.
 class BiensPage extends StatefulWidget {
@@ -41,23 +46,32 @@ class _BiensPageState extends State<BiensPage>
   final _baux = GlobalKey<ListePagineeState<Bail>>();
   String _q = '';
 
+  /// Change au retour d'une fiche : recharge les photos de la liste.
+  int _versionPhotos = 0;
+
   void _rafraichir() => switch (_onglets.index) {
-        0 => _immeubles.currentState?.recharger(),
-        1 => _appartements.currentState?.recharger(),
-        2 => _locataires.currentState?.recharger(),
-        _ => _baux.currentState?.recharger(),
-      };
+    0 => _immeubles.currentState?.recharger(),
+    1 => _appartements.currentState?.recharger(),
+    2 => _locataires.currentState?.recharger(),
+    _ => _baux.currentState?.recharger(),
+  };
 
   Future<Object?> _formulaire() => switch (_onglets.index) {
-        0 => formulaireImmeuble(context),
-        1 => formulaireAppartement(context),
-        2 => creerLocataire(context),
-        _ => formulaireBail(context),
-      };
+    0 => formulaireImmeuble(context),
+    1 => formulaireAppartement(context),
+    2 => creerLocataire(context),
+    _ => formulaireBail(context),
+  };
 
   Future<void> _ajouter() async {
     final r = await _formulaire();
     if (r == null) return;
+    // Un nouvel immeuble s'ouvre sur sa fiche, pour y ajouter sa photo.
+    if (r is Immeuble && mounted) {
+      await ouvrirImmeuble(context, r.id);
+      if (mounted) setState(() => _versionPhotos++);
+    }
+    if (!mounted) return;
     // Locataire créé avec invitation : le code est à transmettre tout de suite
     if (r is LocataireCree && r.invitation != null && mounted) {
       await afficherInvitation(context, r.invitation!, r.locataire);
@@ -70,15 +84,17 @@ class _BiensPageState extends State<BiensPage>
     final q = _q.isEmpty ? null : _q;
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        leading: LogoBarre.siRacine(context),
+        leadingWidth: LogoBarre.largeur,
+
         title: const Text('Mes biens'),
         bottom: TabBar(
           controller: _onglets,
           isScrollable: true,
           tabAlignment: TabAlignment.start,
           labelColor: Theme.of(context).appBarTheme.foregroundColor,
-          unselectedLabelColor: Theme.of(context)
-              .appBarTheme
-              .foregroundColor
+          unselectedLabelColor: Theme.of(context).appBarTheme.foregroundColor
               ?.withValues(alpha: 0.7),
           indicatorColor: Theme.of(context).colorScheme.secondary,
           tabs: const [
@@ -93,7 +109,8 @@ class _BiensPageState extends State<BiensPage>
         onPressed: _ajouter,
         icon: const Icon(Icons.add),
         label: Text(
-            ['Immeuble', 'Appartement', 'Locataire', 'Bail'][_onglets.index]),
+          ['Immeuble', 'Appartement', 'Locataire', 'Bail'][_onglets.index],
+        ),
       ),
       body: Column(
         children: [
@@ -102,9 +119,10 @@ class _BiensPageState extends State<BiensPage>
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: TextField(
                 decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.search),
-                    hintText: 'Rechercher',
-                    isDense: true),
+                  prefixIcon: Icon(Icons.search),
+                  hintText: 'Rechercher',
+                  isDense: true,
+                ),
                 textInputAction: TextInputAction.search,
                 onSubmitted: (v) => setState(() => _q = v.trim()),
               ),
@@ -116,20 +134,17 @@ class _BiensPageState extends State<BiensPage>
                 ListePaginee<Immeuble>(
                   key: _immeubles,
                   cle: q,
-                  vide:
-                      'Aucun immeuble. Commencez par créer votre premier immeuble.',
+                  vide: 'Aucun immeuble. Commencez par créer votre premier immeuble.',
                   iconeVide: Icons.apartment_outlined,
                   charger: (page) =>
                       sl<GetImmeubles>()(page: page, recherche: q),
-                  element: (context, b) => ListTile(
-                    leading: const CircleAvatar(child: Icon(Icons.apartment)),
-                    title: Text(b.nom),
-                    subtitle: Text(
-                        '${b.ville ?? ''} · ${b.nbAppartements} appart. · ${b.nbOccupes} occupés'),
-                    trailing: const Icon(Icons.chevron_right),
+                  element: (context, b) => _TuileImmeuble(
+                    key: ValueKey('${b.id}-$_versionPhotos'),
+                    immeuble: b,
                     onTap: () async {
                       await ouvrirImmeuble(context, b.id);
                       _immeubles.currentState?.recharger();
+                      if (mounted) setState(() => _versionPhotos++);
                     },
                   ),
                 ),
@@ -141,23 +156,22 @@ class _BiensPageState extends State<BiensPage>
                   iconeVide: Icons.people_outline,
                   charger: (page) =>
                       sl<GetLocataires>()(page: page, recherche: q),
-                  element: (context, t) => ListTile(
-                    leading: CircleAvatar(
-                        child: Text(t.initiales.isEmpty ? '?' : t.initiales)),
-                    title: Text(t.nomComplet),
-                    subtitle: Text(
-                      [
-                        t.telephone,
-                        if (t.logementCourant != null)
-                          'Appart. ${t.logementCourant!.numero}'
-                        else
-                          'Sans bail actif',
-                      ].whereType<String>().join(' · '),
-                    ),
-                    trailing: t.compteActif
-                        ? Icon(Icons.verified_user_outlined,
+                  element: (context, t) => TuileOption(
+                    icone: Icons.person_outline,
+                    titre: t.nomComplet,
+                    detail: [
+                      t.telephone,
+                      if (t.logementCourant != null)
+                        'Appart. ${t.logementCourant!.numero}'
+                      else
+                        'Sans bail actif',
+                    ].whereType<String>().join(' · '),
+                    fin: t.compteActif
+                        ? Icon(
+                            Icons.verified_user_outlined,
                             color: context.palette.succes,
-                            semanticLabel: 'Compte activé')
+                            semanticLabel: 'Compte activé',
+                          )
                         : const Icon(Icons.chevron_right),
                     onTap: () async {
                       await ouvrir(context, LocataireDetailPage(id: t.id));
@@ -195,7 +209,7 @@ class _ListeAppartementsState extends State<_ListeAppartements> {
           options: [
             ('', 'Tous'),
             for (final o in refs.options('statut_appartement'))
-              (o.code, o.label)
+              (o.code, o.label),
           ],
           valeur: _statut,
           onChange: (v) => setState(() => _statut = v),
@@ -207,11 +221,14 @@ class _ListeAppartementsState extends State<_ListeAppartements> {
             vide: 'Aucun appartement',
             iconeVide: Icons.door_front_door_outlined,
             charger: (page) => sl<GetAppartements>()(
-                page: page,
-                recherche: widget.q,
-                statut: _statut.isEmpty ? null : _statut),
+              page: page,
+              recherche: widget.q,
+              statut: _statut.isEmpty ? null : _statut,
+            ),
             element: (context, a) => TuileAppartement(
-                a: a, onRetour: () => widget.cle.currentState?.recharger()),
+              a: a,
+              onRetour: () => widget.cle.currentState?.recharger(),
+            ),
           ),
         ),
       ],
@@ -237,7 +254,7 @@ class _ListeBauxState extends State<_ListeBaux> {
         Filtres(
           options: [
             ('', 'Tous'),
-            for (final o in refs.options('statut_bail')) (o.code, o.label)
+            for (final o in refs.options('statut_bail')) (o.code, o.label),
           ],
           valeur: _statut,
           onChange: (v) => setState(() => _statut = v),
@@ -249,12 +266,76 @@ class _ListeBauxState extends State<_ListeBaux> {
             vide: 'Aucun bail',
             iconeVide: Icons.description_outlined,
             charger: (page) => sl<GetBaux>()(
-                page: page, statut: _statut.isEmpty ? null : _statut),
+              page: page,
+              statut: _statut.isEmpty ? null : _statut,
+            ),
             element: (context, b) => TuileBail(
-                b: b, onRetour: () => widget.cle.currentState?.recharger()),
+              b: b,
+              onRetour: () => widget.cle.currentState?.recharger(),
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Immeuble de la liste : photo, nom, courte description et occupation.
+class _TuileImmeuble extends StatelessWidget {
+  final Immeuble immeuble;
+  final VoidCallback onTap;
+  const _TuileImmeuble({
+    super.key,
+    required this.immeuble,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final b = immeuble;
+    final p = context.palette;
+    final description = (b.description ?? '').trim();
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.espaceMd),
+        child: Row(
+          children: [
+            VignetteImmeuble(immeubleId: b.id, couvertureId: b.couvertureId),
+            const SizedBox(width: AppTheme.espaceMd),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    b.nom,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: p.texte,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    description.isEmpty ? b.adresseComplete : description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: p.texteSecondaire, fontSize: 13),
+                  ),
+                  const SizedBox(height: AppTheme.espaceXs),
+                  Text(
+                    '${b.nbAppartements} appart. · ${b.nbOccupes} ${b.nbOccupes > 1 ? 'occupés' : 'occupé'}',
+                    style: TextStyle(color: p.texteDiscret, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: p.texteDiscret),
+          ],
+        ),
+      ),
     );
   }
 }

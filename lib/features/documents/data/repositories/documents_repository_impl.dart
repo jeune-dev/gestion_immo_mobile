@@ -5,6 +5,7 @@ import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
+
 import '../../domain/entities/document_app.dart';
 import '../../domain/repositories/documents_repository.dart';
 import '../datasources/documents_remote_datasource.dart';
@@ -14,39 +15,54 @@ class DocumentsRepositoryImpl implements DocumentsRepository {
   DocumentsRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, PageResultat<DocumentApp>>> getDocuments(
-      {required String type, required String id}) async {
+  Future<Either<Failure, PageResultat<DocumentApp>>> getDocuments({
+    required String type,
+    required String id,
+  }) async {
     try {
-      final documentApps =
-          await remoteDataSource.getDocuments(type: type, id: id);
+      final documentApps = await remoteDataSource.getDocuments(
+        type: type,
+        id: id,
+      );
       return Right(documentApps);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, void>> ajouterPhoto(
-      {required String type,
-      required String id,
-      required String chemin}) async {
+  Future<Either<Failure, void>> ajouterPhoto({
+    required String type,
+    required String id,
+    required String chemin,
+    bool visibleLocataire = false,
+  }) async {
     try {
-      await remoteDataSource.ajouterPhoto(type: type, id: id, chemin: chemin);
+      await remoteDataSource.ajouterPhoto(
+        type: type,
+        id: id,
+        chemin: chemin,
+        visibleLocataire: visibleLocataire,
+      );
       return const Right(null);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, Uint8List>> telecharger(String id,
-      {String? taille}) async {
+  Future<Either<Failure, Uint8List>> telecharger(
+    String id, {
+    String? taille,
+  }) async {
     try {
       final octets = await remoteDataSource.telecharger(id, taille: taille);
       return Right(octets);
@@ -54,7 +70,8 @@ class DocumentsRepositoryImpl implements DocumentsRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -67,13 +84,16 @@ class DocumentsRepositoryImpl implements DocumentsRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, void>> changerVisibilite(String id,
-      {required bool visible}) async {
+  Future<Either<Failure, void>> changerVisibilite(
+    String id, {
+    required bool visible,
+  }) async {
     try {
       await remoteDataSource.changerVisibilite(id, visible: visible);
       return const Right(null);
@@ -81,7 +101,8 @@ class DocumentsRepositoryImpl implements DocumentsRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -94,7 +115,8 @@ class DocumentsRepositoryImpl implements DocumentsRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 }

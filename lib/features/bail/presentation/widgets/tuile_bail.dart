@@ -15,11 +15,12 @@ class TuileBail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text('${nomDe(b.locataire)} · ${b.logement?.numero ?? ''}'),
-      subtitle: Text(
-          '${b.reference ?? ''} · depuis le ${date(b.debut)} · ${montant(b.loyer)}'),
-      trailing: Statut(FamilleStatut.bail, 'statut_bail', b.statut),
+    return TuileOption(
+      icone: Icons.assignment_outlined,
+      titre: '${nomDe(b.locataire)} · ${b.logement?.numero ?? ''}',
+      detail:
+          '${b.reference ?? ''} · depuis le ${date(b.debut)} · ${montant(b.loyer)}',
+      fin: Statut(FamilleStatut.bail, 'statut_bail', b.statut),
       onTap: () async {
         await ouvrir(context, BailDetailPage(id: b.id));
         onRetour?.call();

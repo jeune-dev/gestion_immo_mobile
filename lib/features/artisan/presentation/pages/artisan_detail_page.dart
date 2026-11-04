@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
 import 'package:gestion_immo_mobile/core/widgets/actions.dart';
@@ -14,6 +15,7 @@ import 'package:gestion_immo_mobile/features/artisan/presentation/bloc/artisan_b
 import 'package:gestion_immo_mobile/features/artisan/presentation/bloc/artisan_event.dart';
 import 'package:gestion_immo_mobile/features/artisan/presentation/bloc/artisan_state.dart';
 import 'package:gestion_immo_mobile/features/artisan/presentation/widgets/formulaire_artisan.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Fiche d'un artisan (§ 24).
 class ArtisanDetailPage extends StatelessWidget {
@@ -59,6 +61,7 @@ class ArtisanDetailPage extends StatelessWidget {
     final bloc = context.read<ArtisanBloc>();
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
         title: Text(a.nom),
         actions: [
           MenuActions(
@@ -75,7 +78,7 @@ class ArtisanDetailPage extends StatelessWidget {
               (
                 a.actif ? 'Désactiver' : 'Réactiver',
                 () => bloc.add(DefinirActiviteArtisanEvent(id, !a.actif)),
-                false
+                false,
               ),
               (
                 'Supprimer',
@@ -98,18 +101,24 @@ class ArtisanDetailPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          EnTeteFiche(
+            surtitre: refs.libelle('metier_artisan', a.metier),
+            titre: a.nom,
+            detail:
+                '${a.interventions} intervention(s) · ${montant(a.totalPaye)} payés',
+            statut: a.actif ? null : const Pastille('Inactif'),
+          ),
+          const SizedBox(height: AppTheme.espaceLg),
           Section(
+            titre: 'Coordonnées',
             children: [
-              Ligne('Métier', refs.libelle('metier_artisan', a.metier)),
               Ligne('Téléphone', a.telephone),
               Ligne('E-mail', a.email),
-              Ligne('Interventions', '${a.interventions}'),
-              Ligne('Total payé', montant(a.totalPaye)),
-              Ligne('Statut', a.actif ? 'Actif' : 'Inactif'),
               if (a.notes != null)
                 Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(a.notes!)),
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(a.notes!),
+                ),
               if (a.telephone != null) ...[
                 const SizedBox(height: 8),
                 OutlinedButton.icon(

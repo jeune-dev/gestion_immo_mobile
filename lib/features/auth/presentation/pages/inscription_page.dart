@@ -25,7 +25,7 @@ class _InscriptionPageState extends State<InscriptionPage> {
       'phone',
       'email',
       'company_name',
-      'city'
+      'city',
     ])
       k: TextEditingController(),
   };
@@ -41,34 +41,40 @@ class _InscriptionPageState extends State<InscriptionPage> {
   void _valider() {
     if (!_form.currentState!.validate()) return;
     context.read<AuthBloc>().add(
-          InscriptionDemandee({
-            for (final e in _c.entries)
-              if (e.value.text.trim().isNotEmpty) e.key: e.value.text.trim(),
-            'password': _mdp.text,
-            'password_confirmation': _confirmation.text,
-          }),
-        );
+      InscriptionDemandee({
+        for (final e in _c.entries)
+          if (e.value.text.trim().isNotEmpty) e.key: e.value.text.trim(),
+        'password': _mdp.text,
+        'password_confirmation': _confirmation.text,
+      }),
+    );
   }
 
-  Widget _champ(String cle, String libelle,
-          {bool obligatoire = true,
-          TextInputType? clavier,
-          List<String>? autofill}) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: AppTheme.espaceLg),
-        child: TextFormField(
-          controller: _c[cle],
-          keyboardType: clavier,
-          autofillHints: autofill,
-          textCapitalization: clavier == null
-              ? TextCapitalization.words
-              : TextCapitalization.none,
-          decoration:
-              InputDecoration(labelText: '$libelle${obligatoire ? ' *' : ''}'),
-          validator: (v) =>
-              obligatoire && (v ?? '').trim().isEmpty ? 'Obligatoire' : null,
-        ),
-      );
+  Widget _champ(
+    String cle,
+    String libelle, {
+    bool obligatoire = true,
+    TextInputType? clavier,
+    List<String>? autofill,
+    required IconData icone,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: AppTheme.espaceMd),
+    child: TextFormField(
+      controller: _c[cle],
+      keyboardType: clavier,
+      textInputAction: TextInputAction.next,
+      autofillHints: autofill,
+      textCapitalization: clavier == null
+          ? TextCapitalization.words
+          : TextCapitalization.none,
+      decoration: InputDecoration(
+        labelText: '$libelle${obligatoire ? ' *' : ''}',
+        prefixIcon: Icon(icone),
+      ),
+      validator: (v) =>
+          obligatoire && (v ?? '').trim().isEmpty ? 'Obligatoire' : null,
+    ),
+  );
 
   @override
   void dispose() {
@@ -86,7 +92,7 @@ class _InscriptionPageState extends State<InscriptionPage> {
       retour: true,
       titre: 'Créer mon compte',
       sousTitre:
-          "Propriétaire : gérez immeubles, loyers et travaux. Période d'essai offerte.",
+          "Gérez vos immeubles, loyers et travaux. Période d'essai offerte.",
       children: [
         Form(
           key: _form,
@@ -94,25 +100,51 @@ class _InscriptionPageState extends State<InscriptionPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const ErreurAuth(),
-              _champ('first_name', 'Prénom',
-                  autofill: const [AutofillHints.givenName]),
-              _champ('last_name', 'Nom',
-                  autofill: const [AutofillHints.familyName]),
-              _champ('phone', 'Téléphone',
-                  clavier: TextInputType.phone,
-                  autofill: const [AutofillHints.telephoneNumber]),
-              _champ('email', 'E-mail',
-                  clavier: TextInputType.emailAddress,
-                  autofill: const [AutofillHints.email]),
-              _champ('company_name', 'Société (facultatif)',
-                  obligatoire: false),
-              _champ('city', 'Ville', obligatoire: false),
+              _champ(
+                'first_name',
+                'Prénom',
+                icone: Icons.person_outline,
+                autofill: const [AutofillHints.givenName],
+              ),
+              _champ(
+                'last_name',
+                'Nom',
+                icone: Icons.badge_outlined,
+                autofill: const [AutofillHints.familyName],
+              ),
+              _champ(
+                'phone',
+                'Téléphone',
+                icone: Icons.phone_outlined,
+                clavier: TextInputType.phone,
+                autofill: const [AutofillHints.telephoneNumber],
+              ),
+              _champ(
+                'email',
+                'E-mail',
+                icone: Icons.mail_outline,
+                clavier: TextInputType.emailAddress,
+                autofill: const [AutofillHints.email],
+              ),
+              _champ(
+                'company_name',
+                'Société (facultatif)',
+                icone: Icons.business_outlined,
+                obligatoire: false,
+              ),
+              _champ(
+                'city',
+                'Ville (facultatif)',
+                icone: Icons.location_on_outlined,
+                obligatoire: false,
+              ),
               ChampMotDePasse(
-                  controleur: _mdp,
-                  nouveau: true,
-                  validator: (v) =>
-                      IdentifiantValidator.motDePasse(v).erreurFormulaire),
-              const SizedBox(height: AppTheme.espaceLg),
+                controleur: _mdp,
+                nouveau: true,
+                validator: (v) =>
+                    IdentifiantValidator.motDePasse(v).erreurFormulaire,
+              ),
+              const SizedBox(height: AppTheme.espaceMd),
               ChampMotDePasse(
                 controleur: _confirmation,
                 libelle: 'Confirmation du mot de passe',

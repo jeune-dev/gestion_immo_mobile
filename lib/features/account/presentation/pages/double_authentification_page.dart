@@ -13,6 +13,7 @@ import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.d
 import 'package:gestion_immo_mobile/features/account/presentation/bloc/account_bloc.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/bloc/account_event.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/bloc/account_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Double authentification facultative (propriétaire, locataire) : la clé est
 /// ajoutée à l'application d'authentification par le lien `otpauth://` ou à la main.
@@ -28,28 +29,31 @@ class _Contenu extends StatelessWidget {
   const _Contenu();
 
   Future<String?> _motDePasse(BuildContext context) => confirmer(
-        context,
-        titre: 'Confirmez votre mot de passe',
-        message: '',
-        motif: true,
-        libelleMotif: 'Mot de passe',
-        minMotif: 1,
-        action: 'Continuer',
-        masque: true,
-      );
+    context,
+    titre: 'Confirmez votre mot de passe',
+    message: '',
+    motif: true,
+    libelleMotif: 'Mot de passe',
+    minMotif: 1,
+    action: 'Continuer',
+    masque: true,
+  );
 
-  Future<String?> _code(BuildContext context, String titre) =>
-      confirmer(context,
-          titre: titre,
-          message: '',
-          motif: true,
-          libelleMotif: 'Code à 6 chiffres',
-          minMotif: 6);
+  Future<String?> _code(BuildContext context, String titre) => confirmer(
+    context,
+    titre: titre,
+    message: '',
+    motif: true,
+    libelleMotif: 'Code à 6 chiffres',
+    minMotif: 6,
+  );
 
   @override
   Widget build(BuildContext context) {
-    final active = context.select((AuthBloc b) =>
-        b.state.compte?.utilisateur.doubleAuthentificationActive ?? false);
+    final active = context.select(
+      (AuthBloc b) =>
+          b.state.compte?.utilisateur.doubleAuthentificationActive ?? false,
+    );
     final bloc = context.read<AccountBloc>();
     return BlocConsumer<AccountBloc, AccountState>(
       listener: (context, state) {
@@ -71,23 +75,30 @@ class _Contenu extends StatelessWidget {
         final codes = state is CodesSecoursLoaded ? state.codes : null;
         final secret = state is SecretMfaLoaded ? state.secret : null;
         return Scaffold(
-          appBar: AppBar(title: const Text('Double authentification')),
+          appBar: AppBar(
+            flexibleSpace: const FondMarque(),
+            title: const Text('Double authentification'),
+          ),
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
               if (codes != null) ...[
                 const Encadre(
-                    'Conservez ces codes de secours en lieu sûr : ils ne seront plus affichés.',
-                    ton: TonStatut.avertissement),
+                  'Conservez ces codes de secours en lieu sûr : ils ne seront plus affichés.',
+                  ton: TonStatut.avertissement,
+                ),
                 const SizedBox(height: 12),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: SelectableText(codes.join('\n'),
-                        style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 16,
-                            height: 1.6)),
+                    child: SelectableText(
+                      codes.join('\n'),
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 16,
+                        height: 1.6,
+                      ),
+                    ),
                   ),
                 ),
                 OutlinedButton.icon(
@@ -100,8 +111,9 @@ class _Contenu extends StatelessWidget {
                 ),
               ] else if (active) ...[
                 const Encadre(
-                    'La double authentification est activée sur votre compte.',
-                    ton: TonStatut.succes),
+                  'La double authentification est activée sur votre compte.',
+                  ton: TonStatut.succes,
+                ),
                 const SizedBox(height: 16),
                 OutlinedButton(
                   onPressed: () async {
@@ -109,8 +121,9 @@ class _Contenu extends StatelessWidget {
                     if (mdp == null || !context.mounted) return;
                     final code = await _code(context, "Code de l'application");
                     if (code != null) {
-                      bloc.add(RegenererCodesSecoursEvent(
-                          motDePasse: mdp, code: code));
+                      bloc.add(
+                        RegenererCodesSecoursEvent(motDePasse: mdp, code: code),
+                      );
                     }
                   },
                   child: const Text('Générer de nouveaux codes de secours'),
@@ -124,9 +137,12 @@ class _Contenu extends StatelessWidget {
                       bloc.add(DesactiverMfaEvent(motDePasse: mdp, code: code));
                     }
                   },
-                  child: Text('Désactiver',
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.error)),
+                  child: Text(
+                    'Désactiver',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
                 ),
               ] else if (secret == null) ...[
                 const Text(
@@ -142,20 +158,27 @@ class _Contenu extends StatelessWidget {
                   child: const Text('Activer'),
                 ),
               ] else ...[
-                const Text(
-                    "1. Ajoutez la clé à votre application d'authentification :"),
+                Text(
+                  "1. Ajoutez la clé à votre application d'authentification",
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 8),
                 FilledButton.tonalIcon(
-                  onPressed: () => ouvrirLien(context, secret.otpauthUrl,
-                      mode: LaunchMode.externalApplication),
+                  onPressed: () => ouvrirLien(
+                    context,
+                    secret.otpauthUrl,
+                    mode: LaunchMode.externalApplication,
+                  ),
                   icon: const Icon(Icons.open_in_new),
                   label: const Text("Ouvrir l'application d'authentification"),
                 ),
                 const SizedBox(height: 8),
                 Card(
                   child: ListTile(
-                    title: SelectableText(secret.secret,
-                        style: const TextStyle(fontFamily: 'monospace')),
+                    title: SelectableText(
+                      secret.secret,
+                      style: const TextStyle(fontFamily: 'monospace'),
+                    ),
                     subtitle: const Text('ou saisissez cette clé à la main'),
                     trailing: IconButton(
                       icon: const Icon(Icons.copy),
@@ -165,7 +188,10 @@ class _Contenu extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppTheme.espaceLg),
-                const Text('2. Saisissez le code affiché :'),
+                Text(
+                  '2. Saisissez le code affiché',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 8),
                 FilledButton(
                   onPressed: () async {

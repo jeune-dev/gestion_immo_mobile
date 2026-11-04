@@ -12,6 +12,7 @@ import 'package:gestion_immo_mobile/core/widgets/bandeau_synchronisation.dart';
 import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/core/widgets/navigation.dart';
 import 'package:gestion_immo_mobile/injection_container.dart';
+import 'package:gestion_immo_mobile/features/auth/presentation/widgets/avatar_utilisateur.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.dart';
 import 'package:gestion_immo_mobile/features/depense/presentation/pages/categories_page.dart';
@@ -22,6 +23,8 @@ import 'package:gestion_immo_mobile/features/parametres/presentation/pages/param
 import 'package:gestion_immo_mobile/features/parametres/presentation/widgets/formulaire_espace.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/pages/modifier_profil.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/pages/securite_page.dart';
+import 'package:gestion_immo_mobile/core/widgets/logo.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Onglet « Profil » du propriétaire.
 class ProfilProprietairePage extends StatelessWidget {
@@ -33,105 +36,149 @@ class ProfilProprietairePage extends StatelessWidget {
     final u = compte?.utilisateur;
     final abo = compte?.abonnement;
     final file = sl<FileAttenteService>();
-    Widget tuile(IconData i, String t, VoidCallback onTap,
-            {String? sous, Widget? fin}) =>
-        ListTile(
-          leading: Icon(i),
-          title: Text(t),
-          subtitle: sous == null ? null : Text(sous),
-          trailing: fin ?? const Icon(Icons.chevron_right),
-          onTap: onTap,
-        );
-    final initiales =
-        '${(u?.prenom ?? '').isNotEmpty ? u!.prenom[0] : ''}${(u?.nom ?? '').isNotEmpty ? u!.nom[0] : ''}'
-            .toUpperCase();
+    Widget tuile(
+      IconData i,
+      String t,
+      VoidCallback onTap, {
+      String? sous,
+      Widget? fin,
+    }) => TuileOption(icone: i, titre: t, detail: sous, fin: fin, onTap: onTap);
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        leading: LogoBarre.siRacine(context),
+        leadingWidth: LogoBarre.largeur,
+        title: const Text('Profil'),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.espaceLg),
         children: [
-          Card(
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: CircleAvatar(
-                  radius: 28,
-                  child: Text(initiales.isEmpty ? '?' : initiales,
-                      style: const TextStyle(fontSize: 18))),
-              title: Text(u?.nomComplet ?? '—',
-                  style: Theme.of(context).textTheme.titleMedium),
-              subtitle: Text([compte?.espace?.societe, u?.telephone, u?.email]
-                  .whereType<String>()
-                  .join('\n')),
-              trailing: IconButton(
-                  tooltip: 'Modifier',
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: () => modifierProfil(context)),
-            ),
-          ),
-          const SizedBox(height: AppTheme.espaceLg),
-          Card(
+          CarteMarque(
             child: Column(
               children: [
-                tuile(
-                  Icons.workspace_premium_outlined,
-                  'Abonnement',
-                  () => context.push(AppRouter.abonnement),
-                  sous:
-                      '${abo?.plan ?? ''} · jusqu’au ${date(abo?.finPeriode)}',
-                  fin: Statut(FamilleStatut.abonnement, 'statut_abonnement',
-                      abo?.statut),
+                const AvatarUtilisateur(taille: 84),
+                const SizedBox(height: AppTheme.espaceMd),
+                Text(
+                  u?.nomComplet ?? '—',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                tuile(
-                  Icons.store_outlined,
-                  'Mon espace propriétaire',
-                  () => modifierEspaceBailleur(context),
-                  sous: 'Nom affiché, coordonnées sur les quittances',
+                const SizedBox(height: AppTheme.espaceXs),
+                Text(
+                  [
+                    compte?.espace?.societe,
+                    u?.telephone,
+                    u?.email,
+                  ].whereType<String>().join('  ·  '),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 13,
+                  ),
                 ),
-                tuile(Icons.tune, 'Relances et règles de gestion',
-                    () => ouvrir(context, const ParametresPage())),
-                tuile(
-                  Icons.account_balance_outlined,
-                  'Moyens de paiement',
-                  () => ouvrir(context, const MoyensPaiementPage()),
-                  sous: 'Wave, Orange Money, PayDunya',
-                ),
-                tuile(Icons.category_outlined, 'Catégories de dépenses',
-                    () => ouvrir(context, const CategoriesPage())),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.espaceLg),
-          Card(
-            child: Column(
-              children: [
-                tuile(Icons.chat_bubble_outline, 'Messagerie',
-                    () => ouvrir(context, const MessageriePage())),
-                tuile(Icons.notifications_outlined, 'Notifications',
-                    () => ouvrir(context, const NotificationsPage())),
-                tuile(Icons.lock_outline, 'Sécurité',
-                    () => ouvrir(context, const SecuritePage())),
-                ListenableBuilder(
-                  listenable: file,
-                  builder: (context, _) => file.operations.isEmpty
-                      ? const SizedBox.shrink()
-                      : tuile(
-                          Icons.cloud_upload_outlined,
-                          'Opérations en attente',
-                          () => ouvrir(context, const OperationsPage()),
-                          fin: Badge(label: Text('${file.operations.length}')),
-                        ),
+                const SizedBox(height: AppTheme.espaceLg),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.transparent,
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
+                    minimumSize: const Size(0, 42),
+                  ),
+                  onPressed: () => modifierProfil(context),
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: const Text('Modifier mon profil'),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.espaceLg),
-          OutlinedButton.icon(
+          const SizedBox(height: AppTheme.espaceXl),
+          GroupeOptions(
+            titre: 'Mon activité',
+            children: [
+              tuile(
+                Icons.workspace_premium_outlined,
+                'Abonnement',
+                () => context.push(AppRouter.abonnement),
+                sous: '${abo?.plan ?? ''} · jusqu’au ${date(abo?.finPeriode)}',
+                fin: Statut(
+                  FamilleStatut.abonnement,
+                  'statut_abonnement',
+                  abo?.statut,
+                ),
+              ),
+              tuile(
+                Icons.store_outlined,
+                'Mon espace propriétaire',
+                () => modifierEspaceBailleur(context),
+                sous: 'Nom affiché, coordonnées sur les quittances',
+              ),
+              tuile(
+                Icons.tune,
+                'Relances et règles de gestion',
+                () => ouvrir(context, const ParametresPage()),
+              ),
+              tuile(
+                Icons.account_balance_outlined,
+                'Moyens de paiement',
+                () => ouvrir(context, const MoyensPaiementPage()),
+                sous: 'Wave, Orange Money, PayDunya',
+              ),
+              tuile(
+                Icons.category_outlined,
+                'Catégories de dépenses',
+                () => ouvrir(context, const CategoriesPage()),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.espaceXl),
+          GroupeOptions(
+            titre: 'Préférences',
+            children: [
+              tuile(
+                Icons.chat_bubble_outline,
+                'Messagerie',
+                () => ouvrir(context, const MessageriePage()),
+              ),
+              tuile(
+                Icons.notifications_outlined,
+                'Notifications',
+                () => ouvrir(context, const NotificationsPage()),
+              ),
+              tuile(
+                Icons.lock_outline,
+                'Sécurité',
+                () => ouvrir(context, const SecuritePage()),
+              ),
+              ListenableBuilder(
+                listenable: file,
+                builder: (context, _) => file.operations.isEmpty
+                    ? const SizedBox.shrink()
+                    : tuile(
+                        Icons.cloud_upload_outlined,
+                        'Opérations en attente',
+                        () => ouvrir(context, const OperationsPage()),
+                        fin: Badge(label: Text('${file.operations.length}')),
+                      ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.espaceXl),
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+              minimumSize: const Size.fromHeight(48),
+            ),
             onPressed: () async {
               final ok = await confirmer(
                 context,
                 titre: 'Se déconnecter',
-                message:
-                    'Les données enregistrées sur ce téléphone seront effacées.',
+                message: 'Les données enregistrées sur ce téléphone seront effacées.',
                 action: 'Se déconnecter',
               );
               if (ok != null && context.mounted) {

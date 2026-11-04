@@ -47,14 +47,15 @@ class AppRouter {
     connexion,
     inscription,
     motDePasseOublie,
-    activation
+    activation,
   ];
 
   static GoRouter creer(AuthBloc auth) {
     return GoRouter(
       initialLocation: demarrage,
-      refreshListenable:
-          _Ecoute(auth.stream.map((s) => (s.statut, s.compte)).distinct()),
+      refreshListenable: _Ecoute(
+        auth.stream.map((s) => (s.statut, s.compte)).distinct(),
+      ),
       redirect: (context, etat) {
         final s = auth.state;
         final ici = etat.matchedLocation;
@@ -84,15 +85,18 @@ class AppRouter {
         GoRoute(path: connexion, builder: (_, _) => const ConnexionPage()),
         GoRoute(path: inscription, builder: (_, _) => const InscriptionPage()),
         GoRoute(
-            path: motDePasseOublie,
-            builder: (_, _) => const MotDePasseOubliePage()),
+          path: motDePasseOublie,
+          builder: (_, _) => const MotDePasseOubliePage(),
+        ),
         GoRoute(path: activation, builder: (_, _) => const ActivationPage()),
         GoRoute(
-            path: motDePasseProvisoire,
-            builder: (_, _) => const ChangerMotDePassePage(force: true)),
+          path: motDePasseProvisoire,
+          builder: (_, _) => const ChangerMotDePassePage(force: true),
+        ),
         GoRoute(
-            path: proprietaire,
-            builder: (_, _) => const ProprietaireHomePage()),
+          path: proprietaire,
+          builder: (_, _) => const ProprietaireHomePage(),
+        ),
         GoRoute(path: abonnement, builder: (_, _) => const AbonnementPage()),
         GoRoute(path: locataire, builder: (_, _) => const LocataireHomePage()),
       ],

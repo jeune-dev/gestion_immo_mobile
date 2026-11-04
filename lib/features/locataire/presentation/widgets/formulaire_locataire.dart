@@ -61,10 +61,7 @@ Future<LocataireCree?> creerLocataire(BuildContext context) {
   );
 }
 
-Future<Locataire?> modifierLocataire(
-  BuildContext context,
-  Locataire existant,
-) {
+Future<Locataire?> modifierLocataire(BuildContext context, Locataire existant) {
   return EcranFormulaire.ouvrir<Locataire>(
     context,
     EcranFormulaire(

@@ -1,6 +1,7 @@
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
 import 'package:gestion_immo_mobile/features/documents/data/models/document_model.dart';
+
 import '../../domain/entities/paiement.dart';
 
 class PaiementModel extends Paiement {
@@ -20,27 +21,27 @@ class PaiementModel extends Paiement {
   });
 
   factory PaiementModel.fromJson(Map<String, dynamic> json) => PaiementModel(
-        id: '${json['id']}',
-        reference: json['reference'] as String?,
-        montant: nombreOuNull(json['amount']),
-        statut: json['status'] as String?,
-        locataire: PersonneResume.depuis(json['tenant']),
-        logementNumero: (json['apartment'] as Map?)?['number']?.toString(),
-        moyen: json['method'] as String?,
-        payeLe: json['paid_on'] as String?,
-        commentaire: json['comment'] as String?,
-        rembourseLe: json['refunded_at'] as String?,
-        motifRemboursement: json['refund_reason'] as String?,
-        imputations: listeJson(json['allocations'])
-            .map(
-              (a) => Imputation(
-                libelle:
-                    '${(a['schedule'] as Map?)?['label'] ?? (a['charge'] as Map?)?['label'] ?? 'Échéance'}',
-                montant: nombreOuNull(a['amount']),
-              ),
-            )
-            .toList(),
-      );
+    id: '${json['id']}',
+    reference: json['reference'] as String?,
+    montant: nombreOuNull(json['amount']),
+    statut: json['status'] as String?,
+    locataire: PersonneResume.depuis(json['tenant']),
+    logementNumero: (json['apartment'] as Map?)?['number']?.toString(),
+    moyen: json['method'] as String?,
+    payeLe: json['paid_on'] as String?,
+    commentaire: json['comment'] as String?,
+    rembourseLe: json['refunded_at'] as String?,
+    motifRemboursement: json['refund_reason'] as String?,
+    imputations: listeJson(json['allocations'])
+        .map(
+          (a) => Imputation(
+            libelle:
+                '${(a['schedule'] as Map?)?['label'] ?? (a['charge'] as Map?)?['label'] ?? 'Échéance'}',
+            montant: nombreOuNull(a['amount']),
+          ),
+        )
+        .toList(),
+  );
 }
 
 class TransactionPaiementModel extends TransactionPaiement {
@@ -104,19 +105,20 @@ class RapprochementModel extends Rapprochement {
         bailId: json['lease_id']?.toString(),
         locataire: PersonneResume.depuis(json['tenant']),
         telephonePayeur: json['payer_phone'] as String?,
-        referenceRecue:
-            (json['details'] as Map?)?['reference_recue']?.toString(),
+        referenceRecue: (json['details'] as Map?)?['reference_recue']
+            ?.toString(),
         creeLe: json['created_at'] as String?,
       );
 }
 
 class MoyenPaiementModel extends MoyenPaiement {
-  const MoyenPaiementModel(
-      {required super.fournisseur,
-      required super.mode,
-      super.libelle,
-      super.numeroReception,
-      super.actif});
+  const MoyenPaiementModel({
+    required super.fournisseur,
+    required super.mode,
+    super.libelle,
+    super.numeroReception,
+    super.actif,
+  });
 
   factory MoyenPaiementModel.fromJson(Map<String, dynamic> json) =>
       MoyenPaiementModel(

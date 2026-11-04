@@ -11,6 +11,7 @@ import 'package:gestion_immo_mobile/features/etat_des_lieux/domain/entities/etat
 import 'package:gestion_immo_mobile/features/facture_commune/domain/entities/facture_commune.dart';
 import 'package:gestion_immo_mobile/features/incident/domain/entities/incident.dart';
 import 'package:gestion_immo_mobile/features/paiement/domain/entities/paiement.dart';
+
 import '../../domain/entities/espace_locataire.dart';
 import '../../domain/repositories/espace_locataire_repository.dart';
 import '../datasources/espace_locataire_remote_datasource.dart';
@@ -28,7 +29,8 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -41,28 +43,35 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, PageResultat<Echeance>>> echeances(
-      {required int page, required bool aPayer}) async {
+  Future<Either<Failure, PageResultat<Echeance>>> echeances({
+    required int page,
+    required bool aPayer,
+  }) async {
     try {
-      final echeances =
-          await remoteDataSource.echeances(page: page, aPayer: aPayer);
+      final echeances = await remoteDataSource.echeances(
+        page: page,
+        aPayer: aPayer,
+      );
       return Right(echeances);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, PageResultat<Paiement>>> paiements(
-      {required int page}) async {
+  Future<Either<Failure, PageResultat<Paiement>>> paiements({
+    required int page,
+  }) async {
     try {
       final paiements = await remoteDataSource.paiements(page: page);
       return Right(paiements);
@@ -70,22 +79,26 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, PageResultat<TransactionPaiement>>> transactions(
-      {required int page}) async {
+  Future<Either<Failure, PageResultat<TransactionPaiement>>> transactions({
+    required int page,
+  }) async {
     try {
-      final transactionPaiements =
-          await remoteDataSource.transactions(page: page);
+      final transactionPaiements = await remoteDataSource.transactions(
+        page: page,
+      );
       return Right(transactionPaiements);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -98,49 +111,58 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, MoyensPaiementLocataire>> moyensPaiement(
-      String bailId) async {
+    String bailId,
+  ) async {
     try {
-      final moyensPaiementLocataire =
-          await remoteDataSource.moyensPaiement(bailId);
+      final moyensPaiementLocataire = await remoteDataSource.moyensPaiement(
+        bailId,
+      );
       return Right(moyensPaiementLocataire);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, DemandePaiement>> payer(
-      {String? echeanceId,
-      String? chargeId,
-      required String portefeuille,
-      int? montant}) async {
+  Future<Either<Failure, DemandePaiement>> payer({
+    String? echeanceId,
+    String? chargeId,
+    required String portefeuille,
+    int? montant,
+  }) async {
     try {
       final demandePaiement = await remoteDataSource.payer(
-          echeanceId: echeanceId,
-          chargeId: chargeId,
-          portefeuille: portefeuille,
-          montant: montant);
+        echeanceId: echeanceId,
+        chargeId: chargeId,
+        portefeuille: portefeuille,
+        montant: montant,
+      );
       return Right(demandePaiement);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, void>> declarerPreuve(Map<String, dynamic> champs,
-      {String? capture}) async {
+  Future<Either<Failure, void>> declarerPreuve(
+    Map<String, dynamic> champs, {
+    String? capture,
+  }) async {
     try {
       await remoteDataSource.declarerPreuve(champs, capture: capture);
       return const Right(null);
@@ -148,7 +170,8 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -161,13 +184,16 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, void>> contesterRetenue(
-      String mouvementId, String message) async {
+    String mouvementId,
+    String message,
+  ) async {
     try {
       await remoteDataSource.contesterRetenue(mouvementId, message);
       return const Right(null);
@@ -175,13 +201,15 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, PageResultat<ChargeRefacturee>>> charges(
-      {required int page}) async {
+  Future<Either<Failure, PageResultat<ChargeRefacturee>>> charges({
+    required int page,
+  }) async {
     try {
       final chargeRefacturees = await remoteDataSource.charges(page: page);
       return Right(chargeRefacturees);
@@ -189,13 +217,29 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, void>> consentementWhatsapp(
-      {required bool accorde}) async {
+  Future<Either<Failure, ChargeRefacturee>> charge(String id) async {
+    try {
+      final charge = await remoteDataSource.charge(id);
+      return Right(charge);
+    } on ApiException catch (e) {
+      return Left(Failure.depuis(e));
+    } catch (e) {
+      return Left(
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> consentementWhatsapp({
+    required bool accorde,
+  }) async {
     try {
       await remoteDataSource.consentementWhatsapp(accorde: accorde);
       return const Right(null);
@@ -203,13 +247,15 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, PageResultat<Incident>>> incidents(
-      {required int page}) async {
+  Future<Either<Failure, PageResultat<Incident>>> incidents({
+    required int page,
+  }) async {
     try {
       final incidents = await remoteDataSource.incidents(page: page);
       return Right(incidents);
@@ -217,7 +263,8 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -230,13 +277,15 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, Incident?>> signalerOuDifferer(
-      Map<String, dynamic> corps) async {
+    Map<String, dynamic> corps,
+  ) async {
     try {
       final incident = await remoteDataSource.signalerOuDifferer(corps);
       return Right(incident);
@@ -244,13 +293,16 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, void>> ajouterPieceIncident(
-      String id, String chemin) async {
+    String id,
+    String chemin,
+  ) async {
     try {
       await remoteDataSource.ajouterPieceIncident(id, chemin);
       return const Right(null);
@@ -258,13 +310,15 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, PageResultat<EtatDesLieux>>> etatsDesLieux(
-      {required int page}) async {
+  Future<Either<Failure, PageResultat<EtatDesLieux>>> etatsDesLieux({
+    required int page,
+  }) async {
     try {
       final etatDesLieuxs = await remoteDataSource.etatsDesLieux(page: page);
       return Right(etatDesLieuxs);
@@ -272,7 +326,8 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -285,7 +340,8 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -298,7 +354,8 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -311,13 +368,16 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, void>> contesterEtatDesLieux(
-      String id, String commentaire) async {
+    String id,
+    String commentaire,
+  ) async {
     try {
       await remoteDataSource.contesterEtatDesLieux(id, commentaire);
       return const Right(null);
@@ -325,7 +385,8 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 }

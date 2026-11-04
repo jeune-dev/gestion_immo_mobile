@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/get_caution.dart';
 import 'caution_event.dart';
 import 'caution_state.dart';
@@ -8,9 +9,7 @@ import 'caution_state.dart';
 class CautionBloc extends Bloc<CautionEvent, CautionState> {
   final GetCaution getCaution;
 
-  CautionBloc({
-    required this.getCaution,
-  }) : super(CautionInitial()) {
+  CautionBloc({required this.getCaution}) : super(CautionInitial()) {
     on<LoadCaution>(_onLoadCaution);
     on<RafraichirCaution>(_onRafraichirCaution);
     on<ResetCautionState>((_, emit) => emit(CautionInitial()));
@@ -34,7 +33,8 @@ class CautionBloc extends Bloc<CautionEvent, CautionState> {
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(String id, Emitter<CautionState> emit) async {
-    final dejaAffichee = state is! CautionInitial &&
+    final dejaAffichee =
+        state is! CautionInitial &&
         state is! CautionLoading &&
         state is! CautionError;
     final result = await getCaution(id);

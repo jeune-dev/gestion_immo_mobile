@@ -15,16 +15,16 @@ class TuileAppartement extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(
-          'Appartement ${a.numero} · ${refs.libelle('type_appartement', a.type)}'),
-      subtitle: Text([
+    return TuileOption(
+      icone: Icons.door_front_door_outlined,
+      titre:
+          'Appartement ${a.numero} · ${refs.libelle('type_appartement', a.type)}',
+      detail: [
         a.immeubleNom,
         a.locataireCourant?.nomComplet,
-        montant(a.loyer)
-      ].whereType<String>().join(' · ')),
-      trailing:
-          Statut(FamilleStatut.appartement, 'statut_appartement', a.statut),
+        montant(a.loyer),
+      ].whereType<String>().join(' · '),
+      fin: Statut(FamilleStatut.appartement, 'statut_appartement', a.statut),
       onTap: () async {
         await ouvrir(context, AppartementDetailPage(id: a.id));
         onRetour?.call();

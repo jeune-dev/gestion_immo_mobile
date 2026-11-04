@@ -10,6 +10,7 @@ import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/incident/domain/entities/incident.dart';
 import 'package:gestion_immo_mobile/features/incident/domain/usecases/get_incidents.dart';
 import 'package:gestion_immo_mobile/features/incident/presentation/pages/incident_detail_page.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Écran autonome (depuis le tableau de bord).
 class IncidentsPage extends StatelessWidget {
@@ -18,10 +19,15 @@ class IncidentsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Incidents')),
-        body: ListeIncidents(
-            cle: GlobalKey<ListePagineeState<Incident>>(), ouverts: ouverts),
-      );
+    appBar: AppBar(
+      flexibleSpace: const FondMarque(),
+      title: const Text('Incidents'),
+    ),
+    body: ListeIncidents(
+      cle: GlobalKey<ListePagineeState<Incident>>(),
+      ouverts: ouverts,
+    ),
+  );
 }
 
 /// Incidents signalés par les locataires (§ 22) et leur traitement (§ 23).
@@ -44,7 +50,7 @@ class _ListeIncidentsState extends State<ListeIncidents> {
         Filtres(
           options: [
             ('', 'Tous'),
-            for (final o in refs.options('statut_incident')) (o.code, o.label)
+            for (final o in refs.options('statut_incident')) (o.code, o.label),
           ],
           valeur: _statut,
           onChange: (v) => setState(() => _statut = v),
@@ -56,20 +62,20 @@ class _ListeIncidentsState extends State<ListeIncidents> {
             vide: 'Aucun incident',
             iconeVide: Icons.report_problem_outlined,
             charger: (page) => sl<GetIncidents>()(
-                page: page, statut: _statut.isEmpty ? null : _statut),
-            element: (context, i) => ListTile(
-              title: Text(i.titre ?? ''),
-              subtitle: Text(
-                [
-                  i.reference,
-                  i.immeubleNom,
-                  if (i.appartementNumero != null)
-                    'Appart. ${i.appartementNumero}',
-                  ilYa(i.creeLe),
-                ].whereType<String>().join(' · '),
-              ),
-              trailing:
-                  Statut(FamilleStatut.incident, 'statut_incident', i.statut),
+              page: page,
+              statut: _statut.isEmpty ? null : _statut,
+            ),
+            element: (context, i) => TuileOption(
+              icone: Icons.report_problem_outlined,
+              titre: i.titre ?? '',
+              detail: [
+                i.reference,
+                i.immeubleNom,
+                if (i.appartementNumero != null)
+                  'Appart. ${i.appartementNumero}',
+                ilYa(i.creeLe),
+              ].whereType<String>().join(' · '),
+              fin: Statut(FamilleStatut.incident, 'statut_incident', i.statut),
               onTap: () async {
                 await ouvrir(context, IncidentDetailPage(id: i.id));
                 widget.cle.currentState?.recharger();

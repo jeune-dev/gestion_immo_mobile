@@ -1,6 +1,7 @@
 import 'package:gestion_immo_mobile/core/models/logement_resume.dart';
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import '../../domain/entities/bail.dart';
 
 int? _entierOuNull(dynamic v) => v == null ? null : entier(v);
@@ -81,16 +82,17 @@ class BailModel extends Bail {
 }
 
 class ContratBailModel extends ContratBail {
-  const ContratBailModel(
-      {required super.version,
-      required super.documentId,
-      super.versionModele,
-      super.creeLe});
+  const ContratBailModel({
+    required super.version,
+    required super.documentId,
+    super.versionModele,
+    super.creeLe,
+  });
 
   factory ContratBailModel.fromJson(Map<String, dynamic> j) => ContratBailModel(
-        version: entier(j['version']),
-        documentId: '${j['document_id']}',
-        versionModele: _entierOuNull(j['template_version']),
-        creeLe: j['created_at'] as String?,
-      );
+    version: entier(j['version']),
+    documentId: '${j['document_id']}',
+    versionModele: _entierOuNull(j['template_version']),
+    creeLe: j['created_at'] as String?,
+  );
 }

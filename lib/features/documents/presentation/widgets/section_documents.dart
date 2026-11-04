@@ -26,19 +26,45 @@ class SectionDocuments extends StatelessWidget {
   /// locataire, bail et artisan ; les autres entités ont leur propre route.
   final bool ajout;
 
-  const SectionDocuments(
-      {super.key,
-      required this.type,
-      required this.id,
-      this.titre = 'Documents et photos',
-      this.ajout = true});
+  /// Photo de couverture marquée d'une étoile pleine.
+  final String? couvertureId;
+
+  /// Si renseigné, chaque photo porte une étoile pour la choisir en couverture.
+  final ValueChanged<DocumentApp>? onCouverture;
+
+  /// Appelé après un ajout ou une suppression.
+  final VoidCallback? onChangement;
+
+  /// Les photos ajoutées ici sont partagées avec le locataire.
+  final bool partagerPhotos;
+
+  const SectionDocuments({
+    super.key,
+    required this.type,
+    required this.id,
+    this.titre = 'Documents et photos',
+    this.ajout = true,
+    this.couvertureId,
+    this.onCouverture,
+    this.onChangement,
+    this.partagerPhotos = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       key: ValueKey('$type/$id'),
       create: (_) => sl<DocumentsBloc>()..add(LoadDocuments(type, id)),
-      child: _Section(titre: titre, ajout: ajout, type: type, id: id),
+      child: _Section(
+        titre: titre,
+        ajout: ajout,
+        type: type,
+        id: id,
+        couvertureId: couvertureId,
+        onCouverture: onCouverture,
+        onChangement: onChangement,
+        partagerPhotos: partagerPhotos,
+      ),
     );
   }
 }
@@ -48,11 +74,19 @@ class _Section extends StatelessWidget {
   final bool ajout;
   final String type;
   final String id;
+  final String? couvertureId;
+  final ValueChanged<DocumentApp>? onCouverture;
+  final VoidCallback? onChangement;
+  final bool partagerPhotos;
   const _Section({
     required this.titre,
     required this.ajout,
     required this.type,
     required this.id,
+    this.couvertureId,
+    this.onCouverture,
+    this.onChangement,
+    this.partagerPhotos = false,
   });
 
   /// Catégories que l'API laisse supprimer (les pièces probantes — contrat,
@@ -62,7 +96,7 @@ class _Section extends StatelessWidget {
     'piece_identite',
     'autre',
     'justificatif',
-    'facture'
+    'facture',
   ];
 
   /// Seuls les documents d'un locataire ou d'un bail concernent un locataire
@@ -71,9 +105,13 @@ class _Section extends StatelessWidget {
 
   Future<void> _ajouter(BuildContext context) async {
     final bloc = context.read<DocumentsBloc>();
-    final photo = await choisirPhoto(context);
-    if (photo != null) {
-      bloc.add(AjouterPhotoDocumentEvent(type, id, photo.path));
+    final photos = await choisirPhotos(context);
+    if (photos.isNotEmpty) {
+      bloc.add(
+        AjouterPhotosDocumentEvent(type, id, [
+          for (final p in photos) p.path,
+        ], visibleLocataire: partagerPhotos),
+      );
     }
   }
 
@@ -125,10 +163,14 @@ class _Section extends StatelessWidget {
               ),
             if (ajout && _supprimables.contains(d.categorie))
               ListTile(
-                leading: Icon(Icons.delete_outline,
-                    color: Theme.of(ctx).colorScheme.error),
-                title: Text('Supprimer',
-                    style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+                leading: Icon(
+                  Icons.delete_outline,
+                  color: Theme.of(ctx).colorScheme.error,
+                ),
+                title: Text(
+                  'Supprimer',
+                  style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _supprimer(context, d);
@@ -142,16 +184,21 @@ class _Section extends StatelessWidget {
 
   Future<void> _partager(BuildContext context, LienDocument lien) async {
     if (!lien.partageable) {
-      return afficherErreur(context,
-          'Lien temporaire indisponible pour ce document : ouvrez-le puis partagez le fichier.');
+      return afficherErreur(
+        context,
+        'Lien temporaire indisponible pour ce document : ouvrez-le puis partagez le fichier.',
+      );
     }
     final minutes = lien.expireDansSecondes == null
         ? null
         : (lien.expireDansSecondes! / 60).round();
-    await SharePlus.instance.share(ShareParams(
+    await SharePlus.instance.share(
+      ShareParams(
         text: lien.url,
         subject:
-            'Document${minutes != null ? ' (lien valable $minutes min)' : ''}'));
+            'Document${minutes != null ? ' (lien valable $minutes min)' : ''}',
+      ),
+    );
   }
 
   @override
@@ -162,6 +209,7 @@ class _Section extends StatelessWidget {
           afficherErreurApi(context, state.failure);
         } else if (state is DocumentsSuccess) {
           afficherSucces(context, state.message);
+          onChangement?.call();
         } else if (state is LienDocumentLoaded) {
           _partager(context, state.lien);
         }
@@ -181,18 +229,32 @@ class _Section extends StatelessWidget {
       titre: titre,
       action: ajout
           ? IconButton(
-              tooltip: 'Ajouter une photo',
+              tooltip: 'Ajouter des photos',
               onPressed: () => _ajouter(context),
-              icon: const Icon(Icons.add_a_photo_outlined))
+              icon: const Icon(Icons.add_a_photo_outlined),
+            )
           : null,
       children: [
+        if (partagerPhotos) ...[
+          Text(
+            'Les photos ajoutées ici sont visibles par le locataire et s’affichent sur son accueil.',
+            style: TextStyle(
+              fontSize: 12,
+              color: context.palette.texteSecondaire,
+            ),
+          ),
+          const SizedBox(height: AppTheme.espaceMd),
+        ],
         if (documents == null)
           const SizedBox(
-              height: 40,
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)))
+            height: 40,
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
         else if (documents.isEmpty)
-          Text('Aucun document',
-              style: TextStyle(color: context.palette.texteSecondaire))
+          Text(
+            'Aucun document',
+            style: TextStyle(color: context.palette.texteSecondaire),
+          )
         else
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,49 +264,109 @@ class _Section extends StatelessWidget {
                 runSpacing: AppTheme.espaceSm,
                 children: [
                   for (final d in documents)
-                    InkWell(
-                      onTap: () => ouvrirDocument(context, d),
-                      onLongPress: () => _actions(context, d),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(AppTheme.rayon),
-                        child: SizedBox(
-                          width: 88,
-                          height: 88,
-                          child: d.estImage && d.aMiniature
-                              ? ImageApi(d.id)
-                              : Container(
-                                  color: context.palette.surfaceAlt,
-                                  padding: const EdgeInsets.all(6),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(Icons.description_outlined),
-                                      Text(
-                                        refs.libelle(
-                                            'categorie_document', d.categorie),
-                                        maxLines: 2,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(fontSize: 11),
+                    Stack(
+                      children: [
+                        InkWell(
+                          onTap: () => ouvrirDocument(context, d),
+                          onLongPress: () => _actions(context, d),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(AppTheme.rayon),
+                            child: SizedBox(
+                              width: 88,
+                              height: 88,
+                              child: d.estImage && d.aMiniature
+                                  ? ImageApi(d.id)
+                                  : Container(
+                                      color: context.palette.surfaceAlt,
+                                      padding: const EdgeInsets.all(6),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.description_outlined,
+                                          ),
+                                          Text(
+                                            refs.libelle(
+                                              'categorie_document',
+                                              d.categorie,
+                                            ),
+                                            maxLines: 2,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                          Text(
+                                            date(d.creeLe),
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      Text(date(d.creeLe),
-                                          style: const TextStyle(fontSize: 10)),
-                                    ],
-                                  ),
-                                ),
+                                    ),
+                            ),
+                          ),
                         ),
-                      ),
+                        if (onCouverture != null && d.estImage)
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: _EtoileCouverture(
+                              active: d.id == couvertureId,
+                              onTap: () => onCouverture!(d),
+                            ),
+                          ),
+                      ],
                     ),
                 ],
               ),
               const SizedBox(height: AppTheme.espaceSm),
               Text(
-                'Appui long sur un document : partager, gérer, supprimer.',
+                onCouverture == null
+                    ? 'Appui long sur un document : partager, gérer, supprimer.'
+                    : 'Étoile : choisir la photo de couverture. Appui long : partager, gérer, supprimer.',
                 style: TextStyle(
-                    fontSize: 12, color: context.palette.texteSecondaire),
+                  fontSize: 12,
+                  color: context.palette.texteSecondaire,
+                ),
               ),
             ],
           ),
       ],
     );
   }
+}
+
+class _EtoileCouverture extends StatelessWidget {
+  final bool active;
+  final VoidCallback onTap;
+  const _EtoileCouverture({required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    selected: active,
+    label: active ? 'Photo de couverture' : 'Choisir comme photo de couverture',
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: const BoxDecoration(
+            color: Color(0x99061730),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            active ? Icons.star : Icons.star_border,
+            size: 18,
+            color: active ? const Color(0xFFFFC83D) : Colors.white,
+          ),
+        ),
+      ),
+    ),
+  );
 }

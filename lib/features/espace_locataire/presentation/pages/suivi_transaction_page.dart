@@ -11,6 +11,8 @@ import 'package:gestion_immo_mobile/injection_container.dart' as di;
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/suivi_transaction_bloc.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/suivi_transaction_event.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/suivi_transaction_state.dart';
+import 'package:gestion_immo_mobile/features/espace_locataire/presentation/widgets/choix_paiement.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Suivi d'un paiement en ligne : la confirmation vient du serveur (webhook PayDunya).
 class SuiviTransactionPage extends StatefulWidget {
@@ -57,41 +59,58 @@ class _SuiviTransactionPageState extends State<SuiviTransactionPage>
         final statut = t?.statut;
         final (icone, titre, texte, ton) = switch (statut) {
           'confirmee' => (
-              Icons.check_circle_outline,
-              'Paiement confirmé',
-              'Merci ! Votre quittance est disponible dans « Mes quittances ».',
-              TonStatut.succes,
-            ),
+            Icons.check_circle_outline,
+            'Paiement confirmé',
+            'Merci ! Votre quittance est disponible dans « Mes quittances ».',
+            TonStatut.succes,
+          ),
           'echouee' || 'annulee' => (
-              Icons.error_outline,
-              'Paiement non abouti',
-              'Aucun montant n’a été débité. Vous pouvez réessayer.',
-              TonStatut.danger
-            ),
+            Icons.error_outline,
+            'Paiement non abouti',
+            'Aucun montant n’a été débité. Vous pouvez réessayer.',
+            TonStatut.danger,
+          ),
           'a_rapprocher' => (
-              Icons.schedule,
-              'Paiement reçu',
-              'Votre propriétaire doit l’associer à votre échéance.',
-              TonStatut.avertissement
-            ),
+            Icons.schedule,
+            'Paiement reçu',
+            'Votre propriétaire doit l’associer à votre échéance.',
+            TonStatut.avertissement,
+          ),
           _ => (
-              Icons.hourglass_top,
-              'En attente de confirmation',
-              'Validez le paiement dans votre application Wave / Orange Money, puis revenez ici.',
-              TonStatut.info,
-            ),
+            Icons.hourglass_top,
+            'En attente de confirmation',
+            'Validez le paiement dans votre application Wave / Orange Money, puis revenez ici.',
+            TonStatut.info,
+          ),
         };
         final c = couleursDuTon(context, ton);
         return Scaffold(
-          appBar: AppBar(title: const Text('Suivi du paiement')),
+          appBar: AppBar(
+            flexibleSpace: const FondMarque(),
+            title: const Text('Suivi du paiement'),
+          ),
           body: ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              Icon(icone, size: 72, color: c.texte),
+              EtapesPaiement(etape: t?.termine ?? false ? 3 : 2),
+              const SizedBox(height: 32),
+              Center(
+                child: Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    color: c.fond,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icone, size: 48, color: c.texte),
+                ),
+              ),
               const SizedBox(height: 16),
-              Text(titre,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                titre,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 8),
               Text(texte, textAlign: TextAlign.center),
               const SizedBox(height: 24),
@@ -100,16 +119,25 @@ class _SuiviTransactionPageState extends State<SuiviTransactionPage>
                   children: [
                     Ligne('Montant', montant(t.montant)),
                     Ligne('Référence', t.reference ?? ''),
-                    Ligne('Statut', null,
-                        widget: Statut(FamilleStatut.transaction,
-                            'statut_transaction', statut)),
+                    Ligne(
+                      'Statut',
+                      null,
+                      widget: Statut(
+                        FamilleStatut.transaction,
+                        'statut_transaction',
+                        statut,
+                      ),
+                    ),
                   ],
                 ),
               const SizedBox(height: 24),
               if (!(t?.termine ?? false) && widget.checkoutUrl != null)
                 OutlinedButton(
-                  onPressed: () => ouvrirLien(context, widget.checkoutUrl!,
-                      mode: LaunchMode.externalApplication),
+                  onPressed: () => ouvrirLien(
+                    context,
+                    widget.checkoutUrl!,
+                    mode: LaunchMode.externalApplication,
+                  ),
                   child: const Text('Rouvrir la page de paiement'),
                 ),
               TextButton(
@@ -117,8 +145,9 @@ class _SuiviTransactionPageState extends State<SuiviTransactionPage>
                 child: const Text('Vérifier maintenant'),
               ),
               FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Terminer')),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Terminer'),
+              ),
             ],
           ),
         );
@@ -129,9 +158,11 @@ class _SuiviTransactionPageState extends State<SuiviTransactionPage>
 
 /// Ouvre la page de paiement puis l'écran de suivi.
 Future<void> ouvrirPaiement(
-    BuildContext context, String transactionId, String checkoutUrl) async {
-  await ouvrirLien(context, checkoutUrl,
-      mode: LaunchMode.externalApplication);
+  BuildContext context,
+  String transactionId,
+  String checkoutUrl,
+) async {
+  await ouvrirLien(context, checkoutUrl, mode: LaunchMode.externalApplication);
   if (!context.mounted) return;
   await Navigator.of(context).push(
     MaterialPageRoute(

@@ -18,7 +18,7 @@ enum FamilleStatut {
   caution,
   abonnement,
   etatDesLieux,
-  priorite
+  priorite,
 }
 
 /// Ton de chaque code de statut de l'API (tokens.json › tonsDesStatuts).
@@ -81,7 +81,7 @@ const Map<FamilleStatut, Map<String, TonStatut>> tonsDesStatuts = {
   },
   FamilleStatut.paiement: {
     'valide': TonStatut.succes,
-    'rembourse': TonStatut.neutre
+    'rembourse': TonStatut.neutre,
   },
   FamilleStatut.caution: {
     'attendue': TonStatut.avertissement,
@@ -110,7 +110,7 @@ const Map<FamilleStatut, Map<String, TonStatut>> tonsDesStatuts = {
     'basse': TonStatut.neutre,
     'normale': TonStatut.info,
     'haute': TonStatut.avertissement,
-    'urgente': TonStatut.danger
+    'urgente': TonStatut.danger,
   },
 };
 
@@ -124,9 +124,9 @@ TonStatut tonDe(FamilleStatut famille, String code) =>
   return switch (ton) {
     TonStatut.succes => (texte: p.succes, fond: p.succesFond),
     TonStatut.avertissement => (
-        texte: p.avertissement,
-        fond: p.avertissementFond
-      ),
+      texte: p.avertissement,
+      fond: p.avertissementFond,
+    ),
     TonStatut.danger => (texte: p.danger, fond: p.dangerFond),
     TonStatut.info => (texte: p.info, fond: p.infoFond),
     TonStatut.neutre => (texte: p.neutre, fond: p.neutreFond),
@@ -150,11 +150,12 @@ class BadgeStatut extends StatelessWidget {
   final FamilleStatut famille;
   final String code;
   final String libelle;
-  const BadgeStatut(
-      {super.key,
-      required this.famille,
-      required this.code,
-      required this.libelle});
+  const BadgeStatut({
+    super.key,
+    required this.famille,
+    required this.code,
+    required this.libelle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +166,9 @@ class BadgeStatut extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-            color: c.fond, borderRadius: BorderRadius.circular(999)),
+          color: c.fond,
+          borderRadius: BorderRadius.circular(999),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -174,7 +177,10 @@ class BadgeStatut extends StatelessWidget {
             Text(
               libelle,
               style: TextStyle(
-                  color: c.texte, fontSize: 12, fontWeight: FontWeight.w600),
+                color: c.texte,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/changer_statut_appartement.dart';
 import '../../domain/usecases/get_fiche_appartement.dart';
 import '../../domain/usecases/supprimer_appartement.dart';
@@ -69,7 +70,8 @@ class AppartementBloc extends Bloc<AppartementEvent, AppartementState> {
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(String id, Emitter<AppartementState> emit) async {
-    final dejaAffichee = state is! AppartementInitial &&
+    final dejaAffichee =
+        state is! AppartementInitial &&
         state is! AppartementLoading &&
         state is! AppartementError;
     final result = await getFicheAppartement(id, annee: annee);

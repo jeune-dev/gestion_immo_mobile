@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/annuler_facture_commune.dart';
 import '../../domain/usecases/get_facture_commune.dart';
 import '../../domain/usecases/joindre_document_facture.dart';
@@ -69,7 +70,8 @@ class FactureCommuneBloc
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(String id, Emitter<FactureCommuneState> emit) async {
-    final dejaAffichee = state is! FactureCommuneInitial &&
+    final dejaAffichee =
+        state is! FactureCommuneInitial &&
         state is! FactureCommuneLoading &&
         state is! FactureCommuneError;
     final result = await getFactureCommune(id);

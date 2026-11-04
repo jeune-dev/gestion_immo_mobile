@@ -20,7 +20,11 @@ class PayerEnLigneEvent extends PaiementLocataireEvent {
   final int montant;
   final String portefeuille;
   PayerEnLigneEvent(
-      this.bailId, this.echeanceId, this.montant, this.portefeuille);
+    this.bailId,
+    this.echeanceId,
+    this.montant,
+    this.portefeuille,
+  );
 }
 
 class ResetPaiementLocataireState extends PaiementLocataireEvent {}

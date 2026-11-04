@@ -21,25 +21,35 @@ class ElementEdl extends Equatable {
   final String? commentaire;
   final List<PhotoEdl> photos;
 
-  const ElementEdl(
-      {required this.id,
-      this.element,
-      this.precision,
-      this.etat,
-      this.commentaire,
-      this.photos = const []});
+  const ElementEdl({
+    required this.id,
+    this.element,
+    this.precision,
+    this.etat,
+    this.commentaire,
+    this.photos = const [],
+  });
 
   @override
-  List<Object?> get props =>
-      [id, element, precision, etat, commentaire, photos];
+  List<Object?> get props => [
+    id,
+    element,
+    precision,
+    etat,
+    commentaire,
+    photos,
+  ];
 }
 
 class PieceEdl extends Equatable {
   final String id;
   final String nom;
   final List<ElementEdl> elements;
-  const PieceEdl(
-      {required this.id, required this.nom, this.elements = const []});
+  const PieceEdl({
+    required this.id,
+    required this.nom,
+    this.elements = const [],
+  });
 
   @override
   List<Object?> get props => [id, nom, elements];
@@ -94,25 +104,25 @@ class EtatDesLieux extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        type,
-        version,
-        statut,
-        realiseLe,
-        soumisLe,
-        creeLe,
-        limiteReponse,
-        accepteTacitement,
-        contestation,
-        compteurEau,
-        compteurElectricite,
-        nbCles,
-        detailCles,
-        observations,
-        locataire,
-        appartementNumero,
-        pieces,
-      ];
+    id,
+    type,
+    version,
+    statut,
+    realiseLe,
+    soumisLe,
+    creeLe,
+    limiteReponse,
+    accepteTacitement,
+    contestation,
+    compteurEau,
+    compteurElectricite,
+    nbCles,
+    detailCles,
+    observations,
+    locataire,
+    appartementNumero,
+    pieces,
+  ];
 }
 
 /// Écart entre l'entrée et la sortie pour un élément.
@@ -123,16 +133,22 @@ class EcartEdl extends Equatable {
   final String? etatSortie;
   final String? commentaireSortie;
 
-  const EcartEdl(
-      {this.piece,
-      this.element,
-      this.etatEntree,
-      this.etatSortie,
-      this.commentaireSortie});
+  const EcartEdl({
+    this.piece,
+    this.element,
+    this.etatEntree,
+    this.etatSortie,
+    this.commentaireSortie,
+  });
 
   @override
-  List<Object?> get props =>
-      [piece, element, etatEntree, etatSortie, commentaireSortie];
+  List<Object?> get props => [
+    piece,
+    element,
+    etatEntree,
+    etatSortie,
+    commentaireSortie,
+  ];
 }
 
 /// Comparaison entrée / sortie (§ 52.3) : éléments dégradés, absents, nouveaux.
@@ -154,6 +170,12 @@ class ComparaisonEdl extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      [elementsSortie, identiques, degrades, ameliores, absents, ecarts];
+  List<Object?> get props => [
+    elementsSortie,
+    identiques,
+    degrades,
+    ameliores,
+    absents,
+    ecarts,
+  ];
 }

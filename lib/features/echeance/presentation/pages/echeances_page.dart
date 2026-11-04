@@ -15,6 +15,7 @@ import 'package:gestion_immo_mobile/features/paiement/presentation/widgets/encai
 import 'package:gestion_immo_mobile/features/echeance/domain/entities/echeance.dart';
 import 'package:gestion_immo_mobile/features/echeance/domain/usecases/annuler_echeance.dart';
 import 'package:gestion_immo_mobile/features/echeance/domain/usecases/get_echeances.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Échéances de loyer (§ 11) et impayés (§ 48 « Qui n'a pas payé ? »).
 class EcheancesPage extends StatefulWidget {
@@ -23,12 +24,13 @@ class EcheancesPage extends StatefulWidget {
   final String? locataireId;
   final String? titre;
 
-  const EcheancesPage(
-      {super.key,
-      this.impayes = false,
-      this.bailId,
-      this.locataireId,
-      this.titre});
+  const EcheancesPage({
+    super.key,
+    this.impayes = false,
+    this.bailId,
+    this.locataireId,
+    this.titre,
+  });
 
   @override
   State<EcheancesPage> createState() => _EcheancesPageState();
@@ -53,11 +55,14 @@ class _EcheancesPageState extends State<EcheancesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(e.libelle ?? '',
-                      style: Theme.of(ctx).textTheme.titleMedium),
+                  Text(
+                    e.libelle ?? '',
+                    style: Theme.of(ctx).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                      '${nomDe(e.locataire)} · Appartement ${e.logementNumero ?? ''}'),
+                    '${nomDe(e.locataire)} · Appartement ${e.logementNumero ?? ''}',
+                  ),
                   const SizedBox(height: 8),
                   Ligne('Montant dû', montant(e.montantDu)),
                   Ligne('Déjà payé', montant(e.montantPaye)),
@@ -68,14 +73,16 @@ class _EcheancesPageState extends State<EcheancesPage> {
             ),
             if (payable)
               ListTile(
-                  leading: const Icon(Icons.payments_outlined),
-                  title: const Text('Encaisser'),
-                  onTap: () => Navigator.pop(ctx, 'encaisser')),
+                leading: const Icon(Icons.payments_outlined),
+                title: const Text('Encaisser'),
+                onTap: () => Navigator.pop(ctx, 'encaisser'),
+              ),
             if (payable && e.montantPaye == 0)
               ListTile(
-                  leading: const Icon(Icons.block),
-                  title: const Text("Annuler l'échéance"),
-                  onTap: () => Navigator.pop(ctx, 'annuler')),
+                leading: const Icon(Icons.block),
+                title: const Text("Annuler l'échéance"),
+                onTap: () => Navigator.pop(ctx, 'annuler'),
+              ),
           ],
         ),
       ),
@@ -95,8 +102,10 @@ class _EcheancesPageState extends State<EcheancesPage> {
         motif: true,
       );
       if (motif != null) {
-        actions.executer(sl<AnnulerEcheance>()(e.id, motif),
-            succes: 'Échéance annulée');
+        actions.executer(
+          sl<AnnulerEcheance>()(e.id, motif),
+          succes: 'Échéance annulée',
+        );
       }
     }
   }
@@ -106,21 +115,25 @@ class _EcheancesPageState extends State<EcheancesPage> {
     final options = [
       ('impayes', 'Impayés'),
       ('', 'Toutes'),
-      for (final o in refs.options('statut_echeance')) (o.code, o.label)
+      for (final o in refs.options('statut_echeance')) (o.code, o.label),
     ];
     return AvecActions(
       onReussite: () => _liste.currentState?.recharger(),
       child: Builder(
         builder: (context) => Scaffold(
           appBar: AppBar(
-              title: Text(
-                  widget.titre ?? (widget.impayes ? 'Impayés' : 'Échéances'))),
+            flexibleSpace: const FondMarque(),
+            title: Text(
+              widget.titre ?? (widget.impayes ? 'Impayés' : 'Échéances'),
+            ),
+          ),
           body: Column(
             children: [
               Filtres(
-                  options: options,
-                  valeur: _filtre,
-                  onChange: (v) => setState(() => _filtre = v)),
+                options: options,
+                valeur: _filtre,
+                onChange: (v) => setState(() => _filtre = v),
+              ),
               Expanded(
                 child: ListePaginee<Echeance>(
                   key: _liste,
@@ -140,12 +153,12 @@ class _EcheancesPageState extends State<EcheancesPage> {
                         ? null
                         : _filtre,
                   ),
-                  element: (context, e) => ListTile(
-                    title: Text(
-                        '${nomDe(e.locataire)} · ${e.logementNumero ?? ''}'),
-                    subtitle: Text(
-                        '${e.libelle ?? ''} · échéance ${date(e.dateEcheance)}'),
-                    trailing: Column(
+                  element: (context, e) => TuileOption(
+                    icone: Icons.event_outlined,
+                    titre: '${nomDe(e.locataire)} · ${e.logementNumero ?? ''}',
+                    detail:
+                        '${e.libelle ?? ''} · échéance ${date(e.dateEcheance)}',
+                    fin: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -154,14 +167,18 @@ class _EcheancesPageState extends State<EcheancesPage> {
                               ? e.reste
                               : e.montantDu,
                           style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: e.statut == 'en_retard'
-                                  ? context.palette.danger
-                                  : null),
+                            fontWeight: FontWeight.w600,
+                            color: e.statut == 'en_retard'
+                                ? context.palette.danger
+                                : null,
+                          ),
                         ),
                         const SizedBox(height: AppTheme.espaceXs),
-                        Statut(FamilleStatut.echeance, 'statut_echeance',
-                            e.statut),
+                        Statut(
+                          FamilleStatut.echeance,
+                          'statut_echeance',
+                          e.statut,
+                        ),
                       ],
                     ),
                     onTap: () => _actions(context, e),

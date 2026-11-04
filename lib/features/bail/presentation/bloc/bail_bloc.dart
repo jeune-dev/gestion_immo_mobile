@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/activer_bail.dart';
 import '../../domain/usecases/annuler_bail.dart';
 import '../../domain/usecases/cloturer_bail.dart';
@@ -27,10 +28,7 @@ class BailBloc extends Bloc<BailEvent, BailState> {
     on<ResetBailState>((_, emit) => emit(BailInitial()));
   }
 
-  Future<void> _onLoadBail(
-    LoadBail event,
-    Emitter<BailState> emit,
-  ) async {
+  Future<void> _onLoadBail(LoadBail event, Emitter<BailState> emit) async {
     emit(BailLoading());
     await _relire(event.id, emit);
   }
@@ -47,14 +45,13 @@ class BailBloc extends Bloc<BailEvent, BailState> {
     Emitter<BailState> emit,
   ) async {
     final result = await activerBail(event.id);
-    await result.fold(
-      (failure) async => emit(BailActionError(failure)),
-      (messages) async {
-        if (messages.isNotEmpty) emit(AvertissementsActivationLoaded(messages));
-        emit(BailSuccess(message: 'Bail activé'));
-        await _relire(event.id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(BailActionError(failure)), (
+      messages,
+    ) async {
+      if (messages.isNotEmpty) emit(AvertissementsActivationLoaded(messages));
+      emit(BailSuccess(message: 'Bail activé'));
+      await _relire(event.id, emit);
+    });
   }
 
   Future<void> _onAnnulerBail(
@@ -62,13 +59,12 @@ class BailBloc extends Bloc<BailEvent, BailState> {
     Emitter<BailState> emit,
   ) async {
     final result = await annulerBail(event.id, event.motif);
-    await result.fold(
-      (failure) async => emit(BailActionError(failure)),
-      (_) async {
-        emit(BailSuccess(message: 'Bail annulé'));
-        await _relire(event.id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(BailActionError(failure)), (
+      _,
+    ) async {
+      emit(BailSuccess(message: 'Bail annulé'));
+      await _relire(event.id, emit);
+    });
   }
 
   Future<void> _onCloturerBail(
@@ -76,13 +72,12 @@ class BailBloc extends Bloc<BailEvent, BailState> {
     Emitter<BailState> emit,
   ) async {
     final result = await cloturerBail(event.id);
-    await result.fold(
-      (failure) async => emit(BailActionError(failure)),
-      (_) async {
-        emit(BailSuccess(message: 'Bail clôturé'));
-        await _relire(event.id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(BailActionError(failure)), (
+      _,
+    ) async {
+      emit(BailSuccess(message: 'Bail clôturé'));
+      await _relire(event.id, emit);
+    });
   }
 
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
@@ -92,9 +87,8 @@ class BailBloc extends Bloc<BailEvent, BailState> {
         state is! BailInitial && state is! BailLoading && state is! BailError;
     final result = await getFicheBail(id);
     result.fold(
-      (failure) => emit(
-        dejaAffichee ? BailActionError(failure) : BailError(failure),
-      ),
+      (failure) =>
+          emit(dejaAffichee ? BailActionError(failure) : BailError(failure)),
       (fiche) => emit(BailLoaded(fiche)),
     );
   }

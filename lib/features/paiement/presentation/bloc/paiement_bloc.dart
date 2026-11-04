@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/get_fiche_paiement.dart';
 import 'paiement_event.dart';
 import 'paiement_state.dart';
@@ -8,9 +9,7 @@ import 'paiement_state.dart';
 class PaiementBloc extends Bloc<PaiementEvent, PaiementState> {
   final GetFichePaiement getFichePaiement;
 
-  PaiementBloc({
-    required this.getFichePaiement,
-  }) : super(PaiementInitial()) {
+  PaiementBloc({required this.getFichePaiement}) : super(PaiementInitial()) {
     on<LoadPaiement>(_onLoadPaiement);
     on<RafraichirPaiement>(_onRafraichirPaiement);
     on<ResetPaiementState>((_, emit) => emit(PaiementInitial()));
@@ -34,7 +33,8 @@ class PaiementBloc extends Bloc<PaiementEvent, PaiementState> {
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(String id, Emitter<PaiementState> emit) async {
-    final dejaAffichee = state is! PaiementInitial &&
+    final dejaAffichee =
+        state is! PaiementInitial &&
         state is! PaiementLoading &&
         state is! PaiementError;
     final result = await getFichePaiement(id);

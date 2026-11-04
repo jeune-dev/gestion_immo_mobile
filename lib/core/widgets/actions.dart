@@ -13,6 +13,7 @@ import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/errors/messages.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
+
 import 'chargement.dart';
 
 void afficherSucces(BuildContext context, String message) {
@@ -37,8 +38,11 @@ void afficherErreur(BuildContext context, String message) {
 /// renouvellement : l'espace est en lecture seule tant que l'abonnement est échu.
 /// Ouvre un lien (page de paiement, appel…) et prévient quand le téléphone
 /// ne peut pas l'ouvrir, au lieu d'échouer en silence. Renvoie `true` si ouvert.
-Future<bool> ouvrirLien(BuildContext context, String lien,
-    {LaunchMode mode = LaunchMode.platformDefault}) async {
+Future<bool> ouvrirLien(
+  BuildContext context,
+  String lien, {
+  LaunchMode mode = LaunchMode.platformDefault,
+}) async {
   final uri = Uri.tryParse(lien);
   var ouvert = false;
   try {
@@ -63,11 +67,13 @@ void afficherErreurApi(BuildContext context, Object e) {
       builder: (ctx) => AlertDialog(
         title: const Text('Abonnement à renouveler'),
         content: Text(
-            '${messageErreur(e)}\n\nVos données restent consultables ; renouvelez pour les modifier.'),
+          '${messageErreur(e)}\n\nVos données restent consultables ; renouvelez pour les modifier.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Plus tard')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Plus tard'),
+          ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -86,8 +92,10 @@ void afficherErreurApi(BuildContext context, Object e) {
 /// Exécute un cas d'usage : message de succès, ou message d'erreur. Renvoie
 /// la valeur en cas de succès, `null` en cas d'échec.
 Future<T?> executer<T>(
-    BuildContext context, Future<Either<Failure, T>> Function() action,
-    {String? succes}) async {
+  BuildContext context,
+  Future<Either<Failure, T>> Function() action, {
+  String? succes,
+}) async {
   final r = await action();
   if (!context.mounted) return r.fold((_) => null, (v) => v);
   return r.fold(
@@ -104,8 +112,10 @@ Future<T?> executer<T>(
 
 /// Comme [executer], pour une action sans valeur de retour : vrai si elle a réussi.
 Future<bool> reussir(
-    BuildContext context, Future<Either<Failure, dynamic>> Function() action,
-    {String? succes}) async {
+  BuildContext context,
+  Future<Either<Failure, dynamic>> Function() action, {
+  String? succes,
+}) async {
   final r = await action();
   if (!context.mounted) return r.isRight();
   return r.fold(
@@ -222,15 +232,19 @@ class _ConfirmationState extends State<_Confirmation> {
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler')),
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Annuler'),
+        ),
         FilledButton(
           style: w.danger
               ? FilledButton.styleFrom(
-                  backgroundColor: cs.error, foregroundColor: cs.onError)
+                  backgroundColor: cs.error,
+                  foregroundColor: cs.onError,
+                )
               : null,
-          onPressed:
-              invalide ? null : () => Navigator.pop(ctx, ctrl.text.trim()),
+          onPressed: invalide
+              ? null
+              : () => Navigator.pop(ctx, ctrl.text.trim()),
           child: Text(w.action),
         ),
       ],
@@ -247,9 +261,12 @@ Future<void> ouvrirPdf(
   bool partager = false,
 }) async {
   final messenger = ScaffoldMessenger.of(context);
-  messenger.showSnackBar(const SnackBar(
+  messenger.showSnackBar(
+    const SnackBar(
       content: Text('Préparation du document…'),
-      duration: Duration(seconds: 20)));
+      duration: Duration(seconds: 20),
+    ),
+  );
   try {
     final octets = (await telecharger()).fold((f) => throw f, (o) => o);
     final dossier = await getTemporaryDirectory();
@@ -266,8 +283,11 @@ Future<void> ouvrirPdf(
     } else {
       final r = await OpenFilex.open(fichier.path, type: 'application/pdf');
       if (r.type != ResultType.done && context.mounted) {
-        await SharePlus.instance.share(ShareParams(
-            files: [XFile(fichier.path, mimeType: 'application/pdf')]));
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(fichier.path, mimeType: 'application/pdf')],
+          ),
+        );
       }
     }
   } catch (e) {
@@ -290,23 +310,32 @@ class EntiteChoisie<T> {
 class SourceEntite<T> {
   /// Page `page`, filtrée par la recherche `q` (vide = pas de filtre).
   final Future<Either<Failure, PageResultat<T>>> Function(int page, String q)
-      charger;
+  charger;
   final String Function(T) id;
   final String Function(T) libelle;
   final String Function(T)? sousTitre;
   final bool recherche;
 
-  const SourceEntite(
-      {required this.charger,
-      required this.id,
-      required this.libelle,
-      this.sousTitre,
-      this.recherche = true});
+  const SourceEntite({
+    required this.charger,
+    required this.id,
+    required this.libelle,
+    this.sousTitre,
+    this.recherche = true,
+  });
+
+  // Le sélecteur manipule une `SourceEntite<dynamic>` : lire directement les
+  // fonctions typées `(T) => String` y lèverait une erreur de type.
+  String idDe(Object? e) => id(e as T);
+  String libelleDe(Object? e) => libelle(e as T);
+  String? sousTitreDe(Object? e) => sousTitre?.call(e as T);
 }
 
 Future<EntiteChoisie<dynamic>?> choisirEntite(
-    BuildContext context, SourceEntite<dynamic> source,
-    {required String titre}) {
+  BuildContext context,
+  SourceEntite<dynamic> source, {
+  required String titre,
+}) {
   return showModalBottomSheet<EntiteChoisie<dynamic>>(
     context: context,
     isScrollControlled: true,
@@ -339,11 +368,15 @@ class _SelecteurState extends State<_Selecteur> {
             child: Row(
               children: [
                 Expanded(
-                    child: Text(widget.titre,
-                        style: Theme.of(context).textTheme.titleMedium)),
+                  child: Text(
+                    widget.titre,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
                 IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close)),
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
               ],
             ),
           ),
@@ -352,7 +385,9 @@ class _SelecteurState extends State<_Selecteur> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
                 decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.search), hintText: 'Rechercher'),
+                  prefixIcon: Icon(Icons.search),
+                  hintText: 'Rechercher',
+                ),
                 onSubmitted: (v) => setState(() => _q = v.trim()),
               ),
             ),
@@ -361,14 +396,21 @@ class _SelecteurState extends State<_Selecteur> {
             child: ListePaginee<dynamic>(
               cle: _q,
               charger: (page) => source.charger(page, _q),
-              element: (context, e) => ListTile(
-                title: Text(source.libelle(e)),
-                subtitle: source.sousTitre == null
-                    ? null
-                    : Text(source.sousTitre!(e)),
-                onTap: () => Navigator.pop(context,
-                    EntiteChoisie<dynamic>(source.id(e), source.libelle(e), e)),
-              ),
+              element: (context, e) {
+                final sousTitre = source.sousTitreDe(e);
+                return ListTile(
+                  title: Text(source.libelleDe(e)),
+                  subtitle: sousTitre == null ? null : Text(sousTitre),
+                  onTap: () => Navigator.pop(
+                    context,
+                    EntiteChoisie<dynamic>(
+                      source.idDe(e),
+                      source.libelleDe(e),
+                      e,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],

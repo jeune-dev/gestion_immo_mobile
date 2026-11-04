@@ -7,11 +7,12 @@ class LogementResume extends Equatable {
   final String? immeubleId;
   final String? immeubleNom;
 
-  const LogementResume(
-      {required this.id,
-      required this.numero,
-      this.immeubleId,
-      this.immeubleNom});
+  const LogementResume({
+    required this.id,
+    required this.numero,
+    this.immeubleId,
+    this.immeubleNom,
+  });
 
   static LogementResume? depuis(dynamic json) {
     if (json is! Map) return null;

@@ -5,9 +5,9 @@ import 'package:gestion_immo_mobile/features/immeuble/domain/usecases/get_immeub
 
 /// Sélection d'un immeuble dans un formulaire.
 SourceEntite<Immeuble> sourceImmeubles() => SourceEntite<Immeuble>(
-      charger: (page, q) =>
-          sl<GetImmeubles>()(page: page, recherche: q.isEmpty ? null : q),
-      id: (e) => e.id,
-      libelle: (e) => e.nom,
-      sousTitre: (e) => [e.adresse, e.ville].whereType<String>().join(', '),
-    );
+  charger: (page, q) =>
+      sl<GetImmeubles>()(page: page, recherche: q.isEmpty ? null : q),
+  id: (e) => e.id,
+  libelle: (e) => e.nom,
+  sousTitre: (e) => [e.adresse, e.ville].whereType<String>().join(', '),
+);

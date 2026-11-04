@@ -3,6 +3,7 @@ import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/services/token_service.dart';
+
 import '../../domain/entities/session_appareil.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../datasources/account_remote_datasource.dart';
@@ -14,7 +15,8 @@ class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Future<Either<Failure, void>> modifierProfil(
-      Map<String, dynamic> corps) async {
+    Map<String, dynamic> corps,
+  ) async {
     try {
       await remoteDataSource.modifierProfil(corps);
       return const Right(null);
@@ -22,7 +24,8 @@ class AccountRepositoryImpl implements AccountRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -35,7 +38,8 @@ class AccountRepositoryImpl implements AccountRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -48,7 +52,8 @@ class AccountRepositoryImpl implements AccountRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -61,7 +66,8 @@ class AccountRepositoryImpl implements AccountRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -74,7 +80,8 @@ class AccountRepositoryImpl implements AccountRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -84,20 +91,24 @@ class AccountRepositoryImpl implements AccountRepository {
     try {
       final r = await remoteDataSource.activerMfa(code);
       await jetons.enregistrer(
-          access: r['access_token'] as String,
-          refresh: r['refresh_token'] as String?);
+        access: r['access_token'] as String,
+        refresh: r['refresh_token'] as String?,
+      );
       return Right(((r['codes_secours'] as List?) ?? const []).cast<String>());
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, void>> desactiverMfa(
-      {required String motDePasse, required String code}) async {
+  Future<Either<Failure, void>> desactiverMfa({
+    required String motDePasse,
+    required String code,
+  }) async {
     try {
       await remoteDataSource.desactiverMfa(motDePasse: motDePasse, code: code);
       return const Right(null);
@@ -105,22 +116,28 @@ class AccountRepositoryImpl implements AccountRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, List<String>>> regenererCodesSecours(
-      {required String motDePasse, required String code}) async {
+  Future<Either<Failure, List<String>>> regenererCodesSecours({
+    required String motDePasse,
+    required String code,
+  }) async {
     try {
       final strings = await remoteDataSource.regenererCodesSecours(
-          motDePasse: motDePasse, code: code);
+        motDePasse: motDePasse,
+        code: code,
+      );
       return Right(strings);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 }

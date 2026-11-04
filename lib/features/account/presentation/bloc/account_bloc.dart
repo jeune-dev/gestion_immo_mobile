@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/activer_mfa.dart';
 import '../../domain/usecases/desactiver_mfa.dart';
 import '../../domain/usecases/get_sessions.dart';
@@ -42,13 +43,12 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     Emitter<AccountState> emit,
   ) async {
     final result = await revoquerSession(event.id);
-    await result.fold(
-      (failure) async => emit(AccountActionError(failure)),
-      (_) async {
-        emit(AccountSuccess(message: 'Appareil déconnecté'));
-        await _chargerSessions(emit);
-      },
-    );
+    await result.fold((failure) async => emit(AccountActionError(failure)), (
+      _,
+    ) async {
+      emit(AccountSuccess(message: 'Appareil déconnecté'));
+      await _chargerSessions(emit);
+    });
   }
 
   Future<void> _onRevoquerAutresSessions(
@@ -56,13 +56,12 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     Emitter<AccountState> emit,
   ) async {
     final result = await revoquerAutresSessions();
-    await result.fold(
-      (failure) async => emit(AccountActionError(failure)),
-      (_) async {
-        emit(AccountSuccess(message: 'Autres appareils déconnectés'));
-        await _chargerSessions(emit);
-      },
-    );
+    await result.fold((failure) async => emit(AccountActionError(failure)), (
+      _,
+    ) async {
+      emit(AccountSuccess(message: 'Autres appareils déconnectés'));
+      await _chargerSessions(emit);
+    });
   }
 
   Future<void> _onInitialiserMfa(
@@ -81,16 +80,15 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     Emitter<AccountState> emit,
   ) async {
     final result = await activerMfa(event.code);
-    result.fold(
-      (failure) => emit(AccountActionError(failure)),
-      (codes) {
-        emit(CodesSecoursLoaded(codes));
-        emit(AccountSuccess(
+    result.fold((failure) => emit(AccountActionError(failure)), (codes) {
+      emit(CodesSecoursLoaded(codes));
+      emit(
+        AccountSuccess(
           message: 'Double authentification activée',
           compteModifie: true,
-        ));
-      },
-    );
+        ),
+      );
+    });
   }
 
   Future<void> _onDesactiverMfa(
@@ -103,10 +101,12 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     );
     result.fold(
       (failure) => emit(AccountActionError(failure)),
-      (_) => emit(AccountSuccess(
-        message: 'Double authentification désactivée',
-        compteModifie: true,
-      )),
+      (_) => emit(
+        AccountSuccess(
+          message: 'Double authentification désactivée',
+          compteModifie: true,
+        ),
+      ),
     );
   }
 

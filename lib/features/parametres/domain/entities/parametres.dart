@@ -9,17 +9,24 @@ class EspaceBailleur extends Equatable {
   final String? adresse;
   final String? ville;
 
-  const EspaceBailleur(
-      {this.nomAffiche,
-      this.societe,
-      this.telephone,
-      this.email,
-      this.adresse,
-      this.ville});
+  const EspaceBailleur({
+    this.nomAffiche,
+    this.societe,
+    this.telephone,
+    this.email,
+    this.adresse,
+    this.ville,
+  });
 
   @override
-  List<Object?> get props =>
-      [nomAffiche, societe, telephone, email, adresse, ville];
+  List<Object?> get props => [
+    nomAffiche,
+    societe,
+    telephone,
+    email,
+    adresse,
+    ville,
+  ];
 }
 
 /// Règles de gestion : relances (§ 14), état des lieux (§ 52.4), caution (§ 55), canaux (§ 54.3).
@@ -47,15 +54,15 @@ class ReglagesGestion extends Equatable {
 
   @override
   List<Object?> get props => [
-        relances,
-        preavisEcheance,
-        delaiGrace,
-        delaiReponseEdl,
-        delaiRestitutionCaution,
-        politiqueEdlEntree,
-        ordreCanaux,
-        strategieNotification,
-      ];
+    relances,
+    preavisEcheance,
+    delaiGrace,
+    delaiReponseEdl,
+    delaiRestitutionCaution,
+    politiqueEdlEntree,
+    ordreCanaux,
+    strategieNotification,
+  ];
 }
 
 class ParametresProprietaire extends Equatable {

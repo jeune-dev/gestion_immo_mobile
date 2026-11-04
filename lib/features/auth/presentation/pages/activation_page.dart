@@ -33,13 +33,13 @@ class _ActivationPageState extends State<ActivationPage> {
   void _valider() {
     if (!_form.currentState!.validate()) return;
     context.read<AuthBloc>().add(
-          ActivationDemandee({
-            'code': _code.text.trim(),
-            'phone': _telephone.text.trim(),
-            'password': _mdp.text,
-            'password_confirmation': _confirmation.text,
-          }),
-        );
+      ActivationDemandee({
+        'code': _code.text.trim(),
+        'phone': _telephone.text.trim(),
+        'password': _mdp.text,
+        'password_confirmation': _confirmation.text,
+      }),
+    );
   }
 
   @override
@@ -55,9 +55,8 @@ class _ActivationPageState extends State<ActivationPage> {
   Widget build(BuildContext context) {
     return AuthCadre(
       retour: true,
-      titre: 'Activer mon compte locataire',
-      sousTitre:
-          "Saisissez le code d'invitation reçu de votre propriétaire et le numéro de téléphone qu'il a enregistré.",
+      titre: 'Activer mon compte',
+      sousTitre: "Entrez le code reçu de votre propriétaire et le téléphone qu'il a enregistré.",
       children: [
         Form(
           key: _form,
@@ -68,29 +67,40 @@ class _ActivationPageState extends State<ActivationPage> {
               TextFormField(
                 controller: _code,
                 keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.next,
                 maxLength: 8,
-                decoration:
-                    const InputDecoration(labelText: "Code d'invitation"),
+                decoration: const InputDecoration(
+                  labelText: "Code d'invitation",
+                  hintText: '8 chiffres',
+                  counterText: '',
+                  prefixIcon: Icon(Icons.key_outlined),
+                ),
                 validator: (v) =>
                     IdentifiantValidator.code(v, longueur: 8).erreurFormulaire,
               ),
+              const SizedBox(height: AppTheme.espaceMd),
               TextFormField(
                 controller: _telephone,
                 keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.telephoneNumber],
                 decoration: const InputDecoration(
-                    labelText: 'Téléphone', hintText: '77 123 45 67'),
+                  labelText: 'Téléphone',
+                  hintText: '77 123 45 67',
+                  prefixIcon: Icon(Icons.phone_outlined),
+                ),
                 validator: (v) =>
                     (v ?? '').trim().isEmpty ? 'Obligatoire' : null,
               ),
-              const SizedBox(height: AppTheme.espaceLg),
+              const SizedBox(height: AppTheme.espaceMd),
               ChampMotDePasse(
-                  controleur: _mdp,
-                  libelle: 'Choisissez un mot de passe',
-                  nouveau: true,
-                  validator: (v) =>
-                      IdentifiantValidator.motDePasse(v).erreurFormulaire),
-              const SizedBox(height: AppTheme.espaceLg),
+                controleur: _mdp,
+                libelle: 'Choisissez un mot de passe',
+                nouveau: true,
+                validator: (v) =>
+                    IdentifiantValidator.motDePasse(v).erreurFormulaire,
+              ),
+              const SizedBox(height: AppTheme.espaceMd),
               ChampMotDePasse(
                 controleur: _confirmation,
                 libelle: 'Confirmation',

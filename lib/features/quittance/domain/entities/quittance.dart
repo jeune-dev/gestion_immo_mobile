@@ -12,16 +12,24 @@ class Quittance extends Equatable {
   final num? montant;
   final bool annulee;
 
-  const Quittance(
-      {required this.id,
-      this.numero,
-      this.libelleEcheance,
-      this.locataire,
-      this.emiseLe,
-      this.montant,
-      this.annulee = false});
+  const Quittance({
+    required this.id,
+    this.numero,
+    this.libelleEcheance,
+    this.locataire,
+    this.emiseLe,
+    this.montant,
+    this.annulee = false,
+  });
 
   @override
-  List<Object?> get props =>
-      [id, numero, libelleEcheance, locataire, emiseLe, montant, annulee];
+  List<Object?> get props => [
+    id,
+    numero,
+    libelleEcheance,
+    locataire,
+    emiseLe,
+    montant,
+    annulee,
+  ];
 }

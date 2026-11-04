@@ -12,13 +12,14 @@ class CautionDuBail extends Equatable {
   final num? retenue;
   final num? restituee;
 
-  const CautionDuBail(
-      {required this.id,
-      this.statut,
-      this.recue,
-      this.attendue,
-      this.retenue,
-      this.restituee});
+  const CautionDuBail({
+    required this.id,
+    this.statut,
+    this.recue,
+    this.attendue,
+    this.retenue,
+    this.restituee,
+  });
 
   @override
   List<Object?> get props => [id, statut, recue, attendue, retenue, restituee];
@@ -32,8 +33,13 @@ class EtatDesLieuxDuBail extends Equatable {
   final String? statut;
   final String? date;
 
-  const EtatDesLieuxDuBail(
-      {required this.id, this.type, this.version, this.statut, this.date});
+  const EtatDesLieuxDuBail({
+    required this.id,
+    this.type,
+    this.version,
+    this.statut,
+    this.date,
+  });
 
   @override
   List<Object?> get props => [id, type, version, statut, date];
@@ -46,11 +52,12 @@ class ContratBail extends Equatable {
   final int? versionModele;
   final String? creeLe;
 
-  const ContratBail(
-      {required this.version,
-      required this.documentId,
-      this.versionModele,
-      this.creeLe});
+  const ContratBail({
+    required this.version,
+    required this.documentId,
+    this.versionModele,
+    this.creeLe,
+  });
 
   @override
   List<Object?> get props => [version, documentId, versionModele, creeLe];
@@ -108,29 +115,29 @@ class Bail extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        reference,
-        statut,
-        typeBail,
-        debut,
-        fin,
-        sortieLe,
-        loyer,
-        charges,
-        montantCaution,
-        periodicite,
-        jourEcheance,
-        nbOccupants,
-        preavisMois,
-        revisionLoyer,
-        conditionsParticulieres,
-        locataire,
-        logement,
-        caution,
-        resteDu,
-        totalEncaisse,
-        etatsDesLieux,
-      ];
+    id,
+    reference,
+    statut,
+    typeBail,
+    debut,
+    fin,
+    sortieLe,
+    loyer,
+    charges,
+    montantCaution,
+    periodicite,
+    jourEcheance,
+    nbOccupants,
+    preavisMois,
+    revisionLoyer,
+    conditionsParticulieres,
+    locataire,
+    logement,
+    caution,
+    resteDu,
+    totalEncaisse,
+    etatsDesLieux,
+  ];
 }
 
 /// Fiche du bail : le bail et ses contrats générés.

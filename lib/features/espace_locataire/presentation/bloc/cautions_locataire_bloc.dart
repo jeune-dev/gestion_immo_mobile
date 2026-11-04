@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/contester_retenue.dart';
 import '../../domain/usecases/get_mes_cautions.dart';
 import 'cautions_locataire_event.dart';
@@ -18,7 +19,8 @@ class CautionsLocataireBloc
     on<RafraichirCautionsLocataire>(_onRafraichirCautionsLocataire);
     on<ContesterRetenueEvent>(_onContesterRetenue);
     on<ResetCautionsLocataireState>(
-        (_, emit) => emit(CautionsLocataireInitial()));
+      (_, emit) => emit(CautionsLocataireInitial()),
+    );
   }
 
   Future<void> _onLoadCautionsLocataire(
@@ -53,7 +55,8 @@ class CautionsLocataireBloc
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(Emitter<CautionsLocataireState> emit) async {
-    final dejaAffichee = state is! CautionsLocataireInitial &&
+    final dejaAffichee =
+        state is! CautionsLocataireInitial &&
         state is! CautionsLocataireLoading &&
         state is! CautionsLocataireError;
     final result = await getMesCautions();

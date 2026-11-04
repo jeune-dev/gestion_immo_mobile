@@ -20,8 +20,10 @@ class Env {
         ? definie
         : (dotenv.maybeGet('API_URL') ?? 'http://localhost:3000/api/v1');
     if (!kIsWeb && Platform.isAndroid) {
-      url =
-          url.replaceFirst(RegExp(r'//(localhost|127\.0\.0\.1)'), '//10.0.2.2');
+      url = url.replaceFirst(
+        RegExp(r'//(localhost|127\.0\.0\.1)'),
+        '//10.0.2.2',
+      );
     }
     return url;
   }

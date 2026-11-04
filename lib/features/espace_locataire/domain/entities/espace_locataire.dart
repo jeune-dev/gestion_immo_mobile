@@ -6,6 +6,11 @@ import 'package:gestion_immo_mobile/features/echeance/domain/entities/echeance.d
 class LogementLocataire extends Equatable {
   final String bailId;
   final String? statutBail;
+  final String? appartementId;
+  final String? immeubleId;
+
+  /// Photo de couverture de l'immeuble, choisie par le propriétaire.
+  final String? couvertureId;
   final String? appartementNumero;
   final String? appartementType;
   final String? immeubleNom;
@@ -27,6 +32,9 @@ class LogementLocataire extends Equatable {
   const LogementLocataire({
     required this.bailId,
     this.statutBail,
+    this.appartementId,
+    this.immeubleId,
+    this.couvertureId,
     this.appartementNumero,
     this.appartementType,
     this.immeubleNom,
@@ -44,22 +52,22 @@ class LogementLocataire extends Equatable {
 
   @override
   List<Object?> get props => [
-        bailId,
-        statutBail,
-        appartementNumero,
-        appartementType,
-        immeubleNom,
-        immeubleAdresse,
-        ville,
-        loyer,
-        charges,
-        periodicite,
-        proprietaireNom,
-        proprietaireTelephone,
-        prochaineEcheance,
-        montantEnRetard,
-        montantDu,
-      ];
+    bailId,
+    statutBail,
+    appartementNumero,
+    appartementType,
+    immeubleNom,
+    immeubleAdresse,
+    ville,
+    loyer,
+    charges,
+    periodicite,
+    proprietaireNom,
+    proprietaireTelephone,
+    prochaineEcheance,
+    montantEnRetard,
+    montantDu,
+  ];
 }
 
 /// Numéro Wave / Orange Money du bailleur pour un paiement direct avec preuve.
@@ -81,11 +89,12 @@ class MoyensPaiementLocataire extends Equatable {
   final String? beneficiaire;
   final bool especes;
 
-  const MoyensPaiementLocataire(
-      {this.integres = const [],
-      this.preuves = const [],
-      this.beneficiaire,
-      this.especes = false});
+  const MoyensPaiementLocataire({
+    this.integres = const [],
+    this.preuves = const [],
+    this.beneficiaire,
+    this.especes = false,
+  });
 
   @override
   List<Object?> get props => [integres, preuves, beneficiaire, especes];

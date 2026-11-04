@@ -1,4 +1,5 @@
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import '../../domain/entities/parametres.dart';
 
 class ParametresModel {
@@ -20,8 +21,9 @@ class ParametresModel {
         ville: o['city'] as String?,
       ),
       reglages: ReglagesGestion(
-        relances:
-            ((s['reminder_offsets'] as List?) ?? const []).map(entier).toList(),
+        relances: ((s['reminder_offsets'] as List?) ?? const [])
+            .map(entier)
+            .toList(),
         preavisEcheance: _entier(s['schedule_notice_days']),
         delaiGrace: _entier(s['late_grace_days']),
         delaiReponseEdl: _entier(s['inspection_response_days']),

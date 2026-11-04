@@ -27,8 +27,11 @@ Future<List<OptionRef>?> _categories(BuildContext context) async {
 /// Saisie d'une dépense (§ 20). Hors ligne, elle est mise en file et
 /// synchronisée au retour du réseau (§ 34) grâce à `client_reference`.
 /// Avec [travauxId], la dépense est rattachée au chantier (§ 23 étape 7).
-Future<bool> nouvelleDepense(BuildContext context,
-    {String? travauxId, String? travauxTitre}) async {
+Future<bool> nouvelleDepense(
+  BuildContext context, {
+  String? travauxId,
+  String? travauxTitre,
+}) async {
   final categories = await _categories(context);
   if (categories == null || !context.mounted) return false;
   final r = await EcranFormulaire.ouvrir<Object>(
@@ -38,30 +41,57 @@ Future<bool> nouvelleDepense(BuildContext context,
       initial: {'spent_on': aujourdhui(), 'method': 'especes'},
       intro: travauxId == null
           ? const Text(
-              'Une dépense en espèces est aussi enregistrée dans la caisse.')
+              'Une dépense en espèces est aussi enregistrée dans la caisse.',
+            )
           : Text(travauxTitre ?? ''),
       champs: [
         if (travauxId == null)
-          Champ('building_id', 'Immeuble',
-              type: TypeChamp.entite,
-              obligatoire: true,
-              entite: sourceImmeubles()),
-        Champ('category_id', 'Catégorie',
-            type: TypeChamp.selection,
-            options: categories,
-            obligatoire: travauxId == null),
-        const Champ('amount', 'Montant',
-            type: TypeChamp.montant, obligatoire: true, min: 1),
-        const Champ('method', 'Moyen de paiement',
-            type: TypeChamp.selection,
-            referentiel: 'mode_paiement',
-            obligatoire: true),
-        const Champ('spent_on', 'Date',
-            type: TypeChamp.date, obligatoire: true),
-        const Champ('description', 'Description',
-            type: TypeChamp.multiligne, maxLongueur: 500),
-        Champ('contractor_id', 'Artisan (facultatif)',
-            type: TypeChamp.entite, entite: sourceArtisans()),
+          Champ(
+            'building_id',
+            'Immeuble',
+            type: TypeChamp.entite,
+            obligatoire: true,
+            entite: sourceImmeubles(),
+          ),
+        Champ(
+          'category_id',
+          'Catégorie',
+          type: TypeChamp.selection,
+          options: categories,
+          obligatoire: travauxId == null,
+        ),
+        const Champ(
+          'amount',
+          'Montant',
+          type: TypeChamp.montant,
+          obligatoire: true,
+          min: 1,
+        ),
+        const Champ(
+          'method',
+          'Moyen de paiement',
+          type: TypeChamp.selection,
+          referentiel: 'mode_paiement',
+          obligatoire: true,
+        ),
+        const Champ(
+          'spent_on',
+          'Date',
+          type: TypeChamp.date,
+          obligatoire: true,
+        ),
+        const Champ(
+          'description',
+          'Description',
+          type: TypeChamp.multiligne,
+          maxLongueur: 500,
+        ),
+        Champ(
+          'contractor_id',
+          'Artisan (facultatif)',
+          type: TypeChamp.entite,
+          entite: sourceArtisans(),
+        ),
       ],
       libelleEnvoi: 'Enregistrer',
       envoyer: (corps) async {
@@ -75,10 +105,11 @@ Future<bool> nouvelleDepense(BuildContext context,
   );
   if (r == null || !context.mounted) return false;
   afficherSucces(
-      context,
-      r == 'differee'
-          ? 'Hors ligne : la dépense sera envoyée au retour du réseau.'
-          : 'Dépense enregistrée');
+    context,
+    r == 'differee'
+        ? 'Hors ligne : la dépense sera envoyée au retour du réseau.'
+        : 'Dépense enregistrée',
+  );
   return true;
 }
 
@@ -92,9 +123,11 @@ Future<bool> modifierDepense(BuildContext context, Depense d) async {
   if (d.categorieId != null &&
       !categories.any((o) => o.code == d.categorieId)) {
     categories = [
-      OptionRef(d.categorieId!,
-          '${d.categorieNom ?? 'Catégorie actuelle'} (désactivée)'),
-      ...categories
+      OptionRef(
+        d.categorieId!,
+        '${d.categorieNom ?? 'Catégorie actuelle'} (désactivée)',
+      ),
+      ...categories,
     ];
   }
   final r = await EcranFormulaire.ouvrir<Object>(
@@ -102,7 +135,8 @@ Future<bool> modifierDepense(BuildContext context, Depense d) async {
     EcranFormulaire(
       titre: 'Modifier la dépense',
       intro: const Text(
-          'Le montant, le moyen et la date ne se modifient pas : annulez la dépense et ressaisissez-la si besoin.'),
+        'Le montant, le moyen et la date ne se modifient pas : annulez la dépense et ressaisissez-la si besoin.',
+      ),
       initial: {
         'category_id': d.categorieId,
         'description': d.description,
@@ -113,8 +147,13 @@ Future<bool> modifierDepense(BuildContext context, Depense d) async {
         if (d.artisanNom != null) 'contractor_id__libelle': d.artisanNom,
       },
       champs: [
-        Champ('category_id', 'Catégorie',
-            type: TypeChamp.selection, options: categories, obligatoire: true),
+        Champ(
+          'category_id',
+          'Catégorie',
+          type: TypeChamp.selection,
+          options: categories,
+          obligatoire: true,
+        ),
         Champ(
           'apartment_id',
           'Appartement (facultatif)',
@@ -122,10 +161,19 @@ Future<bool> modifierDepense(BuildContext context, Depense d) async {
           nullable: true,
           entite: sourceAppartements(immeuble: d.immeubleId),
         ),
-        Champ('contractor_id', 'Artisan (facultatif)',
-            type: TypeChamp.entite, nullable: true, entite: sourceArtisans()),
-        const Champ('description', 'Description',
-            type: TypeChamp.multiligne, maxLongueur: 500),
+        Champ(
+          'contractor_id',
+          'Artisan (facultatif)',
+          type: TypeChamp.entite,
+          nullable: true,
+          entite: sourceArtisans(),
+        ),
+        const Champ(
+          'description',
+          'Description',
+          type: TypeChamp.multiligne,
+          maxLongueur: 500,
+        ),
       ],
       messageSucces: 'Dépense modifiée',
       envoyer: (corps) async =>

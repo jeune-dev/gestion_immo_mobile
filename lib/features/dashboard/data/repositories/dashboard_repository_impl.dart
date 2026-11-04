@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
+
 import '../../domain/entities/tableau_de_bord.dart';
 import '../../domain/repositories/dashboard_repository.dart';
 import '../datasources/dashboard_remote_datasource.dart';
@@ -19,7 +20,21 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, SerieFinanciere>> serieFinanciere(int nbMois) async {
+    try {
+      return Right(await remoteDataSource.serieFinanciere(nbMois));
+    } on ApiException catch (e) {
+      return Left(Failure.depuis(e));
+    } catch (e) {
+      return Left(
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 }

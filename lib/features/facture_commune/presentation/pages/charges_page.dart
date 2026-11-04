@@ -9,6 +9,7 @@ import 'package:gestion_immo_mobile/core/widgets/chargement.dart';
 import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/facture_commune/domain/entities/facture_commune.dart';
 import 'package:gestion_immo_mobile/features/facture_commune/domain/usecases/get_charges_refacturees.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Charges refacturées aux locataires (§ 15).
 class ChargesPage extends StatefulWidget {
@@ -24,13 +25,16 @@ class _ChargesPageState extends State<ChargesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Charges refacturées')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('Charges refacturées'),
+      ),
       body: Column(
         children: [
           Filtres(
             options: [
               ('', 'Toutes'),
-              for (final o in refs.options('statut_charge')) (o.code, o.label)
+              for (final o in refs.options('statut_charge')) (o.code, o.label),
             ],
             valeur: _statut,
             onChange: (v) => setState(() => _statut = v),
@@ -40,18 +44,21 @@ class _ChargesPageState extends State<ChargesPage> {
               cle: _statut,
               vide: 'Aucune charge refacturée',
               charger: (page) => sl<GetChargesRefacturees>()(
-                  page: page, statut: _statut.isEmpty ? null : _statut),
-              element: (context, c) => ListTile(
-                title:
-                    Text('${nomDe(c.locataire)} · ${c.logementNumero ?? ''}'),
-                subtitle: Text(
-                    '${c.libelle ?? ''} · échéance ${date(c.dateEcheance)}'),
-                trailing: Column(
+                page: page,
+                statut: _statut.isEmpty ? null : _statut,
+              ),
+              element: (context, c) => TuileOption(
+                icone: Icons.request_quote_outlined,
+                titre: '${nomDe(c.locataire)} · ${c.logementNumero ?? ''}',
+                detail: '${c.libelle ?? ''} · échéance ${date(c.dateEcheance)}',
+                fin: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Montant(c.montant,
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Montant(
+                      c.montant,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     Statut(FamilleStatut.charge, 'statut_charge', c.statut),
                   ],
                 ),

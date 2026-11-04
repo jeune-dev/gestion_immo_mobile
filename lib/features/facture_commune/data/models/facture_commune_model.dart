@@ -1,16 +1,17 @@
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import '../../domain/entities/facture_commune.dart';
 
 LigneRepartition _ligne(Map<String, dynamic> l) => LigneRepartition(
-      logementNumero:
-          ((l['apartment'] as Map?)?['number'] ?? l['apartment_number'])
-              ?.toString(),
-      locataire:
-          PersonneResume.depuis(l['tenant'] ?? (l['lease'] as Map?)?['tenant']),
-      explication: l['explanation'] as String?,
-      montant: nombreOuNull(l['amount']),
-    );
+  logementNumero: ((l['apartment'] as Map?)?['number'] ?? l['apartment_number'])
+      ?.toString(),
+  locataire: PersonneResume.depuis(
+    l['tenant'] ?? (l['lease'] as Map?)?['tenant'],
+  ),
+  explication: l['explanation'] as String?,
+  montant: nombreOuNull(l['amount']),
+);
 
 class FactureCommuneModel extends FactureCommune {
   const FactureCommuneModel({
@@ -52,8 +53,11 @@ class FactureCommuneModel extends FactureCommune {
 }
 
 class ApercuRepartitionModel extends ApercuRepartition {
-  const ApercuRepartitionModel(
-      {required super.lignes, super.totalRefacture, super.partProprietaire});
+  const ApercuRepartitionModel({
+    required super.lignes,
+    super.totalRefacture,
+    super.partProprietaire,
+  });
 
   factory ApercuRepartitionModel.fromJson(Map<String, dynamic> json) =>
       ApercuRepartitionModel(
@@ -74,6 +78,7 @@ class ChargeRefactureeModel extends ChargeRefacturee {
     super.montant,
     super.montantPaye,
     super.statut,
+    super.calcul,
   });
 
   factory ChargeRefactureeModel.fromJson(Map<String, dynamic> json) =>
@@ -87,5 +92,24 @@ class ChargeRefactureeModel extends ChargeRefacturee {
         montant: entier(json['amount']),
         montantPaye: entier(json['amount_paid']),
         statut: json['status'] as String?,
+        calcul: _calcul(json['calculation']),
       );
+
+  static CalculCharge? _calcul(Object? v) {
+    if (v is! Map) return null;
+    num? nombre(Object? x) => x is num ? x : num.tryParse('${x ?? ''}');
+    return CalculCharge(
+      methode: v['method'] as String?,
+      methodeLibelle: v['method_label'] as String?,
+      totalFacture: entier(v['invoice_total']),
+      nbAppartements: entier(v['apartments_count']),
+      fournisseur: v['supplier'] as String?,
+      numeroFacture: v['invoice_number'] as String?,
+      periodeDebut: v['period_start'] as String?,
+      periodeFin: v['period_end'] as String?,
+      base: nombre(v['basis_value']),
+      quotePart: nombre(v['share']),
+      explication: v['explanation'] as String?,
+    );
+  }
 }

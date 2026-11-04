@@ -3,9 +3,14 @@ import 'package:flutter/services.dart';
 
 import 'package:gestion_immo_mobile/core/validation/identifiant_validator.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
+import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import 'actions.dart';
+import 'base.dart';
+
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 enum TypeChamp {
   texte,
@@ -19,7 +24,7 @@ enum TypeChamp {
   telephone,
   email,
   motDePasse,
-  entite
+  entite,
 }
 
 /// Description d'un champ : le formulaire gère la saisie, la conversion des types
@@ -56,6 +61,14 @@ class Champ {
   /// Affichage conditionnel selon les autres valeurs saisies.
   final bool Function(Map<String, dynamic> valeurs)? visible;
 
+  /// Ouvre une nouvelle carte titrée à partir de ce champ.
+  final String? groupe;
+
+  /// Partage sa ligne avec le champ `moitie` voisin.
+  final bool moitie;
+
+  final IconData? icone;
+
   const Champ(
     this.nom,
     this.libelle, {
@@ -72,6 +85,9 @@ class Champ {
     this.entite,
     this.nullable = false,
     this.visible,
+    this.groupe,
+    this.moitie = false,
+    this.icone,
   });
 }
 
@@ -99,8 +115,9 @@ class EcranFormulaire extends StatefulWidget {
 
   /// Ouvre le formulaire ; renvoie le résultat de [envoyer] si l'envoi a réussi.
   static Future<T?> ouvrir<T>(BuildContext context, EcranFormulaire f) =>
-      Navigator.of(context).push<T>(
-          MaterialPageRoute(builder: (_) => f, fullscreenDialog: true));
+      Navigator.of(
+        context,
+      ).push<T>(MaterialPageRoute(builder: (_) => f, fullscreenDialog: true));
 
   @override
   State<EcranFormulaire> createState() => _EcranFormulaireState();
@@ -227,7 +244,17 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
   Widget _champ(Champ c) {
     final libelle = '${c.libelle}${c.obligatoire ? ' *' : ''}';
     final deco = InputDecoration(
-        labelText: libelle, helperText: c.indice, helperMaxLines: 3);
+      labelText: libelle,
+      helperText: c.indice,
+      helperMaxLines: 3,
+      prefixIcon: c.icone == null ? null : Icon(c.icone),
+      // Compteur réservé aux longs textes : il encombre les champs courts.
+      counterText: c.type == TypeChamp.multiligne ? null : '',
+    );
+    final p = context.palette;
+    final styleValeur = Theme.of(context).textTheme.bodyLarge!
+        .copyWith(color: p.texte, fontSize: 16, fontWeight: FontWeight.w400);
+    final stylePlaceholder = styleValeur.copyWith(color: p.texteDiscret);
     switch (c.type) {
       case TypeChamp.interrupteur:
         return SwitchListTile(
@@ -245,6 +272,9 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
               : null,
           decoration: deco,
           isExpanded: true,
+          isDense: true,
+          style: styleValeur,
+          icon: const Icon(Icons.keyboard_arrow_down),
           items: [
             if (!c.obligatoire)
               const DropdownMenuItem<String>(value: null, child: Text('—')),
@@ -260,8 +290,8 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
         final v = _valeurs[c.nom] as String?;
         return InkWell(
           onTap: () async {
-            final init = (v == null ? null : DateTime.tryParse(v)) ??
-                DateTime.now();
+            final init =
+                (v == null ? null : DateTime.tryParse(v)) ?? DateTime.now();
             final d = await showDatePicker(
               context: context,
               initialDate: init,
@@ -276,15 +306,24 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
           },
           child: InputDecorator(
             decoration: deco.copyWith(
-                suffixIcon: const Icon(Icons.calendar_today, size: 18)),
-            child: Text(v == null ? 'Choisir une date' : date(v)),
+              suffixIcon: const Icon(Icons.calendar_today_outlined, size: 18),
+            ),
+            child: Text(
+              v == null ? 'Choisir' : date(v),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: v == null ? stylePlaceholder : styleValeur,
+            ),
           ),
         );
       case TypeChamp.entite:
         return InkWell(
           onTap: () async {
-            final choix =
-                await choisirEntite(context, c.entite!, titre: c.libelle);
+            final choix = await choisirEntite(
+              context,
+              c.entite!,
+              titre: c.libelle,
+            );
             if (choix != null && mounted) {
               setState(() {
                 _valeurs[c.nom] = choix.id;
@@ -302,17 +341,23 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
                         _libellesEntites.remove(c.nom);
                       }),
                     )
-                  : const Icon(Icons.arrow_drop_down),
+                  : const Icon(Icons.keyboard_arrow_down),
             ),
-            child: Text(_libellesEntites[c.nom] ??
-                (_valeurs[c.nom] == null ? 'Choisir' : 'Sélectionné')),
+            child: Text(
+              _libellesEntites[c.nom] ??
+                  (_valeurs[c.nom] == null ? 'Choisir' : 'Sélectionné'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _valeurs[c.nom] == null ? stylePlaceholder : styleValeur,
+            ),
           ),
         );
       default:
         final clavier = switch (c.type) {
           TypeChamp.montant || TypeChamp.entier => TextInputType.number,
-          TypeChamp.decimal =>
-            const TextInputType.numberWithOptions(decimal: true),
+          TypeChamp.decimal => const TextInputType.numberWithOptions(
+            decimal: true,
+          ),
           TypeChamp.telephone => TextInputType.phone,
           TypeChamp.email => TextInputType.emailAddress,
           TypeChamp.multiligne => TextInputType.multiline,
@@ -323,10 +368,11 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
           initialValue: initial == null
               ? null
               : c.type == TypeChamp.montant && initial is num
-                  ? nombre(initial)
-                  : '$initial',
+              ? nombre(initial)
+              : '$initial',
           decoration: deco.copyWith(
-              suffixText: c.type == TypeChamp.montant ? 'FCFA' : null),
+            suffixText: c.type == TypeChamp.montant ? 'FCFA' : null,
+          ),
           keyboardType: clavier,
           obscureText: c.type == TypeChamp.motDePasse,
           maxLines: c.type == TypeChamp.multiligne ? 5 : 1,
@@ -346,37 +392,107 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
     }
   }
 
+  /// Champs visibles, découpés en cartes à chaque champ qui ouvre un `groupe`.
+  List<List<Champ>> _groupes() {
+    final groupes = <List<Champ>>[];
+    for (final c in widget.champs.where(_visible)) {
+      if (groupes.isEmpty || c.groupe != null) groupes.add([]);
+      groupes.last.add(c);
+    }
+    return groupes;
+  }
+
+  /// Lignes d'une carte : deux champs `moitie` voisins partagent la même.
+  List<Widget> _lignes(List<Champ> champs) {
+    final lignes = <Widget>[];
+    for (var i = 0; i < champs.length; i++) {
+      final c = champs[i];
+      if (c.moitie && i + 1 < champs.length && champs[i + 1].moitie) {
+        lignes.add(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _champ(c)),
+              const SizedBox(width: AppTheme.espaceMd),
+              Expanded(child: _champ(champs[++i])),
+            ],
+          ),
+        );
+      } else {
+        lignes.add(_champ(c));
+      }
+    }
+    return lignes;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.titre)),
-      body: SafeArea(
-        child: Form(
-          key: _form,
-          child: ListView(
-            padding: const EdgeInsets.all(AppTheme.espaceLg),
-            children: [
-              if (widget.intro != null) ...[
-                widget.intro!,
-                const SizedBox(height: AppTheme.espaceLg)
-              ],
-              for (final c in widget.champs.where(_visible))
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppTheme.espaceLg),
-                  child: _champ(c),
-                ),
-              const SizedBox(height: AppTheme.espaceSm),
-              FilledButton(
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: Text(widget.titre),
+      ),
+      // Bouton d'envoi fixé en bas : toujours visible, même sur un long formulaire,
+      // et posé au-dessus du clavier quand il est ouvert.
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: cs.surface,
+            border: Border(top: BorderSide(color: context.palette.bordure)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.espaceLg,
+                AppTheme.espaceMd,
+                AppTheme.espaceLg,
+                AppTheme.espaceMd,
+              ),
+              child: FilledButton(
                 onPressed: _envoi ? null : _valider,
                 child: _envoi
                     ? const SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
                     : Text(widget.libelleEnvoi),
               ),
-            ],
+            ),
           ),
+        ),
+      ),
+      body: Form(
+        key: _form,
+        child: ListView(
+          padding: const EdgeInsets.all(AppTheme.espaceLg),
+          children: [
+            if (widget.intro != null) ...[
+              widget.intro!,
+              const SizedBox(height: AppTheme.espaceLg),
+            ],
+            // Champs regroupés en cartes.
+            for (final (i, groupe) in _groupes().indexed) ...[
+              if (i > 0) const SizedBox(height: AppTheme.espaceLg),
+              Section(
+                titre: groupe.first.groupe,
+                children: [
+                  for (final (j, ligne) in _lignes(groupe).indexed) ...[
+                    if (j > 0) const SizedBox(height: AppTheme.espaceMd),
+                    ligne,
+                  ],
+                ],
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -387,7 +503,9 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
 class _SeparateurMilliers extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue ancien, TextEditingValue nouveau) {
+    TextEditingValue ancien,
+    TextEditingValue nouveau,
+  ) {
     final n = lireMontant(nouveau.text);
     if (n == null) return const TextEditingValue();
     final t = nombre(n);

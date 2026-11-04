@@ -20,6 +20,7 @@ import 'features/auth/domain/usecases/demander_reinitialisation.dart';
 import 'features/auth/domain/usecases/get_compte.dart';
 import 'features/auth/domain/usecases/inscrire_proprietaire.dart';
 import 'features/auth/domain/usecases/reinitialiser_mot_de_passe.dart';
+import 'features/auth/domain/usecases/verifier_code_reinitialisation.dart';
 import 'features/auth/domain/usecases/restaurer_session.dart';
 import 'features/auth/domain/usecases/verifier_mfa.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -303,6 +304,7 @@ import 'features/espace_locataire/domain/usecases/get_accueil_locataire.dart';
 import 'features/espace_locataire/domain/usecases/get_logements_locataire.dart';
 import 'features/espace_locataire/domain/usecases/get_ma_transaction.dart';
 import 'features/espace_locataire/domain/usecases/get_mes_cautions.dart';
+import 'features/espace_locataire/domain/usecases/get_ma_charge.dart';
 import 'features/espace_locataire/domain/usecases/get_mes_charges.dart';
 import 'features/espace_locataire/domain/usecases/get_mes_echeances.dart';
 import 'features/espace_locataire/domain/usecases/get_mes_etats_des_lieux.dart';
@@ -347,9 +349,16 @@ Future<void> init() async {
   //================================================
 
   sl.registerLazySingleton<AuthRemoteDataSource>(
-      () => AuthRemoteDataSourceImpl(api: sl()));
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(
-      remoteDataSource: sl(), api: sl(), jetons: sl(), fileAttente: sl()));
+    () => AuthRemoteDataSourceImpl(api: sl()),
+  );
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      remoteDataSource: sl(),
+      api: sl(),
+      jetons: sl(),
+      fileAttente: sl(),
+    ),
+  );
   sl.registerLazySingleton(() => RestaurerSession(sl()));
   sl.registerLazySingleton(() => Connecter(sl()));
   sl.registerLazySingleton(() => VerifierMfa(sl()));
@@ -359,6 +368,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetCompte(sl()));
   sl.registerLazySingleton(() => Deconnecter(sl()));
   sl.registerLazySingleton(() => DemanderReinitialisation(sl()));
+  sl.registerLazySingleton(() => VerifierCodeReinitialisation(sl()));
   sl.registerLazySingleton(() => ReinitialiserMotDePasse(sl()));
   // Session globale : une seule instance, partagée par le routeur et les écrans
   sl.registerLazySingleton(
@@ -373,37 +383,46 @@ Future<void> init() async {
       deconnecter: sl(),
     ),
   );
-  sl.registerFactory(() => MotDePasseOublieBloc(
-        demanderReinitialisation: sl(),
-        reinitialiserMotDePasse: sl(),
-      ));
+  sl.registerFactory(
+    () => MotDePasseOublieBloc(
+      demanderReinitialisation: sl(),
+      verifierCode: sl(),
+      reinitialiserMotDePasse: sl(),
+    ),
+  );
 
   //================================================
   // FEATURE — NOTIFICATIONS
   //================================================
 
   sl.registerLazySingleton<NotificationsRemoteDataSource>(
-      () => NotificationsRemoteDataSourceImpl(api: sl()));
+    () => NotificationsRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<NotificationsRepository>(
-      () => NotificationsRepositoryImpl(sl()));
+    () => NotificationsRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetNotifications(sl()));
   sl.registerLazySingleton(() => CompterNotificationsNonLues(sl()));
   sl.registerLazySingleton(() => MarquerNotificationLue(sl()));
   sl.registerLazySingleton(() => ToutLire(sl()));
-  sl.registerFactory(() => NotificationsBloc(
-        compterNotificationsNonLues: sl(),
-        marquerNotificationLue: sl(),
-        toutLire: sl(),
-      ));
+  sl.registerFactory(
+    () => NotificationsBloc(
+      compterNotificationsNonLues: sl(),
+      marquerNotificationLue: sl(),
+      toutLire: sl(),
+    ),
+  );
 
   //================================================
   // FEATURE — DOCUMENTS
   //================================================
 
   sl.registerLazySingleton<DocumentsRemoteDataSource>(
-      () => DocumentsRemoteDataSourceImpl(api: sl()));
+    () => DocumentsRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<DocumentsRepository>(
-      () => DocumentsRepositoryImpl(sl()));
+    () => DocumentsRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetDocuments(sl()));
   sl.registerLazySingleton(() => AjouterPhotoDocument(sl()));
   sl.registerLazySingleton(() => TelechargerDocument(sl()));
@@ -411,22 +430,26 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ChangerVisibiliteDocument(sl()));
   sl.registerLazySingleton(() => SupprimerDocument(sl()));
   // Un bloc par entité affichée : (type, id) passés à la création
-  sl.registerFactory(() => DocumentsBloc(
-        getDocuments: sl(),
-        ajouterPhotoDocument: sl(),
-        changerVisibiliteDocument: sl(),
-        supprimerDocument: sl(),
-        getLienDocument: sl(),
-      ));
+  sl.registerFactory(
+    () => DocumentsBloc(
+      getDocuments: sl(),
+      ajouterPhotoDocument: sl(),
+      changerVisibiliteDocument: sl(),
+      supprimerDocument: sl(),
+      getLienDocument: sl(),
+    ),
+  );
 
   //================================================
   // FEATURE — ACCOUNT
   //================================================
 
   sl.registerLazySingleton<AccountRemoteDataSource>(
-      () => AccountRemoteDataSourceImpl(api: sl()));
+    () => AccountRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<AccountRepository>(
-      () => AccountRepositoryImpl(remoteDataSource: sl(), jetons: sl()));
+    () => AccountRepositoryImpl(remoteDataSource: sl(), jetons: sl()),
+  );
   sl.registerLazySingleton(() => ModifierProfil(sl()));
   sl.registerLazySingleton(() => GetSessions(sl()));
   sl.registerLazySingleton(() => RevoquerSession(sl()));
@@ -453,42 +476,52 @@ Future<void> init() async {
 
   // Immeubles (§ 7)
   sl.registerLazySingleton<ImmeubleRemoteDataSource>(
-      () => ImmeubleRemoteDataSourceImpl(api: sl()));
+    () => ImmeubleRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<ImmeubleRepository>(
-      () => ImmeubleRepositoryImpl(sl()));
+    () => ImmeubleRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetImmeubles(sl()));
   sl.registerLazySingleton(() => GetImmeuble(sl()));
   sl.registerLazySingleton(() => CreerImmeuble(sl()));
   sl.registerLazySingleton(() => ModifierImmeuble(sl()));
   sl.registerLazySingleton(() => SupprimerImmeuble(sl()));
-  sl.registerFactory(() => ImmeubleBloc(
-        getImmeuble: sl(),
-        supprimerImmeuble: sl(),
-        getAppartements: sl(),
-      ));
+  sl.registerFactory(
+    () => ImmeubleBloc(
+      getImmeuble: sl(),
+      supprimerImmeuble: sl(),
+      getAppartements: sl(),
+    ),
+  );
 
   // Appartements (§ 8, § 25)
   sl.registerLazySingleton<AppartementRemoteDataSource>(
-      () => AppartementRemoteDataSourceImpl(api: sl()));
+    () => AppartementRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<AppartementRepository>(
-      () => AppartementRepositoryImpl(sl()));
+    () => AppartementRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetAppartements(sl()));
   sl.registerLazySingleton(() => GetFicheAppartement(sl()));
   sl.registerLazySingleton(() => CreerAppartement(sl()));
   sl.registerLazySingleton(() => ModifierAppartement(sl()));
   sl.registerLazySingleton(() => ChangerStatutAppartement(sl()));
   sl.registerLazySingleton(() => SupprimerAppartement(sl()));
-  sl.registerFactory(() => AppartementBloc(
-        getFicheAppartement: sl(),
-        changerStatutAppartement: sl(),
-        supprimerAppartement: sl(),
-      ));
+  sl.registerFactory(
+    () => AppartementBloc(
+      getFicheAppartement: sl(),
+      changerStatutAppartement: sl(),
+      supprimerAppartement: sl(),
+    ),
+  );
 
   // Locataires (§ 9)
   sl.registerLazySingleton<LocataireRemoteDataSource>(
-      () => LocataireRemoteDataSourceImpl(api: sl()));
+    () => LocataireRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<LocataireRepository>(
-      () => LocataireRepositoryImpl(sl()));
+    () => LocataireRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetLocataires(sl()));
   sl.registerLazySingleton(() => GetLocataire(sl()));
   sl.registerLazySingleton(() => CreerLocataire(sl()));
@@ -496,16 +529,19 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SupprimerLocataire(sl()));
   sl.registerLazySingleton(() => InviterLocataire(sl()));
   sl.registerLazySingleton(() => EnregistrerConsentementWhatsapp(sl()));
-  sl.registerFactory(() => LocataireBloc(
-        getLocataire: sl(),
-        supprimerLocataire: sl(),
-        inviterLocataire: sl(),
-        enregistrerConsentementWhatsapp: sl(),
-      ));
+  sl.registerFactory(
+    () => LocataireBloc(
+      getLocataire: sl(),
+      supprimerLocataire: sl(),
+      inviterLocataire: sl(),
+      enregistrerConsentementWhatsapp: sl(),
+    ),
+  );
 
   // Baux (§ 10, § 53)
   sl.registerLazySingleton<BailRemoteDataSource>(
-      () => BailRemoteDataSourceImpl(api: sl()));
+    () => BailRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<BailRepository>(() => BailRepositoryImpl(sl()));
   sl.registerLazySingleton(() => GetBaux(sl()));
   sl.registerLazySingleton(() => GetFicheBail(sl()));
@@ -517,12 +553,14 @@ Future<void> init() async {
   sl.registerLazySingleton(() => CloturerBail(sl()));
   sl.registerLazySingleton(() => ReviserLoyer(sl()));
   sl.registerLazySingleton(() => GenererContrat(sl()));
-  sl.registerFactory(() => BailBloc(
-        getFicheBail: sl(),
-        activerBail: sl(),
-        annulerBail: sl(),
-        cloturerBail: sl(),
-      ));
+  sl.registerFactory(
+    () => BailBloc(
+      getFicheBail: sl(),
+      activerBail: sl(),
+      annulerBail: sl(),
+      cloturerBail: sl(),
+    ),
+  );
 
   //================================================
   // FEATURE — LOYERS ET PAIEMENTS
@@ -530,25 +568,31 @@ Future<void> init() async {
 
   // Échéances (§ 11)
   sl.registerLazySingleton<EcheanceRemoteDataSource>(
-      () => EcheanceRemoteDataSourceImpl(api: sl()));
+    () => EcheanceRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<EcheanceRepository>(
-      () => EcheanceRepositoryImpl(sl()));
+    () => EcheanceRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetEcheances(sl()));
   sl.registerLazySingleton(() => AnnulerEcheance(sl()));
 
   // Quittances (§ 13)
   sl.registerLazySingleton<QuittanceRemoteDataSource>(
-      () => QuittanceRemoteDataSourceImpl(api: sl()));
+    () => QuittanceRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<QuittanceRepository>(
-      () => QuittanceRepositoryImpl(sl()));
+    () => QuittanceRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetQuittances(sl()));
   sl.registerLazySingleton(() => TelechargerQuittance(sl()));
 
   // Paiements, transactions, rapprochements, moyens (§ 12, § 51)
   sl.registerLazySingleton<PaiementRemoteDataSource>(
-      () => PaiementRemoteDataSourceImpl(api: sl()));
+    () => PaiementRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<PaiementRepository>(
-      () => PaiementRepositoryImpl(sl()));
+    () => PaiementRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => EncaisserPaiement(sl()));
   sl.registerLazySingleton(() => GetPaiements(sl()));
   sl.registerLazySingleton(() => GetFichePaiement(sl()));
@@ -562,26 +606,26 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RejeterRapprochement(sl()));
   sl.registerLazySingleton(() => GetMoyensPaiement(sl()));
   sl.registerLazySingleton(() => ConfigurerMoyenPaiement(sl()));
-  sl.registerFactory(() => PaiementBloc(
-        getFichePaiement: sl(),
-      ));
-  sl.registerFactory(() => TransactionBloc(
-        getTransaction: sl(),
-        validerTransaction: sl(),
-        rejeterTransaction: sl(),
-      ));
-  sl.registerFactory(() => MoyensPaiementBloc(
-        getMoyensPaiement: sl(),
-      ));
+  sl.registerFactory(() => PaiementBloc(getFichePaiement: sl()));
+  sl.registerFactory(
+    () => TransactionBloc(
+      getTransaction: sl(),
+      validerTransaction: sl(),
+      rejeterTransaction: sl(),
+    ),
+  );
+  sl.registerFactory(() => MoyensPaiementBloc(getMoyensPaiement: sl()));
 
   //================================================
   // FEATURE — FACTURES COMMUNES
   //================================================
 
   sl.registerLazySingleton<FactureCommuneRemoteDataSource>(
-      () => FactureCommuneRemoteDataSourceImpl(api: sl()));
+    () => FactureCommuneRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<FactureCommuneRepository>(
-      () => FactureCommuneRepositoryImpl(sl()));
+    () => FactureCommuneRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetFacturesCommunes(sl()));
   sl.registerLazySingleton(() => GetFacturesARepartir(sl()));
   sl.registerLazySingleton(() => GetFactureCommune(sl()));
@@ -592,16 +636,20 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RepartirFacture(sl()));
   sl.registerLazySingleton(() => AnnulerFactureCommune(sl()));
   sl.registerLazySingleton(() => GetChargesRefacturees(sl()));
-  sl.registerFactory(() => FactureCommuneBloc(
-        getFactureCommune: sl(),
-        joindreDocumentFacture: sl(),
-        annulerFactureCommune: sl(),
-      ));
-  sl.registerFactory(() => RepartitionBloc(
-        getAppartements: sl(),
-        previsualiserRepartition: sl(),
-        repartirFacture: sl(),
-      ));
+  sl.registerFactory(
+    () => FactureCommuneBloc(
+      getFactureCommune: sl(),
+      joindreDocumentFacture: sl(),
+      annulerFactureCommune: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => RepartitionBloc(
+      getAppartements: sl(),
+      previsualiserRepartition: sl(),
+      repartirFacture: sl(),
+    ),
+  );
 
   //================================================
   // FEATURE — GESTION FINANCIÈRE
@@ -609,9 +657,11 @@ Future<void> init() async {
 
   // Dépenses et catégories (§ 20)
   sl.registerLazySingleton<DepenseRemoteDataSource>(
-      () => DepenseRemoteDataSourceImpl(api: sl(), fileAttente: sl()));
+    () => DepenseRemoteDataSourceImpl(api: sl(), fileAttente: sl()),
+  );
   sl.registerLazySingleton<DepenseRepository>(
-      () => DepenseRepositoryImpl(sl()));
+    () => DepenseRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetDepenses(sl()));
   sl.registerLazySingleton(() => CreerDepense(sl()));
   sl.registerLazySingleton(() => CreerDepenseTravaux(sl()));
@@ -622,14 +672,17 @@ Future<void> init() async {
   sl.registerLazySingleton(() => CreerCategorieDepense(sl()));
   sl.registerLazySingleton(() => ModifierCategorieDepense(sl()));
   sl.registerLazySingleton(() => DesactiverCategorieDepense(sl()));
-  sl.registerFactory(() => CategoriesBloc(
-        getCategoriesDepenses: sl(),
-        desactiverCategorieDepense: sl(),
-      ));
+  sl.registerFactory(
+    () => CategoriesBloc(
+      getCategoriesDepenses: sl(),
+      desactiverCategorieDepense: sl(),
+    ),
+  );
 
   // Caisse (§ 21)
   sl.registerLazySingleton<CaisseRemoteDataSource>(
-      () => CaisseRemoteDataSourceImpl(api: sl()));
+    () => CaisseRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<CaisseRepository>(() => CaisseRepositoryImpl(sl()));
   sl.registerLazySingleton(() => GetMouvementsCaisse(sl()));
   sl.registerLazySingleton(() => GetSyntheseCaisse(sl()));
@@ -638,9 +691,11 @@ Future<void> init() async {
 
   // Cautions (§ 55)
   sl.registerLazySingleton<CautionRemoteDataSource>(
-      () => CautionRemoteDataSourceImpl(api: sl()));
+    () => CautionRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<CautionRepository>(
-      () => CautionRepositoryImpl(sl()));
+    () => CautionRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetCautions(sl()));
   sl.registerLazySingleton(() => GetCaution(sl()));
   sl.registerLazySingleton(() => VerserCaution(sl()));
@@ -648,15 +703,15 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AjouterJustificatifCaution(sl()));
   sl.registerLazySingleton(() => RetenirCaution(sl()));
   sl.registerLazySingleton(() => RepondreContestation(sl()));
-  sl.registerFactory(() => CautionBloc(
-        getCaution: sl(),
-      ));
+  sl.registerFactory(() => CautionBloc(getCaution: sl()));
 
   // Rapports (§ 26)
   sl.registerLazySingleton<RapportRemoteDataSource>(
-      () => RapportRemoteDataSourceImpl(api: sl()));
+    () => RapportRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<RapportRepository>(
-      () => RapportRepositoryImpl(sl()));
+    () => RapportRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetRapportFinancier(sl()));
   sl.registerLazySingleton(() => GetRapportImmobilier(sl()));
   sl.registerLazySingleton(() => GetRapportLocataires(sl()));
@@ -670,26 +725,32 @@ Future<void> init() async {
 
   // Artisans (§ 24)
   sl.registerLazySingleton<ArtisanRemoteDataSource>(
-      () => ArtisanRemoteDataSourceImpl(api: sl()));
+    () => ArtisanRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<ArtisanRepository>(
-      () => ArtisanRepositoryImpl(sl()));
+    () => ArtisanRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetArtisans(sl()));
   sl.registerLazySingleton(() => GetArtisan(sl()));
   sl.registerLazySingleton(() => CreerArtisan(sl()));
   sl.registerLazySingleton(() => ModifierArtisan(sl()));
   sl.registerLazySingleton(() => DefinirActiviteArtisan(sl()));
   sl.registerLazySingleton(() => SupprimerArtisan(sl()));
-  sl.registerFactory(() => ArtisanBloc(
-        getArtisan: sl(),
-        definirActiviteArtisan: sl(),
-        supprimerArtisan: sl(),
-      ));
+  sl.registerFactory(
+    () => ArtisanBloc(
+      getArtisan: sl(),
+      definirActiviteArtisan: sl(),
+      supprimerArtisan: sl(),
+    ),
+  );
 
   // Travaux (§ 18, § 19)
   sl.registerLazySingleton<TravauxRemoteDataSource>(
-      () => TravauxRemoteDataSourceImpl(api: sl()));
+    () => TravauxRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<TravauxRepository>(
-      () => TravauxRepositoryImpl(sl()));
+    () => TravauxRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetTravauxListe(sl()));
   sl.registerLazySingleton(() => GetTravaux(sl()));
   sl.registerLazySingleton(() => CreerTravaux(sl()));
@@ -697,17 +758,21 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ChangerStatutTravaux(sl()));
   sl.registerLazySingleton(() => AjouterPhotoTravaux(sl()));
   sl.registerLazySingleton(() => SupprimerPhotoTravaux(sl()));
-  sl.registerFactory(() => TravauxBloc(
-        getTravaux: sl(),
-        ajouterPhotoTravaux: sl(),
-        supprimerPhotoTravaux: sl(),
-      ));
+  sl.registerFactory(
+    () => TravauxBloc(
+      getTravaux: sl(),
+      ajouterPhotoTravaux: sl(),
+      supprimerPhotoTravaux: sl(),
+    ),
+  );
 
   // Incidents (§ 22, § 23)
   sl.registerLazySingleton<IncidentRemoteDataSource>(
-      () => IncidentRemoteDataSourceImpl(api: sl()));
+    () => IncidentRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<IncidentRepository>(
-      () => IncidentRepositoryImpl(sl()));
+    () => IncidentRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetIncidents(sl()));
   sl.registerLazySingleton(() => GetIncident(sl()));
   sl.registerLazySingleton(() => CreerIncident(sl()));
@@ -715,18 +780,22 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ResoudreIncident(sl()));
   sl.registerLazySingleton(() => RejeterIncident(sl()));
   sl.registerLazySingleton(() => PlanifierTravaux(sl()));
-  sl.registerFactory(() => IncidentBloc(
-        getIncident: sl(),
-        analyserIncident: sl(),
-        resoudreIncident: sl(),
-        rejeterIncident: sl(),
-      ));
+  sl.registerFactory(
+    () => IncidentBloc(
+      getIncident: sl(),
+      analyserIncident: sl(),
+      resoudreIncident: sl(),
+      rejeterIncident: sl(),
+    ),
+  );
 
   // États des lieux (§ 52)
   sl.registerLazySingleton<EtatDesLieuxRemoteDataSource>(
-      () => EtatDesLieuxRemoteDataSourceImpl(api: sl()));
+    () => EtatDesLieuxRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<EtatDesLieuxRepository>(
-      () => EtatDesLieuxRepositoryImpl(sl()));
+    () => EtatDesLieuxRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetEtatsDesLieux(sl()));
   sl.registerLazySingleton(() => GetEtatDesLieux(sl()));
   sl.registerLazySingleton(() => CreerEtatDesLieux(sl()));
@@ -745,42 +814,46 @@ Future<void> init() async {
   sl.registerLazySingleton(() => CorrigerEtatDesLieux(sl()));
   sl.registerLazySingleton(() => TelechargerPdfEdl(sl()));
   sl.registerLazySingleton(() => GetComparaisonEdl(sl()));
-  sl.registerFactory(() => ComparaisonBloc(
-        getComparaisonEdl: sl(),
-      ));
-  sl.registerFactory(() => EtatDesLieuxBloc(
-        getEtatDesLieux: sl(),
-        ajouterPieceEdl: sl(),
-        renommerPieceEdl: sl(),
-        supprimerPieceEdl: sl(),
-        ajouterElementEdl: sl(),
-        preciserElementEdl: sl(),
-        supprimerElementEdl: sl(),
-        ajouterPhotoEdl: sl(),
-        supprimerPhotoEdl: sl(),
-        soumettreEtatDesLieux: sl(),
-        supprimerEtatDesLieux: sl(),
-        corrigerEtatDesLieux: sl(),
-        enregistrerSaisieEdl: sl(),
-      ));
+  sl.registerFactory(() => ComparaisonBloc(getComparaisonEdl: sl()));
+  sl.registerFactory(
+    () => EtatDesLieuxBloc(
+      getEtatDesLieux: sl(),
+      ajouterPieceEdl: sl(),
+      renommerPieceEdl: sl(),
+      supprimerPieceEdl: sl(),
+      ajouterElementEdl: sl(),
+      preciserElementEdl: sl(),
+      supprimerElementEdl: sl(),
+      ajouterPhotoEdl: sl(),
+      supprimerPhotoEdl: sl(),
+      soumettreEtatDesLieux: sl(),
+      supprimerEtatDesLieux: sl(),
+      corrigerEtatDesLieux: sl(),
+      enregistrerSaisieEdl: sl(),
+    ),
+  );
 
   //================================================
   // FEATURE — MESSAGERIE
   //================================================
 
   sl.registerLazySingleton<MessagerieRemoteDataSource>(
-      () => MessagerieRemoteDataSourceImpl(api: sl()));
+    () => MessagerieRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<MessagerieRepository>(
-      () => MessagerieRepositoryImpl(sl()));
+    () => MessagerieRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetFilsDiscussion(sl()));
   sl.registerLazySingleton(() => TrouverFilLocataire(sl()));
-  sl.registerFactory(() => ConversationBloc(
-        getMessages: sl(),
-        marquerFilLu: sl(),
-        trouverFilLocataire: sl(),
-        envoyerMessage: sl(),
-        envoyerPhotoMessage: sl(),
-      ));
+  sl.registerFactory(
+    () => ConversationBloc(
+      getMessages: sl(),
+      marquerFilLu: sl(),
+      trouverFilLocataire: sl(),
+      envoyerMessage: sl(),
+      envoyerPhotoMessage: sl(),
+    ),
+  );
   sl.registerLazySingleton(() => GetMessages(sl()));
   sl.registerLazySingleton(() => MarquerFilLu(sl()));
   sl.registerLazySingleton(() => EnvoyerMessage(sl()));
@@ -792,50 +865,54 @@ Future<void> init() async {
 
   // Tableau de bord (§ 6, § 48)
   sl.registerLazySingleton<DashboardRemoteDataSource>(
-      () => DashboardRemoteDataSourceImpl(api: sl()));
+    () => DashboardRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<DashboardRepository>(
-      () => DashboardRepositoryImpl(sl()));
+    () => DashboardRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetTableauDeBord(sl()));
-  sl.registerFactory(() => DashboardBloc(
-        getTableauDeBord: sl(),
-      ));
+  sl.registerFactory(() => DashboardBloc(getTableauDeBord: sl()));
 
   // Abonnement (§ 31)
   sl.registerLazySingleton<AbonnementRemoteDataSource>(
-      () => AbonnementRemoteDataSourceImpl(api: sl()));
+    () => AbonnementRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<AbonnementRepository>(
-      () => AbonnementRepositoryImpl(sl()));
+    () => AbonnementRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetFicheAbonnement(sl()));
   sl.registerLazySingleton(() => SouscrireAbonnement(sl()));
-  sl.registerFactory(() => AbonnementBloc(
-        getFicheAbonnement: sl(),
-        souscrireAbonnement: sl(),
-      ));
+  sl.registerFactory(
+    () => AbonnementBloc(getFicheAbonnement: sl(), souscrireAbonnement: sl()),
+  );
 
   //================================================
   // FEATURE — PARAMÈTRES
   //================================================
 
   sl.registerLazySingleton<ParametresRemoteDataSource>(
-      () => ParametresRemoteDataSourceImpl(api: sl()));
+    () => ParametresRemoteDataSourceImpl(api: sl()),
+  );
   sl.registerLazySingleton<ParametresRepository>(
-      () => ParametresRepositoryImpl(sl()));
+    () => ParametresRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetParametres(sl()));
   sl.registerLazySingleton(() => ModifierReglages(sl()));
   sl.registerLazySingleton(() => ModifierEspaceBailleur(sl()));
-  sl.registerFactory(() => ParametresBloc(
-        getParametres: sl(),
-        modifierReglages: sl(),
-      ));
+  sl.registerFactory(
+    () => ParametresBloc(getParametres: sl(), modifierReglages: sl()),
+  );
 
   //================================================
   // FEATURE — ESPACE LOCATAIRE
   //================================================
 
   sl.registerLazySingleton<EspaceLocataireRemoteDataSource>(
-      () => EspaceLocataireRemoteDataSourceImpl(api: sl(), fileAttente: sl()));
+    () => EspaceLocataireRemoteDataSourceImpl(api: sl(), fileAttente: sl()),
+  );
   sl.registerLazySingleton<EspaceLocataireRepository>(
-      () => EspaceLocataireRepositoryImpl(sl()));
+    () => EspaceLocataireRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => AccepterEtatDesLieux(sl()));
   sl.registerLazySingleton(() => AjouterPieceSignalement(sl()));
   sl.registerLazySingleton(() => ConsentirWhatsapp(sl()));
@@ -846,6 +923,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetLogementsLocataire(sl()));
   sl.registerLazySingleton(() => GetMaTransaction(sl()));
   sl.registerLazySingleton(() => GetMesCautions(sl()));
+  sl.registerLazySingleton(() => GetMaCharge(sl()));
   sl.registerLazySingleton(() => GetMesCharges(sl()));
   sl.registerLazySingleton(() => GetMesEcheances(sl()));
   sl.registerLazySingleton(() => GetMesEtatsDesLieux(sl()));
@@ -859,24 +937,27 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SignalerProbleme(sl()));
   sl.registerLazySingleton(() => TelechargerMonEtatDesLieux(sl()));
   sl.registerFactory(() => SuiviTransactionBloc(getMaTransaction: sl()));
-  sl.registerFactory(() => AccueilLocataireBloc(
-        getAccueilLocataire: sl(),
-      ));
-  sl.registerFactory(() => CautionsLocataireBloc(
-        getMesCautions: sl(),
-        contesterRetenue: sl(),
-      ));
-  sl.registerFactory(() => PaiementLocataireBloc(
-        getMoyensPaiementLocataire: sl(),
-        payerEnLigne: sl(),
-      ));
-  sl.registerFactory(() => IncidentLocataireBloc(
-        getMonIncident: sl(),
-        ajouterPieceSignalement: sl(),
-      ));
-  sl.registerFactory(() => EtatDesLieuxLocataireBloc(
-        getMonEtatDesLieux: sl(),
-        accepterEtatDesLieux: sl(),
-        contesterEtatDesLieux: sl(),
-      ));
+  sl.registerFactory(() => AccueilLocataireBloc(getAccueilLocataire: sl()));
+  sl.registerFactory(
+    () => CautionsLocataireBloc(getMesCautions: sl(), contesterRetenue: sl()),
+  );
+  sl.registerFactory(
+    () => PaiementLocataireBloc(
+      getMoyensPaiementLocataire: sl(),
+      payerEnLigne: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => IncidentLocataireBloc(
+      getMonIncident: sl(),
+      ajouterPieceSignalement: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => EtatDesLieuxLocataireBloc(
+      getMonEtatDesLieux: sl(),
+      accepterEtatDesLieux: sl(),
+      contesterEtatDesLieux: sl(),
+    ),
+  );
 }

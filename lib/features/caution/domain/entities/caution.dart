@@ -30,16 +30,16 @@ class MouvementCaution extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        type,
-        motif,
-        date,
-        description,
-        montant,
-        statutContestation,
-        messageContestation,
-        reponseProprietaire
-      ];
+    id,
+    type,
+    motif,
+    date,
+    description,
+    montant,
+    statutContestation,
+    messageContestation,
+    reponseProprietaire,
+  ];
 }
 
 /// Caution d'un bail (§ 55) : versée, détenue, retenue, restituée ou en litige.
@@ -81,17 +81,17 @@ class Caution extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        statut,
-        attendue,
-        recue,
-        retenue,
-        restituee,
-        solde,
-        restituerAvant,
-        bailReference,
-        bailStatut,
-        locataire,
-        mouvements,
-      ];
+    id,
+    statut,
+    attendue,
+    recue,
+    retenue,
+    restituee,
+    solde,
+    restituerAvant,
+    bailReference,
+    bailStatut,
+    locataire,
+    mouvements,
+  ];
 }

@@ -17,22 +17,23 @@ class OperationEnAttente {
   final DateTime creeLe;
   String? erreur;
 
-  OperationEnAttente(
-      {required this.id,
-      required this.libelle,
-      required this.chemin,
-      required this.corps,
-      required this.creeLe,
-      this.erreur});
+  OperationEnAttente({
+    required this.id,
+    required this.libelle,
+    required this.chemin,
+    required this.corps,
+    required this.creeLe,
+    this.erreur,
+  });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'libelle': libelle,
-        'chemin': chemin,
-        'corps': corps,
-        'cree_le': creeLe.toIso8601String(),
-        'erreur': erreur,
-      };
+    'id': id,
+    'libelle': libelle,
+    'chemin': chemin,
+    'corps': corps,
+    'cree_le': creeLe.toIso8601String(),
+    'erreur': erreur,
+  };
 
   factory OperationEnAttente.fromJson(Map<String, dynamic> j) =>
       OperationEnAttente(
@@ -64,36 +65,47 @@ class FileAttenteService extends ChangeNotifier {
     final brut = p.getString(_cle);
     operations
       ..clear()
-      ..addAll(brut == null
-          ? const []
-          : (jsonDecode(brut) as List).map((j) => OperationEnAttente.fromJson(
-              Map<String, dynamic>.from(j as Map))));
+      ..addAll(
+        brut == null
+            ? const []
+            : (jsonDecode(brut) as List).map(
+                (j) => OperationEnAttente.fromJson(
+                  Map<String, dynamic>.from(j as Map),
+                ),
+              ),
+      );
     notifyListeners();
   }
 
   Future<void> _sauver() async {
     final p = await SharedPreferences.getInstance();
     await p.setString(
-        _cle, jsonEncode(operations.map((o) => o.toJson()).toList()));
+      _cle,
+      jsonEncode(operations.map((o) => o.toJson()).toList()),
+    );
     notifyListeners();
   }
 
   /// Envoie tout de suite ; sans réseau, met l'opération en file et renvoie `null`.
-  Future<T?> envoyerOuDifferer<T>(
-      {required String libelle,
-      required String chemin,
-      required Map<String, dynamic> corps}) async {
+  Future<T?> envoyerOuDifferer<T>({
+    required String libelle,
+    required String chemin,
+    required Map<String, dynamic> corps,
+  }) async {
     final id = nouvelleCle();
     try {
       return await _api.post<T>(chemin, body: corps, idempotence: id);
     } on ApiException catch (e) {
       if (!e.estReseau) rethrow;
-      operations.add(OperationEnAttente(
+      operations.add(
+        OperationEnAttente(
           id: id,
           libelle: libelle,
           chemin: chemin,
           corps: corps,
-          creeLe: DateTime.now()));
+          creeLe: DateTime.now(),
+        ),
+      );
       await _sauver();
       return null;
     }

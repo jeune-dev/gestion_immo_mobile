@@ -1,12 +1,13 @@
 import '../../domain/entities/session_appareil.dart';
 
 class SessionAppareilModel extends SessionAppareil {
-  const SessionAppareilModel(
-      {required super.id,
-      super.nomAppareil,
-      super.plateforme,
-      super.derniereUtilisation,
-      super.courante});
+  const SessionAppareilModel({
+    required super.id,
+    super.nomAppareil,
+    super.plateforme,
+    super.derniereUtilisation,
+    super.courante,
+  });
 
   factory SessionAppareilModel.fromJson(Map<String, dynamic> json) =>
       SessionAppareilModel(
@@ -22,5 +23,7 @@ class SecretMfaModel extends SecretMfa {
   const SecretMfaModel({required super.secret, required super.otpauthUrl});
 
   factory SecretMfaModel.fromJson(Map<String, dynamic> json) => SecretMfaModel(
-      secret: '${json['secret']}', otpauthUrl: '${json['otpauth_url']}');
+    secret: '${json['secret']}',
+    otpauthUrl: '${json['otpauth_url']}',
+  );
 }

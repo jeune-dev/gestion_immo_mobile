@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
+import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/theme/statuts.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
 import 'package:gestion_immo_mobile/core/widgets/base.dart';
@@ -16,6 +17,9 @@ import 'package:gestion_immo_mobile/features/espace_locataire/domain/usecases/ge
 import 'package:gestion_immo_mobile/features/espace_locataire/domain/usecases/get_mes_transactions.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/paiement_page.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/suivi_transaction_page.dart';
+import 'package:gestion_immo_mobile/features/espace_locataire/presentation/widgets/choix_paiement.dart';
+import 'package:gestion_immo_mobile/core/widgets/logo.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// « Mon loyer » et « Mes paiements » (§ 28).
 class LoyerPage extends StatefulWidget {
@@ -36,6 +40,10 @@ class _LoyerPageState extends State<LoyerPage>
     final fg = Theme.of(context).appBarTheme.foregroundColor;
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        leading: LogoBarre.siRacine(context),
+        leadingWidth: LogoBarre.largeur,
+
         title: const Text('Mon loyer'),
         actions: [
           IconButton(
@@ -72,36 +80,22 @@ class _LoyerPageState extends State<LoyerPage>
                   key: _echeances,
                   cle: _aPayer,
                   vide: _aPayer
-                      ? 'Vous êtes à jour : rien à payer.'
+                      ? 'Vous êtes à jour : rien à payer'
                       : 'Aucune échéance',
-                  iconeVide:
-                      _aPayer ? Icons.verified_outlined : Icons.event_outlined,
+                  iconeVide: _aPayer
+                      ? Icons.verified_outlined
+                      : Icons.event_outlined,
                   charger: (page) =>
                       sl<GetMesEcheances>()(page: page, aPayer: _aPayer),
-                  element: (context, e) => ListTile(
-                    title: Text(e.libelle ?? ''),
-                    subtitle: Text(
-                        'À payer avant le ${date(e.dateEcheance)}${e.montantPaye > 0 ? ' · déjà payé ${montant(e.montantPaye)}' : ''}'),
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Montant(
-                          e.payable ? e.reste : e.montantDu,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: e.statut == 'en_retard'
-                                  ? context.palette.danger
-                                  : null),
-                        ),
-                        Statut(FamilleStatut.echeance, 'statut_echeance',
-                            e.statut),
-                      ],
-                    ),
-                    onTap: e.payable && e.bailId != null
+                  element: (context, e) => TuileEcheance(
+                    e,
+                    onPayer: e.payable && e.bailId != null
                         ? () async {
-                            if (await payer(context,
-                                    echeance: e, bailId: e.bailId!) ==
+                            if (await payer(
+                                  context,
+                                  echeance: e,
+                                  bailId: e.bailId!,
+                                ) ==
                                 true) {
                               _echeances.currentState?.recharger();
                             }
@@ -115,30 +109,188 @@ class _LoyerPageState extends State<LoyerPage>
           ListePaginee<Paiement>(
             vide: 'Aucun paiement enregistré',
             charger: (page) => sl<GetMesPaiements>()(page: page),
-            element: (context, p) => ListTile(
-              leading: const Icon(Icons.check_circle_outline),
-              title: Text(montant(p.montant), style: chiffresFixes),
-              subtitle: Text(
-                  '${date(p.payeLe)} · ${refs.libelle('mode_paiement', p.moyen)} · ${p.reference ?? ''}'),
-              trailing:
-                  Statut(FamilleStatut.paiement, 'statut_paiement', p.statut),
+            element: (context, p) => TuileOption(
+              icone: Icons.check_circle_outline,
+              titre: montant(p.montant),
+              detail:
+                  '${date(p.payeLe)} · ${refs.libelle('mode_paiement', p.moyen)}${p.reference == null ? '' : ' · ${p.reference}'}',
+              fin: Statut(FamilleStatut.paiement, 'statut_paiement', p.statut),
             ),
           ),
           ListePaginee<TransactionPaiement>(
             vide: 'Aucun paiement en ligne',
             charger: (page) => sl<GetMesTransactions>()(page: page),
-            element: (context, t) => ListTile(
-              title: Text(
-                  '${montant(t.montant)} · ${refs.libelle('portefeuille', t.portefeuille)}'),
-              subtitle: Text(
-                '${refs.libelle('mode_transaction', t.mode)} · ${dateHeure(t.creeLe)}${t.motifRejet != null ? '\nRefusé : ${t.motifRejet}' : ''}',
+            element: (context, t) => InkWell(
+              onTap: () => ouvrir(
+                context,
+                SuiviTransactionPage(id: t.id, checkoutUrl: t.checkoutUrl),
               ),
-              trailing: Statut(
-                  FamilleStatut.transaction, 'statut_transaction', t.statut),
-              onTap: () => ouvrir(context,
-                  SuiviTransactionPage(id: t.id, checkoutUrl: t.checkoutUrl)),
+              child: Padding(
+                padding: const EdgeInsets.all(AppTheme.espaceMd),
+                child: Row(
+                  children: [
+                    PastilleMoyen(portefeuille: t.portefeuille),
+                    const SizedBox(width: AppTheme.espaceMd),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            montant(t.montant),
+                            style: TextStyle(
+                              color: context.palette.texte,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${refs.libelle('portefeuille', t.portefeuille)} · ${dateHeure(t.creeLe)}',
+                            style: TextStyle(
+                              color: context.palette.texteSecondaire,
+                              fontSize: 13,
+                            ),
+                          ),
+                          if (t.motifRejet != null)
+                            Text(
+                              'Refusé : ${t.motifRejet}',
+                              style: TextStyle(
+                                color: context.palette.danger,
+                                fontSize: 13,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.espaceSm),
+                    Statut(
+                      FamilleStatut.transaction,
+                      'statut_transaction',
+                      t.statut,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Échéance : pastille de date, libellé, montant et bouton de paiement.
+class TuileEcheance extends StatelessWidget {
+  final Echeance e;
+  final VoidCallback? onPayer;
+  const TuileEcheance(this.e, {super.key, this.onPayer});
+
+  static const _mois = [
+    'janv.',
+    'févr.',
+    'mars',
+    'avr.',
+    'mai',
+    'juin',
+    'juil.',
+    'août',
+    'sept.',
+    'oct.',
+    'nov.',
+    'déc.',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final enRetard = e.statut == 'en_retard';
+    final jour = e.dateEcheance == null
+        ? null
+        : DateTime.tryParse(e.dateEcheance!);
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.espaceMd),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: enRetard ? p.dangerFond : p.primaireTeinte,
+                  borderRadius: BorderRadius.circular(AppTheme.rayonPetit),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      jour == null ? '—' : '${jour.day}',
+                      style: TextStyle(
+                        color: enRetard
+                            ? p.danger
+                            : Theme.of(context).colorScheme.primary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1,
+                      ),
+                    ),
+                    if (jour != null)
+                      Text(
+                        _mois[jour.month - 1],
+                        style: TextStyle(
+                          color: p.texteSecondaire,
+                          fontSize: 11,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppTheme.espaceMd),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      e.libelle ?? 'Échéance',
+                      style: TextStyle(
+                        color: p.texte,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Montant(
+                      e.payable ? e.reste : e.montantDu,
+                      style: TextStyle(
+                        color: enRetard ? p.danger : p.texte,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (e.montantPaye > 0)
+                      Text(
+                        'Déjà payé : ${montant(e.montantPaye)}',
+                        style: TextStyle(
+                          color: p.texteSecondaire,
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Statut(FamilleStatut.echeance, 'statut_echeance', e.statut),
+            ],
+          ),
+          if (onPayer != null) ...[
+            const SizedBox(height: AppTheme.espaceMd),
+            FilledButton(
+              style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+              onPressed: onPayer,
+              child: const Text('Payer'),
+            ),
+          ],
         ],
       ),
     );

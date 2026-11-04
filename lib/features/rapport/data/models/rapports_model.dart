@@ -1,4 +1,5 @@
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import '../../domain/entities/rapports.dart';
 
 Map<String, dynamic> _m(dynamic v) =>

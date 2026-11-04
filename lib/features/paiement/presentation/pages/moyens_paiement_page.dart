@@ -14,13 +14,16 @@ import 'package:gestion_immo_mobile/features/paiement/domain/usecases/configurer
 import 'package:gestion_immo_mobile/features/paiement/presentation/bloc/moyens_paiement_bloc.dart';
 import 'package:gestion_immo_mobile/features/paiement/presentation/bloc/moyens_paiement_event.dart';
 import 'package:gestion_immo_mobile/features/paiement/presentation/bloc/moyens_paiement_state.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Moyens de paiement du propriétaire (§ 51.5) : les loyers arrivent sur SON compte.
 class MoyensPaiementPage extends StatelessWidget {
   const MoyensPaiementPage({super.key});
 
-  Future<bool> _configurer(BuildContext context,
-      {MoyenPaiement? existant}) async {
+  Future<bool> _configurer(
+    BuildContext context, {
+    MoyenPaiement? existant,
+  }) async {
     final r = await EcranFormulaire.ouvrir<Object>(
       context,
       EcranFormulaire(
@@ -39,49 +42,78 @@ class MoyensPaiementPage extends StatelessWidget {
           '« Paiement intégré » : paiement en ligne via votre compte PayDunya Business, confirmé automatiquement.',
         ),
         champs: [
-          const Champ('provider', 'Fournisseur',
-              type: TypeChamp.selection,
-              referentiel: 'fournisseur_paiement',
-              obligatoire: true),
-          const Champ('mode', 'Mode',
-              type: TypeChamp.selection,
-              referentiel: 'mode_transaction',
-              obligatoire: true),
-          const Champ('label', 'Libellé',
-              maxLongueur: 100, indice: 'Ex. Wave personnel'),
-          Champ('account_number', 'Numéro de réception',
-              type: TypeChamp.telephone, visible: (v) => v['mode'] == 'preuve'),
-          Champ('master_key', 'Clé principale PayDunya',
-              minLongueur: 8,
-              visible: (v) =>
-                  v['mode'] == 'integre' && v['provider'] == 'paydunya'),
-          Champ('private_key', 'Clé privée PayDunya',
-              minLongueur: 8,
-              visible: (v) =>
-                  v['mode'] == 'integre' && v['provider'] == 'paydunya'),
-          Champ('token', 'Jeton PayDunya',
-              minLongueur: 8,
-              visible: (v) =>
-                  v['mode'] == 'integre' && v['provider'] == 'paydunya'),
+          const Champ(
+            'provider',
+            'Fournisseur',
+            type: TypeChamp.selection,
+            referentiel: 'fournisseur_paiement',
+            obligatoire: true,
+          ),
+          const Champ(
+            'mode',
+            'Mode',
+            type: TypeChamp.selection,
+            referentiel: 'mode_transaction',
+            obligatoire: true,
+          ),
+          const Champ(
+            'label',
+            'Libellé',
+            maxLongueur: 100,
+            indice: 'Ex. Wave personnel',
+          ),
+          Champ(
+            'account_number',
+            'Numéro de réception',
+            type: TypeChamp.telephone,
+            visible: (v) => v['mode'] == 'preuve',
+          ),
+          Champ(
+            'master_key',
+            'Clé principale PayDunya',
+            minLongueur: 8,
+            visible: (v) =>
+                v['mode'] == 'integre' && v['provider'] == 'paydunya',
+          ),
+          Champ(
+            'private_key',
+            'Clé privée PayDunya',
+            minLongueur: 8,
+            visible: (v) =>
+                v['mode'] == 'integre' && v['provider'] == 'paydunya',
+          ),
+          Champ(
+            'token',
+            'Jeton PayDunya',
+            minLongueur: 8,
+            visible: (v) =>
+                v['mode'] == 'integre' && v['provider'] == 'paydunya',
+          ),
           Champ(
             'mode_cles',
             'Mode des clés',
             type: TypeChamp.selection,
             options: const [
               OptionRef('live', 'Production'),
-              OptionRef('test', 'Test')
+              OptionRef('test', 'Test'),
             ],
             visible: (v) =>
                 v['mode'] == 'integre' && v['provider'] == 'paydunya',
           ),
-          Champ('api_key', 'Clé API',
-              minLongueur: 8,
-              visible: (v) =>
-                  v['mode'] == 'integre' && v['provider'] != 'paydunya'),
-          Champ('webhook_secret', 'Secret du webhook',
-              minLongueur: 8,
-              visible: (v) =>
-                  v['mode'] == 'integre' && v['provider'] != 'paydunya'),
+          Champ(
+            'api_key',
+            'Clé API',
+            minLongueur: 8,
+            visible: (v) =>
+                v['mode'] == 'integre' && v['provider'] != 'paydunya',
+          ),
+          Champ(
+            'webhook_secret',
+            'Secret du webhook',
+            minLongueur: 8,
+            visible: (v) =>
+                v['mode'] == 'integre' && v['provider'] != 'paydunya',
+          ),
           const Champ('is_active', 'Actif', type: TypeChamp.interrupteur),
         ],
         messageSucces: 'Moyen de paiement enregistré',
@@ -93,7 +125,7 @@ class MoyensPaiementPage extends StatelessWidget {
               'mode',
               'label',
               'account_number',
-              'is_active'
+              'is_active',
             ])
               if (c.containsKey(k)) k: c[k],
           };
@@ -109,11 +141,11 @@ class MoyensPaiementPage extends StatelessWidget {
                     'master_key': c['master_key'],
                     'private_key': c['private_key'],
                     'token': c['token'],
-                    'mode': c['mode_cles'] ?? 'live'
+                    'mode': c['mode_cles'] ?? 'live',
                   }
                 : {
                     'api_key': c['api_key'],
-                    'webhook_secret': c['webhook_secret']
+                    'webhook_secret': c['webhook_secret'],
                   };
           }
           (await di.sl<ConfigurerMoyenPaiement>()(corps)).ouLeve();
@@ -158,7 +190,10 @@ class MoyensPaiementPage extends StatelessWidget {
   Widget _buildFiche(BuildContext context, List<MoyenPaiement> moyens) {
     final bloc = context.read<MoyensPaiementBloc>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Moyens de paiement')),
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: const Text('Moyens de paiement'),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           if (await _configurer(context)) bloc.add(RafraichirMoyensPaiement());
@@ -176,14 +211,17 @@ class MoyensPaiementPage extends StatelessWidget {
               children: [
                 for (final m in moyens)
                   Card(
-                    child: ListTile(
-                      title: Text(m.libelle ??
-                          refs.libelle('fournisseur_paiement', m.fournisseur)),
-                      subtitle: Text(
-                        '${refs.libelle('mode_transaction', m.mode)}${m.numeroReception != null ? ' · ${m.numeroReception}' : ''}',
+                    child: TuileOption(
+                      icone: Icons.account_balance_outlined,
+                      titre:
+                          m.libelle ??
+                          refs.libelle('fournisseur_paiement', m.fournisseur),
+                      detail:
+                          '${refs.libelle('mode_transaction', m.mode)}${m.numeroReception != null ? ' · ${m.numeroReception}' : ''}',
+                      fin: Pastille(
+                        m.actif ? 'Actif' : 'Inactif',
+                        ton: m.actif ? TonStatut.succes : TonStatut.neutre,
                       ),
-                      trailing: Pastille(m.actif ? 'Actif' : 'Inactif',
-                          ton: m.actif ? TonStatut.succes : TonStatut.neutre),
                       onTap: () async {
                         if (await _configurer(context, existant: m)) {
                           bloc.add(RafraichirMoyensPaiement());

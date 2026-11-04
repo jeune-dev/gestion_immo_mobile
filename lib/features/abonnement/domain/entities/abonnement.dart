@@ -34,15 +34,15 @@ class EtatAbonnement extends Equatable {
 
   @override
   List<Object?> get props => [
-        actif,
-        statut,
-        planCode,
-        planNom,
-        finPeriode,
-        immeubles,
-        appartements,
-        whatsappCeMois
-      ];
+    actif,
+    statut,
+    planCode,
+    planNom,
+    finPeriode,
+    immeubles,
+    appartements,
+    whatsappCeMois,
+  ];
 }
 
 class PlanAbonnement extends Equatable {
@@ -66,14 +66,14 @@ class PlanAbonnement extends Equatable {
 
   @override
   List<Object?> get props => [
-        code,
-        nom,
-        prix,
-        periodeFacturation,
-        maxImmeubles,
-        maxAppartements,
-        fonctionnalites
-      ];
+    code,
+    nom,
+    prix,
+    periodeFacturation,
+    maxImmeubles,
+    maxAppartements,
+    fonctionnalites,
+  ];
 }
 
 class PaiementAbonnement extends Equatable {
@@ -87,18 +87,26 @@ class PaiementAbonnement extends Equatable {
   /// Paiement initié non terminé : lien pour le reprendre.
   final String? checkoutUrl;
 
-  const PaiementAbonnement(
-      {this.reference,
-      this.planNom,
-      this.mois = 0,
-      this.montant,
-      this.statut,
-      this.date,
-      this.checkoutUrl});
+  const PaiementAbonnement({
+    this.reference,
+    this.planNom,
+    this.mois = 0,
+    this.montant,
+    this.statut,
+    this.date,
+    this.checkoutUrl,
+  });
 
   @override
-  List<Object?> get props =>
-      [reference, planNom, mois, montant, statut, date, checkoutUrl];
+  List<Object?> get props => [
+    reference,
+    planNom,
+    mois,
+    montant,
+    statut,
+    date,
+    checkoutUrl,
+  ];
 }
 
 /// Écran abonnement : état, plans proposés, derniers paiements.
@@ -106,8 +114,11 @@ class FicheAbonnement extends Equatable {
   final EtatAbonnement etat;
   final List<PlanAbonnement> plans;
   final List<PaiementAbonnement> paiements;
-  const FicheAbonnement(
-      {required this.etat, required this.plans, required this.paiements});
+  const FicheAbonnement({
+    required this.etat,
+    required this.plans,
+    required this.paiements,
+  });
 
   @override
   List<Object?> get props => [etat, plans, paiements];

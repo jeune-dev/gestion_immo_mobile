@@ -6,6 +6,7 @@ import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
 import 'package:gestion_immo_mobile/core/services/file_attente_service.dart';
 import 'package:gestion_immo_mobile/core/services/token_service.dart';
+
 import '../../domain/entities/compte.dart';
 import '../../domain/entities/resultat_connexion.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -17,19 +18,21 @@ class AuthRepositoryImpl implements AuthRepository {
   final TokenService jetons;
   final FileAttenteService fileAttente;
 
-  AuthRepositoryImpl(
-      {required this.remoteDataSource,
-      required this.api,
-      required this.jetons,
-      required this.fileAttente});
+  AuthRepositoryImpl({
+    required this.remoteDataSource,
+    required this.api,
+    required this.jetons,
+    required this.fileAttente,
+  });
 
   static const _appareil = 'Application mobile';
   String get _plateforme =>
       defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android';
 
   Future<void> _ouvrir(Map<String, dynamic> data) => jetons.enregistrer(
-      access: data['access_token'] as String,
-      refresh: data['refresh_token'] as String?);
+    access: data['access_token'] as String,
+    refresh: data['refresh_token'] as String?,
+  );
 
   @override
   Future<bool> sessionEnregistree() async => await jetons.lireRefresh() != null;
@@ -38,14 +41,16 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<bool> restaurerSession() => api.renouveler();
 
   @override
-  Future<Either<Failure, ResultatConnexion>> connecter(
-      {required String identifiant, required String motDePasse}) async {
+  Future<Either<Failure, ResultatConnexion>> connecter({
+    required String identifiant,
+    required String motDePasse,
+  }) async {
     try {
       final r = await remoteDataSource.connecter({
         'identifiant': identifiant.trim(),
         'password': motDePasse,
         'device_name': _appareil,
-        'platform': _plateforme
+        'platform': _plateforme,
       });
       if (r['mfa_requis'] == true) {
         return Right(DoubleAuthentificationRequise(r['mfa_token'] as String));
@@ -56,13 +61,17 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, void>> verifierMfa(
-      {required String jeton, String? code, String? codeSecours}) async {
+  Future<Either<Failure, void>> verifierMfa({
+    required String jeton,
+    String? code,
+    String? codeSecours,
+  }) async {
     try {
       await _ouvrir(
         await remoteDataSource.verifierMfa({
@@ -70,7 +79,7 @@ class AuthRepositoryImpl implements AuthRepository {
           if (code != null) 'code': code,
           if (codeSecours != null) 'code_secours': codeSecours,
           'device_name': _appareil,
-          'platform': _plateforme
+          'platform': _plateforme,
         }),
       );
       return const Right(null);
@@ -78,13 +87,15 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, void>> inscrireProprietaire(
-      Map<String, dynamic> corps) async {
+    Map<String, dynamic> corps,
+  ) async {
     try {
       await _ouvrir(await remoteDataSource.inscrire(corps));
       return const Right(null);
@@ -92,29 +103,39 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, void>> activerLocataire(
-      Map<String, dynamic> corps) async {
+    Map<String, dynamic> corps,
+  ) async {
     try {
-      await _ouvrir(await remoteDataSource.activerLocataire(
-          {...corps, 'device_name': _appareil, 'platform': _plateforme}));
+      await _ouvrir(
+        await remoteDataSource.activerLocataire({
+          ...corps,
+          'device_name': _appareil,
+          'platform': _plateforme,
+        }),
+      );
       return const Right(null);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   /// Le serveur renvoie une nouvelle session (les autres appareils sont déconnectés).
   @override
-  Future<Either<Failure, void>> changerMotDePasse(
-      {required String actuel, required String nouveau}) async {
+  Future<Either<Failure, void>> changerMotDePasse({
+    required String actuel,
+    required String nouveau,
+  }) async {
     try {
       final r = await remoteDataSource.changerMotDePasse({
         'current_password': actuel,
@@ -128,7 +149,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -141,7 +163,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
@@ -159,7 +182,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, void>> demanderReinitialisation(
-      String identifiant) async {
+    String identifiant,
+  ) async {
     try {
       await remoteDataSource.demanderReinitialisation(identifiant.trim());
       return const Right(null);
@@ -167,13 +191,35 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> verifierCodeReinitialisation(
+    String identifiant,
+    String code,
+  ) async {
+    try {
+      await remoteDataSource.verifierCodeReinitialisation(
+        identifiant.trim(),
+        code,
+      );
+      return const Right(null);
+    } on ApiException catch (e) {
+      return Left(Failure.depuis(e));
+    } catch (e) {
+      return Left(
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, void>> reinitialiserMotDePasse(
-      Map<String, dynamic> corps) async {
+    Map<String, dynamic> corps,
+  ) async {
     try {
       await remoteDataSource.reinitialiserMotDePasse(corps);
       return const Right(null);
@@ -181,7 +227,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(Failure.depuis(e));
     } catch (e) {
       return Left(
-          ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'));
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
+
 import '../../domain/entities/tableau_de_bord.dart';
 
 class TableauDeBordModel {
@@ -20,6 +21,7 @@ class TableauDeBordModel {
       tauxOccupation: nombreOuNull(p['taux_occupation']),
       aRecevoir: nombreOuNull(l['a_recevoir']),
       encaisses: nombreOuNull(l['encaisses']),
+      revenus: nombreOuNull((d['revenus'] as Map?)?['total']),
       impayes: nombreOuNull(l['impayes']),
       depenses: nombreOuNull(d['depenses']),
       resultat: nombreOuNull(d['resultat']),
@@ -33,13 +35,15 @@ class TableauDeBordModel {
           .map(
             (x) => Debiteur(
               locataire: PersonneResume(
-                  id: '${x['tenant_id']}',
-                  prenom: x['first_name'] as String? ?? '',
-                  nom: x['last_name'] as String? ?? ''),
+                id: '${x['tenant_id']}',
+                prenom: x['first_name'] as String? ?? '',
+                nom: x['last_name'] as String? ?? '',
+              ),
               immeuble: x['building_name'] as String?,
               appartement: x['apartment_number']?.toString(),
               depuis: x['plus_ancienne_echeance'] as String?,
               montant: nombreOuNull(x['montant']),
+              echeances: entier(x['echeances']),
             ),
           )
           .toList(),
@@ -48,12 +52,24 @@ class TableauDeBordModel {
           .toList(),
       depensesMensuelles: {
         for (final x in listeJson(g['depenses_mensuelles']))
-          '${x['mois']}': entier(x['total'])
+          '${x['mois']}': entier(x['total']),
       },
       depensesParCategorie: listeJson(g['depenses_par_categorie'])
           .map(
-              (c) => DepenseCategorie('${c['name']}', nombreOuNull(c['total'])))
+            (c) => DepenseCategorie('${c['name']}', nombreOuNull(c['total'])),
+          )
           .toList(),
     );
   }
+
+  /// `GET /dashboard/graphiques` → `graphiques` : séries revenus / dépenses.
+  static SerieFinanciere serie(Map<String, dynamic> g) => SerieFinanciere(
+    revenus: listeJson(g['revenus_mensuels'])
+        .map((r) => MontantMensuel('${r['mois']}', entier(r['total'])))
+        .toList(),
+    depenses: {
+      for (final x in listeJson(g['depenses_mensuelles']))
+        '${x['mois']}': entier(x['total']),
+    },
+  );
 }

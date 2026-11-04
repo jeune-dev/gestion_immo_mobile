@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/usecases/ajouter_photo_travaux.dart';
 import '../../domain/usecases/get_travaux.dart';
 import '../../domain/usecases/supprimer_photo_travaux.dart';
@@ -47,13 +48,12 @@ class TravauxBloc extends Bloc<TravauxEvent, TravauxState> {
       phase: event.phase,
       chemin: event.chemin,
     );
-    await result.fold(
-      (failure) async => emit(TravauxActionError(failure)),
-      (_) async {
-        emit(TravauxSuccess(message: 'Photo ajoutée'));
-        await _relire(event.id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(TravauxActionError(failure)), (
+      _,
+    ) async {
+      emit(TravauxSuccess(message: 'Photo ajoutée'));
+      await _relire(event.id, emit);
+    });
   }
 
   Future<void> _onSupprimerPhotoTravaux(
@@ -61,19 +61,19 @@ class TravauxBloc extends Bloc<TravauxEvent, TravauxState> {
     Emitter<TravauxState> emit,
   ) async {
     final result = await supprimerPhotoTravaux(event.id, event.photoId);
-    await result.fold(
-      (failure) async => emit(TravauxActionError(failure)),
-      (_) async {
-        emit(TravauxSuccess(message: 'Photo retirée'));
-        await _relire(event.id, emit);
-      },
-    );
+    await result.fold((failure) async => emit(TravauxActionError(failure)), (
+      _,
+    ) async {
+      emit(TravauxSuccess(message: 'Photo retirée'));
+      await _relire(event.id, emit);
+    });
   }
 
   /// Relit la fiche. Si elle est déjà affichée, un échec de relecture
   /// n'efface pas l'écran : il s'affiche comme un message.
   Future<void> _relire(String id, Emitter<TravauxState> emit) async {
-    final dejaAffichee = state is! TravauxInitial &&
+    final dejaAffichee =
+        state is! TravauxInitial &&
         state is! TravauxLoading &&
         state is! TravauxError;
     final result = await getTravaux(id);

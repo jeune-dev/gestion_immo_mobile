@@ -21,6 +21,7 @@ import 'package:gestion_immo_mobile/features/caisse/domain/usecases/ajouter_autr
 import 'package:gestion_immo_mobile/features/caisse/domain/usecases/annuler_mouvement_caisse.dart';
 import 'package:gestion_immo_mobile/features/caisse/domain/usecases/get_mouvements_caisse.dart';
 import 'package:gestion_immo_mobile/features/caisse/domain/usecases/get_synthese_caisse.dart';
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Caisse (§ 21) : entrées et sorties de la période, solde, détail par catégorie.
 class CaissePage extends StatefulWidget {
@@ -44,21 +45,40 @@ class _CaissePageState extends State<CaissePage> {
         titre: 'Autre revenu',
         initial: {'occurred_on': aujourdhui(), 'method': 'especes'},
         champs: [
-          const Champ('label', 'Libellé',
-              obligatoire: true,
-              minLongueur: 2,
-              maxLongueur: 200,
-              indice: 'Ex. location de la terrasse'),
-          const Champ('amount', 'Montant',
-              type: TypeChamp.montant, obligatoire: true, min: 1),
-          const Champ('method', 'Moyen',
-              type: TypeChamp.selection,
-              referentiel: 'mode_paiement',
-              obligatoire: true),
-          const Champ('occurred_on', 'Date',
-              type: TypeChamp.date, obligatoire: true),
-          Champ('building_id', 'Immeuble (facultatif)',
-              type: TypeChamp.entite, entite: sourceImmeubles()),
+          const Champ(
+            'label',
+            'Libellé',
+            obligatoire: true,
+            minLongueur: 2,
+            maxLongueur: 200,
+            indice: 'Ex. location de la terrasse',
+          ),
+          const Champ(
+            'amount',
+            'Montant',
+            type: TypeChamp.montant,
+            obligatoire: true,
+            min: 1,
+          ),
+          const Champ(
+            'method',
+            'Moyen',
+            type: TypeChamp.selection,
+            referentiel: 'mode_paiement',
+            obligatoire: true,
+          ),
+          const Champ(
+            'occurred_on',
+            'Date',
+            type: TypeChamp.date,
+            obligatoire: true,
+          ),
+          Champ(
+            'building_id',
+            'Immeuble (facultatif)',
+            type: TypeChamp.entite,
+            entite: sourceImmeubles(),
+          ),
         ],
         messageSucces: 'Revenu enregistré',
         envoyer: (c) async {
@@ -77,7 +97,10 @@ class _CaissePageState extends State<CaissePage> {
       onReussite: _rafraichir,
       child: Builder(
         builder: (context) => Scaffold(
-          appBar: AppBar(title: const Text('Caisse')),
+          appBar: AppBar(
+            flexibleSpace: const FondMarque(),
+            title: const Text('Caisse'),
+          ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: _autreRevenu,
             icon: const Icon(Icons.add),
@@ -86,8 +109,9 @@ class _CaissePageState extends State<CaissePage> {
           body: Column(
             children: [
               ChoixPeriode(
-                  periode: _periode,
-                  onChange: (v) => setState(() => _periode = v)),
+                periode: _periode,
+                onChange: (v) => setState(() => _periode = v),
+              ),
               Expanded(
                 child: ListePaginee<MouvementCaisse>(
                   cle: '${_periode.du}|${_periode.au}|$_version',
@@ -95,21 +119,32 @@ class _CaissePageState extends State<CaissePage> {
                   entete: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                     child: _Synthese(
-                        key:
-                            ValueKey('${_periode.du}|${_periode.au}|$_version'),
-                        periode: _periode),
+                      key: ValueKey('${_periode.du}|${_periode.au}|$_version'),
+                      periode: _periode,
+                    ),
                   ),
                   charger: (page) => sl<GetMouvementsCaisse>()(
-                      page: page, du: _periode.du, au: _periode.au),
+                    page: page,
+                    du: _periode.du,
+                    au: _periode.au,
+                  ),
                   element: (context, m) => ListTile(
-                    leading: Icon(
-                        m.entree ? Icons.south_west : Icons.north_east,
-                        color: m.entree ? p.succes : p.texteSecondaire),
-                    title: Text(m.libelle ?? '',
-                        style: m.annule
-                            ? const TextStyle(
-                                decoration: TextDecoration.lineThrough)
-                            : null),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.espaceLg,
+                      vertical: AppTheme.espaceXs,
+                    ),
+                    leading: IconeOption(
+                      m.entree ? Icons.south_west : Icons.north_east,
+                      couleur: m.entree ? p.succes : p.texteSecondaire,
+                    ),
+                    title: Text(
+                      m.libelle ?? '',
+                      style: m.annule
+                          ? const TextStyle(
+                              decoration: TextDecoration.lineThrough,
+                            )
+                          : null,
+                    ),
                     subtitle: Text(
                       '${date(m.date)} · ${refs.libelle('categorie_caisse', m.categorie)} · '
                       '${refs.libelle('mode_paiement', m.moyen)}${m.annule ? ' · annulé' : ''}',
@@ -117,9 +152,9 @@ class _CaissePageState extends State<CaissePage> {
                     trailing: Text(
                       '${m.entree ? '+' : '−'} ${montant(m.montant)}',
                       style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: m.entree ? p.succes : null)
-                          .merge(chiffresFixes),
+                        fontWeight: FontWeight.w600,
+                        color: m.entree ? p.succes : null,
+                      ).merge(chiffresFixes),
                     ),
                     onLongPress: m.annule || !m.manuel
                         ? null
@@ -128,15 +163,15 @@ class _CaissePageState extends State<CaissePage> {
                             final motif = await confirmer(
                               context,
                               titre: 'Annuler le mouvement',
-                              message:
-                                  'Seuls les mouvements saisis à la main peuvent être annulés.',
+                              message: 'Seuls les mouvements saisis à la main peuvent être annulés.',
                               motif: true,
                               danger: true,
                             );
                             if (motif != null) {
                               actions.executer(
-                                  sl<AnnulerMouvementCaisse>()(m.id, motif),
-                                  succes: 'Mouvement annulé');
+                                sl<AnnulerMouvementCaisse>()(m.id, motif),
+                                succes: 'Mouvement annulé',
+                              );
                             }
                           },
                   ),
@@ -170,7 +205,9 @@ class _SyntheseState extends State<_Synthese> {
       builder: (context, s) {
         if (!s.hasData) {
           return const SizedBox(
-              height: 120, child: Center(child: CircularProgressIndicator()));
+            height: 120,
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
         return s.data!.fold(
           (f) => VueErreur(f),
@@ -180,16 +217,18 @@ class _SyntheseState extends State<_Synthese> {
                 children: [
                   Expanded(
                     child: ChiffreCle(
-                        libelle: 'Entrées',
-                        valeur: montant(c.entrees),
-                        icone: Icons.south_west),
+                      libelle: 'Entrées',
+                      valeur: montant(c.entrees),
+                      icone: Icons.south_west,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: ChiffreCle(
-                        libelle: 'Sorties',
-                        valeur: montant(c.sorties),
-                        icone: Icons.north_east),
+                      libelle: 'Sorties',
+                      valeur: montant(c.sorties),
+                      icone: Icons.north_east,
+                    ),
                   ),
                 ],
               ),
@@ -202,20 +241,27 @@ class _SyntheseState extends State<_Synthese> {
                     widget: Montant(
                       c.solde,
                       style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                          color: (c.solde ?? 0) < 0 ? p.danger : p.succes),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        color: (c.solde ?? 0) < 0 ? p.danger : p.succes,
+                      ),
                     ),
                   ),
                   for (final d in c.detailEntrees)
-                    Ligne('+ ${refs.libelle('categorie_caisse', d.categorie)}',
-                        montant(d.total)),
+                    Ligne(
+                      '+ ${refs.libelle('categorie_caisse', d.categorie)}',
+                      montant(d.total),
+                    ),
                   for (final d in c.detailSorties)
-                    Ligne('− ${refs.libelle('categorie_caisse', d.categorie)}',
-                        montant(d.total)),
+                    Ligne(
+                      '− ${refs.libelle('categorie_caisse', d.categorie)}',
+                      montant(d.total),
+                    ),
                   const Divider(),
-                  Ligne('Cautions détenues (hors revenus)',
-                      montant(c.cautionsDetenues)),
+                  Ligne(
+                    'Cautions détenues (hors revenus)',
+                    montant(c.cautionsDetenues),
+                  ),
                 ],
               ),
               const SizedBox(height: AppTheme.espaceSm),

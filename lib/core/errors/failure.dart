@@ -16,13 +16,14 @@ abstract class Failure implements Exception {
   /// 402 : abonnement échu ou suspendu, l'espace est en lecture seule.
   bool get abonnementRequis => status == 402 || code == 'ABONNEMENT_REQUIS';
 
-  const Failure(
-      {required this.errorMessage,
-      this.code,
-      this.status,
-      this.details = const [],
-      this.requestId,
-      this.retryAfter});
+  const Failure({
+    required this.errorMessage,
+    this.code,
+    this.status,
+    this.details = const [],
+    this.requestId,
+    this.retryAfter,
+  });
 
   /// Message complet, avec les champs refusés quand l'API les détaille.
   String get messageComplet {
@@ -58,18 +59,20 @@ abstract class Failure implements Exception {
           status: e.status,
           details: e.details,
           requestId: e.requestId,
-          retryAfter: e.retryAfter);
+          retryAfter: e.retryAfter,
+        );
 }
 
 /// Réponse d'erreur de l'API (4xx, 5xx).
 class ServerFailure extends Failure {
-  const ServerFailure(
-      {required super.errorMessage,
-      super.code,
-      super.status,
-      super.details,
-      super.requestId,
-      super.retryAfter});
+  const ServerFailure({
+    required super.errorMessage,
+    super.code,
+    super.status,
+    super.details,
+    super.requestId,
+    super.retryAfter,
+  });
 }
 
 /// Aucune réponse du serveur (pas de réseau, délai dépassé).

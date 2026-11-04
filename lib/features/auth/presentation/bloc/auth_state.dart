@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
+
 import '../../domain/entities/compte.dart';
 
 enum StatutSession { inconnu, deconnecte, connecte }
@@ -48,18 +49,24 @@ class AuthState extends Equatable {
     bool effacerFailure = false,
     bool effacerMfa = false,
     bool effacerSucces = false,
-  }) =>
-      AuthState(
-        statut: statut ?? this.statut,
-        compte: compte ?? this.compte,
-        enCours: enCours ?? this.enCours,
-        failure: effacerFailure ? null : failure ?? this.failure,
-        mfaJeton: effacerMfa ? null : mfaJeton ?? this.mfaJeton,
-        succes: effacerSucces ? null : succes ?? this.succes,
-        version: failure != null || succes != null ? version + 1 : version,
-      );
+  }) => AuthState(
+    statut: statut ?? this.statut,
+    compte: compte ?? this.compte,
+    enCours: enCours ?? this.enCours,
+    failure: effacerFailure ? null : failure ?? this.failure,
+    mfaJeton: effacerMfa ? null : mfaJeton ?? this.mfaJeton,
+    succes: effacerSucces ? null : succes ?? this.succes,
+    version: failure != null || succes != null ? version + 1 : version,
+  );
 
   @override
-  List<Object?> get props =>
-      [statut, compte, enCours, failure, mfaJeton, succes, version];
+  List<Object?> get props => [
+    statut,
+    compte,
+    enCours,
+    failure,
+    mfaJeton,
+    succes,
+    version,
+  ];
 }

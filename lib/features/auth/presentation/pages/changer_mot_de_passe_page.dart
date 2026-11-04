@@ -34,9 +34,9 @@ class _ChangerMotDePassePageState extends State<ChangerMotDePassePage> {
 
   void _valider() {
     if (!_form.currentState!.validate()) return;
-    context
-        .read<AuthBloc>()
-        .add(MotDePasseChangeDemande(actuel: _actuel.text, nouveau: _mdp.text));
+    context.read<AuthBloc>().add(
+      MotDePasseChangeDemande(actuel: _actuel.text, nouveau: _mdp.text),
+    );
   }
 
   @override
@@ -71,14 +71,17 @@ class _ChangerMotDePassePageState extends State<ChangerMotDePassePage> {
               children: [
                 const ErreurAuth(),
                 ChampMotDePasse(
-                    controleur: _actuel, libelle: 'Mot de passe actuel'),
+                  controleur: _actuel,
+                  libelle: 'Mot de passe actuel',
+                ),
                 const SizedBox(height: AppTheme.espaceLg),
                 ChampMotDePasse(
-                    controleur: _mdp,
-                    libelle: 'Nouveau mot de passe',
-                    nouveau: true,
-                    validator: (v) =>
-                        IdentifiantValidator.motDePasse(v).erreurFormulaire),
+                  controleur: _mdp,
+                  libelle: 'Nouveau mot de passe',
+                  nouveau: true,
+                  validator: (v) =>
+                      IdentifiantValidator.motDePasse(v).erreurFormulaire,
+                ),
                 const SizedBox(height: AppTheme.espaceLg),
                 ChampMotDePasse(
                   controleur: _confirmation,
@@ -90,9 +93,10 @@ class _ChangerMotDePassePageState extends State<ChangerMotDePassePage> {
                 BoutonAuth(libelle: 'Enregistrer', onPressed: _valider),
                 if (widget.force)
                   TextButton(
-                      onPressed: () =>
-                          context.read<AuthBloc>().add(DeconnexionDemandee()),
-                      child: const Text('Se déconnecter')),
+                    onPressed: () =>
+                        context.read<AuthBloc>().add(DeconnexionDemandee()),
+                    child: const Text('Se déconnecter'),
+                  ),
               ],
             ),
           ),

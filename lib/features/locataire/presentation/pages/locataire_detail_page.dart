@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/theme/statuts.dart';
@@ -10,6 +11,7 @@ import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/core/widgets/chargement.dart';
 import 'package:gestion_immo_mobile/core/widgets/navigation.dart';
 import 'package:gestion_immo_mobile/features/bail/presentation/pages/bail_detail_page.dart';
+import 'package:gestion_immo_mobile/features/bail/presentation/widgets/formulaire_bail.dart';
 import 'package:gestion_immo_mobile/features/documents/presentation/widgets/section_documents.dart';
 import 'package:gestion_immo_mobile/features/locataire/domain/entities/locataire.dart';
 import 'package:gestion_immo_mobile/features/locataire/presentation/bloc/locataire_bloc.dart';
@@ -19,6 +21,7 @@ import 'package:gestion_immo_mobile/features/locataire/presentation/widgets/dial
 import 'package:gestion_immo_mobile/features/locataire/presentation/widgets/formulaire_locataire.dart';
 import 'package:gestion_immo_mobile/features/messagerie/presentation/pages/conversation_page.dart';
 import 'package:gestion_immo_mobile/injection_container.dart' as di;
+import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// La fiche d'un locataire : coordonnées, compte application, solde, baux,
 /// derniers paiements et documents.
@@ -94,6 +97,7 @@ class _LocataireDetailViewState extends State<_LocataireDetailView> {
   Widget _buildFiche(BuildContext context, Locataire t) {
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: const FondMarque(),
         title: Text(t.nomComplet),
         actions: [
           IconButton(
@@ -115,6 +119,12 @@ class _LocataireDetailViewState extends State<_LocataireDetailView> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            EnTeteFiche(
+              surtitre: 'Locataire',
+              titre: t.nomComplet,
+              detail: t.telephone,
+            ),
+            const SizedBox(height: AppTheme.espaceLg),
             // ── Coordonnées et compte ──────────────────────────────────────
             _buildIdentite(context, t),
             const SizedBox(height: AppTheme.espaceLg),
@@ -124,7 +134,7 @@ class _LocataireDetailViewState extends State<_LocataireDetailView> {
             const SizedBox(height: AppTheme.espaceLg),
 
             // ── Baux ───────────────────────────────────────────────────────
-            _buildBaux(context, t.baux),
+            _buildBaux(context, t),
             const SizedBox(height: AppTheme.espaceLg),
 
             // ── Derniers paiements ─────────────────────────────────────────
@@ -157,7 +167,8 @@ class _LocataireDetailViewState extends State<_LocataireDetailView> {
             final ok = await confirmer(
               context,
               titre: 'Supprimer le locataire',
-              message: 'Un locataire qui a un historique (bail, paiements) '
+              message:
+                  'Un locataire qui a un historique (bail, paiements) '
                   'ne peut pas être supprimé.',
               action: 'Supprimer',
               danger: true,
@@ -182,7 +193,7 @@ class _LocataireDetailViewState extends State<_LocataireDetailView> {
           t.typePiece == null
               ? null
               : '${refs.libelle('type_piece_identite', t.typePiece)} '
-                  '${t.numeroPiece ?? ''}',
+                    '${t.numeroPiece ?? ''}',
         ),
         Ligne(
           'Compte application',
@@ -235,7 +246,8 @@ class _LocataireDetailViewState extends State<_LocataireDetailView> {
                   final ok = await confirmer(
                     context,
                     titre: 'Consentement WhatsApp',
-                    message: 'Confirmez que le locataire a accepté de recevoir '
+                    message:
+                        'Confirmez que le locataire a accepté de recevoir '
                         'relances et confirmations par WhatsApp.',
                   );
                   if (ok != null) {
@@ -263,28 +275,72 @@ class _LocataireDetailViewState extends State<_LocataireDetailView> {
   }
 
   // ── Baux ───────────────────────────────────────────────────────────────────
-  Widget _buildBaux(BuildContext context, List<BailDuLocataire> baux) {
+  Widget _buildBaux(BuildContext context, Locataire t) {
+    final baux = t.baux;
+    final aucunActif = !baux.any((b) => b.statut == 'actif');
     return Section(
       titre: 'Baux',
       padding: false,
-      children: baux.isEmpty
-          ? [const ListTile(title: Text('Aucun bail'))]
-          : [
-              for (final b in baux)
-                ListTile(
-                  title: Text(
-                    '${b.reference ?? ''} · ${b.logement?.numero ?? ''}',
+      children: [
+        if (baux.isEmpty)
+          const ListTile(title: Text('Aucun bail'))
+        else
+          for (final b in baux)
+            TuileOption(
+              icone: Icons.assignment_outlined,
+              titre: '${b.reference ?? ''} · ${b.logement?.numero ?? ''}',
+              detail: '${b.logement?.immeubleNom ?? ''} · ${montant(b.loyer)}',
+              fin: Statut(FamilleStatut.bail, 'statut_bail', b.statut),
+              onTap: () async {
+                await ouvrir(context, BailDetailPage(id: b.id));
+                _rafraichir();
+              },
+            ),
+        // Le locataire ne voit son logement et ses loyers qu'avec un bail actif.
+        if (aucunActif)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.espaceLg,
+              AppTheme.espaceXs,
+              AppTheme.espaceLg,
+              AppTheme.espaceLg,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  baux.isEmpty
+                      ? 'Le locataire verra son logement et ses loyers une fois son bail créé et activé.'
+                      : 'Le locataire verra son logement et ses loyers une fois son bail activé.',
+                  style: TextStyle(
+                    color: context.palette.texteSecondaire,
+                    fontSize: 13,
                   ),
-                  subtitle: Text(
-                    '${b.logement?.immeubleNom ?? ''} · ${montant(b.loyer)}',
-                  ),
-                  trailing: Statut(FamilleStatut.bail, 'statut_bail', b.statut),
-                  onTap: () async {
-                    await ouvrir(context, BailDetailPage(id: b.id));
-                    _rafraichir();
-                  },
                 ),
-            ],
+                if (baux.isEmpty) ...[
+                  const SizedBox(height: AppTheme.espaceMd),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final b = await formulaireBail(
+                        context,
+                        initial: {
+                          'tenant_id': widget.id,
+                          'tenant_id__libelle': t.nomComplet,
+                        },
+                      );
+                      if (b != null && context.mounted) {
+                        await ouvrir(context, BailDetailPage(id: b.id));
+                        _rafraichir();
+                      }
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Créer un bail'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
     );
   }
 
@@ -295,13 +351,12 @@ class _LocataireDetailViewState extends State<_LocataireDetailView> {
       padding: false,
       children: [
         for (final p in paiements)
-          ListTile(
-            dense: true,
-            title: Text(p.reference ?? ''),
-            subtitle: Text(
-              '${date(p.date)} · ${refs.libelle('mode_paiement', p.moyen)}',
-            ),
-            trailing: Montant(p.montant),
+          TuileOption(
+            icone: Icons.assignment_outlined,
+            titre: p.reference ?? '',
+            detail:
+                '${date(p.date)} · ${refs.libelle('mode_paiement', p.moyen)}',
+            fin: Montant(p.montant),
           ),
         if (paiements.isEmpty) const ListTile(title: Text('Aucun paiement')),
       ],

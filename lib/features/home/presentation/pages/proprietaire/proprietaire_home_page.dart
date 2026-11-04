@@ -20,16 +20,27 @@ class ProprietaireHomePage extends StatefulWidget {
 class _ProprietaireHomePageState extends State<ProprietaireHomePage> {
   int _onglet = 0;
 
-  void _aller(int i) => setState(() => _onglet = i);
+  final _actualisation = ValueNotifier<int>(0);
+
+  void _aller(int i) {
+    if (i == 0 && _onglet != 0) _actualisation.value++;
+    setState(() => _onglet = i);
+  }
+
+  @override
+  void dispose() {
+    _actualisation.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final pages = [
-      DashboardPage(onAller: _aller),
+      DashboardPage(onAller: _aller, actualisation: _actualisation),
       const BiensPage(),
       const FinancesPage(),
       const TravauxHubPage(),
-      const ProfilProprietairePage()
+      const ProfilProprietairePage(),
     ];
     return Scaffold(
       body: Column(
@@ -46,26 +57,30 @@ class _ProprietaireHomePageState extends State<ProprietaireHomePage> {
         onDestinationSelected: _aller,
         destinations: const [
           NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Accueil'),
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Accueil',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.apartment_outlined),
-              selectedIcon: Icon(Icons.apartment),
-              label: 'Biens'),
+            icon: Icon(Icons.apartment_outlined),
+            selectedIcon: Icon(Icons.apartment),
+            label: 'Biens',
+          ),
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
             selectedIcon: Icon(Icons.account_balance_wallet),
             label: 'Finances',
           ),
           NavigationDestination(
-              icon: Icon(Icons.handyman_outlined),
-              selectedIcon: Icon(Icons.handyman),
-              label: 'Travaux'),
+            icon: Icon(Icons.handyman_outlined),
+            selectedIcon: Icon(Icons.handyman),
+            label: 'Travaux',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Profil'),
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profil',
+          ),
         ],
       ),
     );

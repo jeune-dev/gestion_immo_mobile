@@ -34,15 +34,16 @@ class ApiClient {
   Completer<bool>? _renouvellement;
 
   ApiClient({required this.session, String? baseUrl, Dio? dio})
-      : _dio = dio ??
-            Dio(
-              BaseOptions(
-                baseUrl: baseUrl ?? Env.baseUrl,
-                connectTimeout: const Duration(seconds: 15),
-                receiveTimeout: const Duration(seconds: 30),
-                headers: {'Accept': 'application/json'},
-              ),
-            ) {
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: baseUrl ?? Env.baseUrl,
+              connectTimeout: const Duration(seconds: 15),
+              receiveTimeout: const Duration(seconds: 30),
+              headers: {'Accept': 'application/json'},
+            ),
+          ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -75,8 +76,9 @@ class ApiClient {
         );
         final data = r.data!['data'] as Map<String, dynamic>;
         await session.enregistrer(
-            access: data['access_token'] as String,
-            refresh: data['refresh_token'] as String?);
+          access: data['access_token'] as String,
+          refresh: data['refresh_token'] as String?,
+        );
         c.complete(true);
       } on DioException catch (e) {
         // Refus explicite (401) : session terminée. Erreur réseau : on garde le jeton pour plus tard.
@@ -93,8 +95,10 @@ class ApiClient {
 
   // ── Requêtes ───────────────────────────────────────────────────────────────
 
-  Future<T> _executer<T>(Future<Response<dynamic>> Function() appel,
-      {bool rejouable = true}) async {
+  Future<T> _executer<T>(
+    Future<Response<dynamic>> Function() appel, {
+    bool rejouable = true,
+  }) async {
     try {
       final r = await appel();
       return _deballer<T>(r.data);
@@ -110,8 +114,9 @@ class ApiClient {
           // Serveur injoignable pendant le renouvellement : la session est
           // gardée (et le cache de lecture prend le relais).
           throw const ApiException(
-              'Impossible de renouveler la session pour le moment. Vérifiez votre connexion.',
-              code: 'RESEAU');
+            'Impossible de renouveler la session pour le moment. Vérifiez votre connexion.',
+            code: 'RESEAU',
+          );
         }
       }
       throw await _normaliser(e);
@@ -131,8 +136,9 @@ class ApiClient {
       // En développement, l'adresse visée aide à diagnostiquer (mauvaise IP, réseau local refusé…)
       final detail = kDebugMode ? '\n(${_dio.options.baseUrl})' : '';
       return ApiException(
-          "Impossible de joindre le serveur. Vérifiez votre connexion.$detail",
-          code: 'RESEAU');
+        "Impossible de joindre le serveur. Vérifiez votre connexion.$detail",
+        code: 'RESEAU',
+      );
     }
     dynamic corps = r.data;
     if (corps is List<int>) {
@@ -143,22 +149,26 @@ class ApiClient {
       }
     }
     final erreur = corps is Map ? corps['error'] as Map? : null;
-    var message = (corps is Map ? corps['message'] as String? : null) ??
-        erreur?['message'] as String? ??
-        'Erreur inattendue';
     final status = r.statusCode;
-    if (status == 429) {
-      message =
-          'Trop de requêtes : patientez quelques instants avant de réessayer.';
-    }
+    // 429 : le serveur indique la cause et le délai réel (compte bloqué
+    // « pendant 4 minutes », trop d'essais depuis ce réseau…) ; message
+    // générique seulement s'il n'en donne pas.
+    final message =
+        (corps is Map ? corps['message'] as String? : null) ??
+        erreur?['message'] as String? ??
+        (status == 429
+            ? 'Trop de requêtes : patientez quelques instants avant de réessayer.'
+            : 'Erreur inattendue');
     final retry = int.tryParse(r.headers.value('retry-after') ?? '');
     return ApiException(
       message,
       status: status,
       code: erreur?['code'] as String?,
-      details:
-          ((erreur?['details'] as List?) ?? const []).map((d) => '$d').toList(),
-      requestId: (corps is Map ? corps['requestId'] as String? : null) ??
+      details: ((erreur?['details'] as List?) ?? const [])
+          .map((d) => '$d')
+          .toList(),
+      requestId:
+          (corps is Map ? corps['requestId'] as String? : null) ??
           r.headers.value('x-request-id'),
       retryAfter: retry,
     );
@@ -175,20 +185,27 @@ class ApiClient {
   }
 
   Options _options(String? idempotence) => Options(
-      headers: idempotence != null ? {'Idempotency-Key': idempotence} : null);
+    headers: idempotence != null ? {'Idempotency-Key': idempotence} : null,
+  );
 
   /// Lecture. Hors ligne, renvoie la dernière réponse connue (si [cache]).
-  Future<T> get<T>(String chemin,
-      {Map<String, dynamic>? query,
-      bool cache = true,
-      Map<String, String>? headers}) async {
+  Future<T> get<T>(
+    String chemin, {
+    Map<String, dynamic>? query,
+    bool cache = true,
+    Map<String, String>? headers,
+  }) async {
     final q = _nettoyer(query);
     final cle =
         'cache:$chemin?${q == null ? '' : Uri(queryParameters: q.map((k, v) => MapEntry(k, '$v'))).query}';
     try {
       final data = await _executer<dynamic>(
-          () => _dio.get<dynamic>(chemin,
-              queryParameters: q, options: Options(headers: headers)));
+        () => _dio.get<dynamic>(
+          chemin,
+          queryParameters: q,
+          options: Options(headers: headers),
+        ),
+      );
       horsLigne.value = false;
       if (cache) unawaited(_memoriser(cle, data));
       return data as T;
@@ -222,23 +239,27 @@ class ApiClient {
     }
   }
 
-  Future<T> post<T>(String chemin,
-          {Object? body, String? idempotence, bool sansJeton = false}) =>
-      _executer<T>(
-        () => _dio.post<dynamic>(
-          chemin,
-          data: body ?? const <String, dynamic>{},
-          options:
-              _options(idempotence).copyWith(extra: {'sansJeton': sansJeton}),
-        ),
-        rejouable: !sansJeton,
-      );
+  Future<T> post<T>(
+    String chemin, {
+    Object? body,
+    String? idempotence,
+    bool sansJeton = false,
+  }) => _executer<T>(
+    () => _dio.post<dynamic>(
+      chemin,
+      data: body ?? const <String, dynamic>{},
+      options: _options(idempotence).copyWith(extra: {'sansJeton': sansJeton}),
+    ),
+    rejouable: !sansJeton,
+  );
 
-  Future<T> patch<T>(String chemin, {Object? body}) => _executer<T>(() =>
-      _dio.patch<dynamic>(chemin, data: body ?? const <String, dynamic>{}));
+  Future<T> patch<T>(String chemin, {Object? body}) => _executer<T>(
+    () => _dio.patch<dynamic>(chemin, data: body ?? const <String, dynamic>{}),
+  );
 
   Future<T> put<T>(String chemin, {Object? body}) => _executer<T>(
-      () => _dio.put<dynamic>(chemin, data: body ?? const <String, dynamic>{}));
+    () => _dio.put<dynamic>(chemin, data: body ?? const <String, dynamic>{}),
+  );
 
   Future<T> delete<T>(String chemin, {Object? body}) =>
       _executer<T>(() => _dio.delete<dynamic>(chemin, data: body));
@@ -259,16 +280,22 @@ class ApiClient {
         if (cheminFichier != null)
           champFichier: await MultipartFile.fromFile(cheminFichier),
       });
-      return _dio.post<dynamic>(chemin,
-          data: form, options: _options(idempotence));
+      return _dio.post<dynamic>(
+        chemin,
+        data: form,
+        options: _options(idempotence),
+      );
     });
   }
 
   /// Fichier binaire (PDF de quittance, état des lieux, contrat, export CSV).
   /// 503 `QUITTANCE_EN_PREPARATION` : nouvelle tentative après le délai indiqué.
-  Future<Uint8List> telecharger(String chemin,
-      {Map<String, dynamic>? query, int tentatives = 3}) async {
-    for (var i = 0;; i++) {
+  Future<Uint8List> telecharger(
+    String chemin, {
+    Map<String, dynamic>? query,
+    int tentatives = 3,
+  }) async {
+    for (var i = 0; ; i++) {
       try {
         final octets = await _executer<List<int>>(
           () => _dio.get<List<int>>(
