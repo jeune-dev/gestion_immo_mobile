@@ -213,7 +213,7 @@ Future<bool> terminerBail(BuildContext context, Bail b) async {
     EcranFormulaire(
       titre: 'Fin du bail',
       intro: const Text(
-        "L'appartement redevient disponible. La caution sera ensuite restituée ou retenue avant la clôture.",
+        "À faire une fois le locataire parti : l'appartement redevient disponible. La caution sera ensuite restituée ou retenue avant la clôture.",
       ),
       initial: {'ended_on': aujourdhui()},
       champs: [
@@ -223,6 +223,7 @@ Future<bool> terminerBail(BuildContext context, Bail b) async {
           dateMin: b.debut,
           type: TypeChamp.date,
           obligatoire: true,
+          pasDansLeFutur: true,
         ),
         const Champ(
           'termination_reason',

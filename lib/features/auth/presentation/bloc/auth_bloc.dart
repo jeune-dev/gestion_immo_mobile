@@ -55,7 +55,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<MotDePasseChangeDemande>(_onMotDePasse);
     on<CompteRechargeDemande>(_onRecharge);
     on<DeconnexionDemandee>(_onDeconnexion);
-    on<SessionExpiree>(_onDeconnexion);
+    on<SessionExpiree>(_onSessionExpiree);
     on<AuthErreurEffacee>(
       (_, emit) =>
           emit(state.copyWith(effacerFailure: true, effacerSucces: true)),
@@ -177,6 +177,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onDeconnexion(AuthEvent e, Emitter<AuthState> emit) async {
     await deconnecter();
+    emit(const AuthState(statut: StatutSession.deconnecte));
+  }
+
+  Future<void> _onSessionExpiree(
+    SessionExpiree e,
+    Emitter<AuthState> emit,
+  ) async {
+    await deconnecter(sessionExpiree: true);
     emit(const AuthState(statut: StatutSession.deconnecte));
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -52,7 +53,7 @@ class OperationEnAttente {
 /// → mise à jour locale ; échec : « Synchronisation impossible [Réessayer]
 /// [Voir les opérations] ». Un paiement n'y passe JAMAIS (confirmation serveur obligatoire).
 class FileAttenteService extends ChangeNotifier {
-  static const _cle = 'gi.file_attente';
+  static const _cleAncienne = 'gi.file_attente';
   final ApiClient _api;
 
   final List<OperationEnAttente> operations = [];
@@ -61,29 +62,61 @@ class FileAttenteService extends ChangeNotifier {
 
   final CoffreLocal _coffre;
 
+  /// Chaque compte a sa file : une déconnexion la conserve, et un autre compte
+  /// du même téléphone ne la voit ni ne l'envoie.
+  String? _compteId;
+  Future<void>? _envoiEnCours;
+
   FileAttenteService(this._api, [CoffreLocal? coffre])
     : _coffre = coffre ?? CoffreLocal();
 
-  Future<void> charger() async {
+  String get _cle => '$_cleAncienne.$_compteId';
+
+  /// Charge la file du compte connecté et relance l'envoi de ce qui attendait.
+  Future<void> ouvrirSession(String compteId) async {
+    if (_compteId == compteId) return;
+    await _envoiEnCours;
+    _compteId = compteId;
+    echec = false;
     final p = await SharedPreferences.getInstance();
-    final stocke = p.getString(_cle);
-    // Ancien format en clair : repris tel quel, puis réécrit chiffré.
-    final brut = stocke == null || !CoffreLocal.estChiffre(stocke)
-        ? stocke
-        : await _coffre.dechiffrer(stocke);
     operations
       ..clear()
-      ..addAll(
-        brut == null
-            ? const []
-            : (jsonDecode(brut) as List).map(
+      ..addAll(await _lire(p.getString(_cle)));
+    // Ancienne file, sans compte : elle appartient à la session restée ouverte.
+    final ancienne = p.getString(_cleAncienne);
+    if (ancienne != null) {
+      operations.addAll(await _lire(ancienne));
+      await _sauver();
+      await p.remove(_cleAncienne);
+    }
+    notifyListeners();
+    if (operations.isNotEmpty) unawaited(synchroniser());
+  }
+
+  /// Fin de session : la file reste sur le téléphone, chiffrée, pour ce compte.
+  Future<void> fermerSession() async {
+    await _envoiEnCours;
+    _compteId = null;
+    operations.clear();
+    echec = false;
+    notifyListeners();
+  }
+
+  Future<List<OperationEnAttente>> _lire(String? stocke) async {
+    if (stocke == null) return const [];
+    // Ancien format en clair : repris tel quel, puis réécrit chiffré.
+    final brut = CoffreLocal.estChiffre(stocke)
+        ? await _coffre.dechiffrer(stocke)
+        : stocke;
+    return brut == null
+        ? const []
+        : (jsonDecode(brut) as List)
+              .map(
                 (j) => OperationEnAttente.fromJson(
                   Map<String, dynamic>.from(j as Map),
                 ),
-              ),
-      );
-    if (stocke != null && !CoffreLocal.estChiffre(stocke)) await _sauver();
-    notifyListeners();
+              )
+              .toList();
   }
 
   Future<void> _sauver() async {
@@ -107,7 +140,8 @@ class FileAttenteService extends ChangeNotifier {
     try {
       return await _api.post<T>(chemin, body: corps, idempotence: id);
     } on ApiException catch (e) {
-      if (!e.estReseau) rethrow;
+      // Sans compte, rien ne garderait l'opération : l'erreur remonte à l'écran.
+      if (!e.estReseau || _compteId == null) rethrow;
       operations.add(
         OperationEnAttente(
           id: id,
@@ -124,8 +158,14 @@ class FileAttenteService extends ChangeNotifier {
 
   /// Rejoue les opérations en attente, dans l'ordre. Une erreur métier (4xx) est
   /// conservée sur l'opération pour que l'utilisateur la voie et la retire.
-  Future<void> synchroniser() async {
-    if (synchronisation || operations.isEmpty) return;
+  /// Un envoi déjà lancé est attendu, pas doublé.
+  Future<void> synchroniser() {
+    if (_envoiEnCours != null) return _envoiEnCours!;
+    if (operations.isEmpty) return Future.value();
+    return _envoiEnCours = _envoyer().whenComplete(() => _envoiEnCours = null);
+  }
+
+  Future<void> _envoyer() async {
     synchronisation = true;
     echec = false;
     notifyListeners();
@@ -134,7 +174,8 @@ class FileAttenteService extends ChangeNotifier {
         await _api.post<dynamic>(op.chemin, body: op.corps, idempotence: op.id);
         operations.remove(op);
       } on ApiException catch (e) {
-        if (e.estReseau) {
+        // Session expirée : l'opération est intacte, elle repartira à la reconnexion.
+        if (e.estReseau || e.status == 401) {
           echec = true;
           break;
         }
@@ -148,11 +189,6 @@ class FileAttenteService extends ChangeNotifier {
 
   Future<void> retirer(OperationEnAttente op) async {
     operations.remove(op);
-    await _sauver();
-  }
-
-  Future<void> vider() async {
-    operations.clear();
     await _sauver();
   }
 }

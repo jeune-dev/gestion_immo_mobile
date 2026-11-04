@@ -32,7 +32,7 @@ abstract class AuthRepository {
   Future<Either<Failure, Compte>> lireCompte();
 
   /// Ferme la session : côté serveur si possible, puis sur l'appareil (jetons, cache, file hors ligne).
-  Future<void> deconnecter();
+  Future<void> deconnecter({bool sessionExpiree = false});
 
   Future<Either<Failure, void>> demanderReinitialisation(String identifiant);
   Future<Either<Failure, void>> verifierCodeReinitialisation(

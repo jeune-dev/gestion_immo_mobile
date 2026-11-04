@@ -45,15 +45,19 @@ void main() {
       final file = FileAttenteService(
         ApiClient(session: TokenService(), baseUrl: 'http://test'),
       );
-      await file.charger();
+      await file.ouvrirSession('compte-a');
       expect(file.operations.single.id, 'a');
       final p = await SharedPreferences.getInstance();
-      expect(CoffreLocal.estChiffre(p.getString('gi.file_attente')!), isTrue);
+      expect(p.getString('gi.file_attente'), isNull);
+      expect(
+        CoffreLocal.estChiffre(p.getString('gi.file_attente.compte-a')!),
+        isTrue,
+      );
 
       final relue = FileAttenteService(
         ApiClient(session: TokenService(), baseUrl: 'http://test'),
       );
-      await relue.charger();
+      await relue.ouvrirSession('compte-a');
       expect(relue.operations.single.chemin, '/depenses');
     },
   );

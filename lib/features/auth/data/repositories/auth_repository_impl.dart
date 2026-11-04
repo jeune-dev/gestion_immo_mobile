@@ -161,6 +161,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, Compte>> lireCompte() async {
     try {
       final resultat = await remoteDataSource.lireCompte();
+      await fileAttente.ouvrirSession(resultat.utilisateur.id);
       return Right(resultat);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
@@ -172,8 +173,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> deconnecter() async {
+  Future<void> deconnecter({bool sessionExpiree = false}) async {
     await push?.arreter();
+    // Dernier envoi tant que la session est valide ; le reste attend la reconnexion.
+    if (!sessionExpiree) await fileAttente.synchroniser();
     try {
       await remoteDataSource.deconnecter(await jetons.lireRefresh());
     } catch (_) {
@@ -181,7 +184,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
     await jetons.effacer();
     await ApiClient.viderCache();
-    await fileAttente.vider();
+    await fileAttente.fermerSession();
   }
 
   @override

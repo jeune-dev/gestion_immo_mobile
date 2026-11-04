@@ -1,3 +1,4 @@
+import 'package:gestion_immo_mobile/features/auth/presentation/widgets/confirmer_deconnexion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -7,14 +8,12 @@ import 'package:gestion_immo_mobile/core/services/file_attente_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/theme/statuts.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
-import 'package:gestion_immo_mobile/core/widgets/actions.dart';
 import 'package:gestion_immo_mobile/core/widgets/bandeau_synchronisation.dart';
 import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/core/widgets/navigation.dart';
 import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/widgets/avatar_utilisateur.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.dart';
 import 'package:gestion_immo_mobile/features/depense/presentation/pages/categories_page.dart';
 import 'package:gestion_immo_mobile/features/messagerie/presentation/pages/messagerie_page.dart';
 import 'package:gestion_immo_mobile/features/notifications/presentation/pages/notifications_page.dart';
@@ -174,17 +173,7 @@ class ProfilProprietairePage extends StatelessWidget {
               foregroundColor: Theme.of(context).colorScheme.error,
               minimumSize: const Size.fromHeight(48),
             ),
-            onPressed: () async {
-              final ok = await confirmer(
-                context,
-                titre: 'Se déconnecter',
-                message: 'Les données enregistrées sur ce téléphone seront effacées.',
-                action: 'Se déconnecter',
-              );
-              if (ok != null && context.mounted) {
-                context.read<AuthBloc>().add(DeconnexionDemandee());
-              }
-            },
+            onPressed: () => confirmerDeconnexion(context),
             icon: const Icon(Icons.logout),
             label: const Text('Se déconnecter'),
           ),

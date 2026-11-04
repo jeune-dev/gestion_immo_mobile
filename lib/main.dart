@@ -34,7 +34,6 @@ Future<void> main() async {
   await dotenv.load(fileName: 'config/.env', isOptional: true);
   await initializeDateFormatting('fr');
   await di.init();
-  await di.sl<FileAttenteService>().charger();
   // Les référentiels (libellés des statuts) se chargent en arrière-plan, depuis le cache d'abord
   di.sl<ReferentielsService>().charger();
   runApp(const GestionImmoApp());
