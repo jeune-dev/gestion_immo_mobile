@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
@@ -28,7 +29,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final ChangerMotDePasse changerMotDePasse;
   final GetCompte getCompte;
   final Deconnecter deconnecter;
-  late final StreamSubscription<void> _expiration;
+  late final StreamSubscription<String?> _expiration;
+
+  /// Une fermeture à la fois : une expiration peut survenir pendant la déconnexion.
+  bool _fermetureEnCours = false;
+
+  static const _sessionExpiree =
+      'Votre session a expiré. Reconnectez-vous pour continuer.';
 
   AuthBloc({
     required this.restaurerSession,
@@ -60,22 +67,62 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (_, emit) =>
           emit(state.copyWith(effacerFailure: true, effacerSucces: true)),
     );
-    _expiration = AuthEventBus.instance.onLogout.listen((_) {
-      if (state.connecte) add(SessionExpiree());
+    _expiration = AuthEventBus.instance.onLogout.listen((motif) {
+      if (state.connecte) add(SessionExpiree(motif));
     });
   }
 
   Future<void> _onDemarree(AuthDemarree e, Emitter<AuthState> emit) async {
-    final r = await restaurerSession();
-    if (r == SessionRestauree.aucune || r == SessionRestauree.refusee) {
-      return emit(const AuthState(statut: StatutSession.deconnecte));
+    // Nouvel essai depuis l'écran d'erreur : retour à l'attente.
+    if (state.failure != null) emit(const AuthState());
+    try {
+      final r = await restaurerSession();
+      if (r == SessionRestauree.aucune) {
+        return emit(const AuthState(statut: StatutSession.deconnecte));
+      }
+      if (r == SessionRestauree.refusee) return await _fermerExpiree(emit);
+      // Renouvelée, ou hors ligne : le compte vient alors du cache de lecture
+      final compte = await getCompte();
+      await compte.fold(
+        (f) async {
+          // Jeton encore là : le serveur est en cause, pas la session. L'écran
+          // de démarrage propose de réessayer au lieu de la perdre.
+          if (await restaurerSession.sessionPresente()) {
+            emit(AuthState(failure: f));
+          } else {
+            await _fermerExpiree(emit);
+          }
+        },
+        (c) async => emit(AuthState(statut: StatutSession.connecte, compte: c)),
+      );
+    } catch (e) {
+      debugPrint('Restauration de session impossible : $e');
+      emit(
+        const AuthState(
+          failure: CacheFailure(
+            errorMessage:
+                'Impossible de lire la session enregistrée sur ce téléphone.',
+          ),
+        ),
+      );
     }
-    // Renouvelée, ou hors ligne : le compte vient alors du cache de lecture
-    final compte = await getCompte();
+  }
+
+  /// Ferme la session sur l'appareil sans laisser une erreur bloquer l'écran.
+  Future<void> _fermer({required bool sessionExpiree}) async {
+    try {
+      await deconnecter(sessionExpiree: sessionExpiree);
+    } catch (e) {
+      debugPrint('Fermeture de session en échec : $e');
+    }
+  }
+
+  Future<void> _fermerExpiree(Emitter<AuthState> emit, [String? motif]) async {
+    await _fermer(sessionExpiree: true);
     emit(
-      compte.fold(
-        (_) => const AuthState(statut: StatutSession.deconnecte),
-        (c) => AuthState(statut: StatutSession.connecte, compte: c),
+      AuthState(
+        statut: StatutSession.deconnecte,
+        information: motif ?? _sessionExpiree,
       ),
     );
   }
@@ -84,7 +131,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     ConnexionDemandee e,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(enCours: true, effacerFailure: true));
+    emit(
+      state.copyWith(
+        enCours: true,
+        effacerFailure: true,
+        effacerInformation: true,
+      ),
+    );
     final r = await connecter(
       identifiant: e.identifiant,
       motDePasse: e.motDePasse,
@@ -95,7 +148,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         DoubleAuthentificationRequise(:final jeton) => emit(
           state.copyWith(enCours: false, mfaJeton: jeton),
         ),
-        SessionOuverte() => _chargerCompte(emit),
+        SessionOuverte() => _chargerCompte(emit, nouvelleSession: true),
       },
     );
   }
@@ -118,7 +171,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           effacerMfa: f.code == 'JETON_MFA_INVALIDE',
         ),
       ),
-      (_) => _chargerCompte(emit),
+      (_) => _chargerCompte(emit, nouvelleSession: true),
     );
   }
 
@@ -130,7 +183,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final r = await action();
     await r.fold(
       (f) async => emit(state.copyWith(enCours: false, failure: f)),
-      (_) => _chargerCompte(emit),
+      (_) => _chargerCompte(emit, nouvelleSession: true),
     );
   }
 
@@ -160,11 +213,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     r.fold((_) {}, (c) => emit(state.copyWith(compte: c)));
   }
 
-  Future<void> _chargerCompte(Emitter<AuthState> emit, {String? succes}) async {
+  /// [nouvelleSession] : sans le compte, la session à peine ouverte est refermée,
+  /// pour qu'un nouvel essai n'en laisse pas une seconde sur le serveur.
+  Future<void> _chargerCompte(
+    Emitter<AuthState> emit, {
+    String? succes,
+    bool nouvelleSession = false,
+  }) async {
     final r = await getCompte();
-    r.fold(
-      (f) => emit(state.copyWith(enCours: false, failure: f)),
-      (c) => emit(
+    await r.fold(
+      (f) async {
+        if (nouvelleSession) await _fermer(sessionExpiree: true);
+        emit(
+          state.copyWith(
+            enCours: false,
+            failure: f,
+            effacerMfa: nouvelleSession,
+          ),
+        );
+      },
+      (c) async => emit(
         AuthState(
           statut: StatutSession.connecte,
           compte: c,
@@ -176,7 +244,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onDeconnexion(AuthEvent e, Emitter<AuthState> emit) async {
-    await deconnecter();
+    if (_fermetureEnCours) return;
+    _fermetureEnCours = true;
+    emit(state.copyWith(deconnexion: true));
+    await _fermer(sessionExpiree: false);
+    _fermetureEnCours = false;
     emit(const AuthState(statut: StatutSession.deconnecte));
   }
 
@@ -184,8 +256,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     SessionExpiree e,
     Emitter<AuthState> emit,
   ) async {
-    await deconnecter(sessionExpiree: true);
-    emit(const AuthState(statut: StatutSession.deconnecte));
+    if (_fermetureEnCours || state.statut == StatutSession.deconnecte) return;
+    _fermetureEnCours = true;
+    await _fermerExpiree(emit, e.motif);
+    _fermetureEnCours = false;
   }
 
   @override

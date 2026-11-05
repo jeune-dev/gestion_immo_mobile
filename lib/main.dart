@@ -117,7 +117,27 @@ class _GestionImmoAppState extends State<GestionImmoApp>
         builder: (context, child) => GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-          child: child,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ?child,
+              BlocSelector<AuthBloc, AuthState, bool>(
+                selector: (etat) => etat.deconnexion,
+                builder: (_, enCours) => enCours
+                    ? const AbsorbPointer(
+                        child: ColoredBox(
+                          color: Colors.black26,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              semanticsLabel: 'Déconnexion en cours',
+                            ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
         ),
       ),
     );

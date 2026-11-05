@@ -18,6 +18,17 @@ String nouvelleCle() => const Uuid().v4();
 const _dureeIntention = Duration(minutes: 10);
 final _intentions = <String, ({String cle, DateTime creeLe})>{};
 
+/// 401 qui concernent la session. Les autres (mot de passe actuel faux, code de
+/// double authentification) sont des refus métier : ni renouvellement ni rejeu.
+const _codesSession = {
+  'TOKEN_MANQUANT',
+  'TOKEN_EXPIRE',
+  'TOKEN_INVALIDE',
+  'SESSION_ABSENTE',
+  'SESSION_INVALIDE',
+  'SESSION_REVOQUEE',
+};
+
 /// Même clé pour la même demande répétée peu après (nouvel essai après une
 /// coupure, retour sur l'écran) : le serveur rejoue sa réponse au lieu de créer
 /// un doublon. À réserver aux actions qui n'ont aucune raison d'être refaites à l'identique.
@@ -47,12 +58,18 @@ class ApiClient {
   /// Appelé quand la session ne peut plus être renouvelée (retour à la connexion).
   VoidCallback? onSessionExpiree;
 
+  /// Appelé quand le serveur signale un compte désactivé (403 `COMPTE_INACTIF`).
+  void Function(String motif)? onCompteInactif;
+
   /// Vrai quand la dernière lecture vient du cache local (pas de réseau).
   final ValueNotifier<bool> horsLigne = ValueNotifier(false);
 
   String get baseUrl => _dio.options.baseUrl;
 
   Completer<bool>? _renouvellement;
+
+  /// Change à chaque vidage du cache : une lecture partie avant ne s'y réécrit pas.
+  static int _generationCache = 0;
 
   ApiClient({
     required this.session,
@@ -91,6 +108,7 @@ class ApiClient {
     final enCours = _renouvellement;
     if (enCours != null) return enCours.future;
     final c = _renouvellement = Completer<bool>();
+    final epoque = session.epoque;
     () async {
       try {
         final refresh = await session.lireRefresh();
@@ -101,14 +119,27 @@ class ApiClient {
           options: Options(extra: {'sansJeton': true}),
         );
         final data = r.data!['data'] as Map<String, dynamic>;
+        // Session fermée entre-temps : ce jeton ne doit ni rester ni rouvrir la session.
+        if (session.epoque != epoque) {
+          await _revoquer(data['refresh_token'] as String?);
+          return c.complete(false);
+        }
         await session.enregistrer(
           access: data['access_token'] as String,
           refresh: data['refresh_token'] as String?,
         );
         c.complete(true);
       } on DioException catch (e) {
-        // Refus explicite (401) : session terminée. Erreur réseau : on garde le jeton pour plus tard.
-        if (e.response?.statusCode == 401) await session.effacer();
+        // Refus explicite (401) : session terminée. Erreur réseau, ou renouvellement
+        // déjà en cours côté serveur : on garde le jeton pour plus tard.
+        final corps = e.response?.data;
+        final erreur = corps is Map ? corps['error'] : null;
+        final code = erreur is Map ? erreur['code'] : null;
+        if (e.response?.statusCode == 401 &&
+            code != 'SESSION_DEJA_RENOUVELEE' &&
+            session.epoque == epoque) {
+          await session.effacer();
+        }
         c.complete(false);
       } catch (_) {
         c.complete(false);
@@ -117,6 +148,24 @@ class ApiClient {
       }
     }();
     return c.future;
+  }
+
+  /// Attend la fin d'un renouvellement en vol (déconnexion : le dernier jeton compte).
+  Future<void> attendreRenouvellement() async {
+    await _renouvellement?.future;
+  }
+
+  Future<void> _revoquer(String? refresh) async {
+    if (refresh == null) return;
+    try {
+      await _dio.post<dynamic>(
+        ApiEndpoints.deconnexion,
+        data: {'refresh_token': refresh},
+        options: Options(extra: {'sansJeton': true}),
+      );
+    } on DioException {
+      // Le jeton expirera de lui-même : il n'est gardé nulle part sur l'appareil.
+    }
   }
 
   // ── Requêtes ───────────────────────────────────────────────────────────────
@@ -131,7 +180,10 @@ class ApiClient {
     } on DioException catch (e) {
       // Sans jeton d'accès (démarrage hors ligne), le refresh token du coffre
       // suffit à rouvrir la session.
-      if (e.response?.statusCode == 401 && rejouable) {
+      final erreur = await _normaliser(e);
+      if (e.response?.statusCode == 401 &&
+          rejouable &&
+          (erreur.code == null || _codesSession.contains(erreur.code))) {
         if (await renouveler()) return _executer<T>(appel, rejouable: false);
         // Refus du serveur : `renouveler` a vidé le coffre, la session est finie.
         if (await session.lireRefresh() == null) {
@@ -145,7 +197,10 @@ class ApiClient {
           );
         }
       }
-      throw await _normaliser(e);
+      if (erreur.code == 'COMPTE_INACTIF') {
+        onCompteInactif?.call(erreur.message);
+      }
+      throw erreur;
     }
   }
 
@@ -222,6 +277,7 @@ class ApiClient {
     Map<String, String>? headers,
   }) async {
     final q = _nettoyer(query);
+    final generation = _generationCache;
     final cle =
         'cache:$chemin?${q == null ? '' : Uri(queryParameters: q.map((k, v) => MapEntry(k, '$v'))).query}';
     try {
@@ -233,7 +289,7 @@ class ApiClient {
         ),
       );
       horsLigne.value = false;
-      if (cache) unawaited(_memoriser(cle, data));
+      if (cache) unawaited(_memoriser(cle, data, generation));
       return data as T;
     } on ApiException catch (e) {
       if (e.estReseau && cache) {
@@ -249,10 +305,12 @@ class ApiClient {
     }
   }
 
-  Future<void> _memoriser(String cle, dynamic data) async {
+  Future<void> _memoriser(String cle, dynamic data, int generation) async {
     try {
       final p = await SharedPreferences.getInstance();
-      await p.setString(cle, await _coffre.chiffrer(jsonEncode(data)));
+      final chiffre = await _coffre.chiffrer(jsonEncode(data));
+      if (generation != _generationCache) return;
+      await p.setString(cle, chiffre);
     } catch (_) {
       // Le cache est une commodité : son échec ne bloque rien
     }
@@ -260,6 +318,7 @@ class ApiClient {
 
   /// Vide le cache de lecture (déconnexion : aucune donnée ne doit rester sur l'appareil).
   static Future<void> viderCache() async {
+    _generationCache++;
     final p = await SharedPreferences.getInstance();
     for (final k in p.getKeys().where((k) => k.startsWith('cache:')).toList()) {
       await p.remove(k);

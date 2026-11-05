@@ -15,6 +15,12 @@ class AuthState extends Equatable {
   final bool enCours;
   final Failure? failure;
 
+  /// Pourquoi la session s'est fermée, affiché sur la page de connexion.
+  final String? information;
+
+  /// La déconnexion est en cours : l'écran attend qu'elle se termine.
+  final bool deconnexion;
+
   /// Double authentification attendue pour terminer la connexion.
   final String? mfaJeton;
 
@@ -34,6 +40,8 @@ class AuthState extends Equatable {
     this.compte,
     this.enCours = false,
     this.failure,
+    this.information,
+    this.deconnexion = false,
     this.mfaJeton,
     this.succes,
     this.version = 0,
@@ -44,16 +52,20 @@ class AuthState extends Equatable {
     Compte? compte,
     bool? enCours,
     Failure? failure,
+    bool? deconnexion,
     String? mfaJeton,
     String? succes,
     bool effacerFailure = false,
     bool effacerMfa = false,
     bool effacerSucces = false,
+    bool effacerInformation = false,
   }) => AuthState(
     statut: statut ?? this.statut,
     compte: compte ?? this.compte,
     enCours: enCours ?? this.enCours,
     failure: effacerFailure ? null : failure ?? this.failure,
+    information: effacerInformation ? null : information,
+    deconnexion: deconnexion ?? this.deconnexion,
     mfaJeton: effacerMfa ? null : mfaJeton ?? this.mfaJeton,
     succes: effacerSucces ? null : succes ?? this.succes,
     version: failure != null || succes != null ? version + 1 : version,
@@ -65,6 +77,8 @@ class AuthState extends Equatable {
     compte,
     enCours,
     failure,
+    information,
+    deconnexion,
     mfaJeton,
     succes,
     version,

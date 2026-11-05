@@ -340,6 +340,7 @@ Future<void> init() async {
     final api = ApiClient(session: sl());
     // Session non renouvelable : l'AuthBloc ferme la session (bus d'événements, sans BuildContext)
     api.onSessionExpiree = AuthEventBus.instance.emitLogout;
+    api.onCompteInactif = AuthEventBus.instance.emitLogout;
     return api;
   });
   sl.registerLazySingleton(() => ReferentielsService(sl()));

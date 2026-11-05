@@ -7,6 +7,8 @@ import 'package:gestion_immo_mobile/core/validation/identifiant_validator.dart';
 import 'package:gestion_immo_mobile/core/routes/app_router.dart';
 import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
+import 'package:gestion_immo_mobile/core/theme/statuts.dart';
+import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/widgets/auth_cadre.dart';
@@ -78,6 +80,7 @@ class _ConnexionPageState extends State<ConnexionPage> {
   @override
   Widget build(BuildContext context) {
     final mfa = context.select((AuthBloc b) => b.state.mfaJeton != null);
+    final information = context.select((AuthBloc b) => b.state.information);
     return AuthCadre(
       titre: mfa ? 'Code de vérification' : 'Connexion',
       sousTitre: mfa
@@ -92,6 +95,10 @@ class _ConnexionPageState extends State<ConnexionPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (information != null) ...[
+                  Encadre(information, ton: TonStatut.info),
+                  const SizedBox(height: AppTheme.espaceLg),
+                ],
                 const ErreurAuth(),
                 if (!mfa) ...[
                   _ChoixIdentifiant(type: _type, onChoix: _choisir),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -116,4 +117,182 @@ void main() {
     expect(expirations, 1);
     expect(await jetons.lireRefresh(), isNull);
   });
+
+  group('sessions : cas limites', () {
+    ({ApiClient api, TokenService jetons, List<String> appels}) client(
+      FutureOr<ResponseBody> Function(RequestOptions) repondre,
+    ) {
+      final appels = <String>[];
+      final dio = Dio(BaseOptions(baseUrl: 'http://api.test/api/v1'))
+        ..httpClientAdapter = _Script(appels, repondre);
+      final jetons = TokenService();
+      return (
+        api: ApiClient(session: jetons, dio: dio),
+        jetons: jetons,
+        appels: appels,
+      );
+    }
+
+    setUp(() {
+      FlutterSecureStorage.setMockInitialValues({'gi.refresh_token': 'R1'});
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test(
+      'renouvellement déjà en cours côté serveur : le jeton est gardé',
+      () async {
+        final c = client(
+          (_) => _reponse(401, {
+            'success': false,
+            'message': 'Session déjà renouvelée, réessayez',
+            'error': {'code': 'SESSION_DEJA_RENOUVELEE'},
+          }),
+        );
+        expect(await c.api.renouveler(), isFalse);
+        expect(await c.jetons.lireRefresh(), 'R1');
+      },
+    );
+
+    test('401 métier : ni renouvellement ni second envoi', () async {
+      final c = client(
+        (_) => _reponse(401, {
+          'success': false,
+          'message': 'Mot de passe actuel incorrect',
+          'error': {'code': 'MOT_DE_PASSE_INCORRECT'},
+        }),
+      );
+      await expectLater(
+        c.api.post<dynamic>('/compte/mot-de-passe'),
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.message,
+            'message',
+            'Mot de passe actuel incorrect',
+          ),
+        ),
+      );
+      expect(c.appels, ['POST /compte/mot-de-passe']);
+    });
+
+    test('jeton expiré : renouvelé puis rejoué', () async {
+      var premier = true;
+      final c = client((o) {
+        if (o.path.endsWith('/auth/refresh')) {
+          return _reponse(200, {
+            'success': true,
+            'data': {'access_token': 'A2', 'refresh_token': 'R2'},
+          });
+        }
+        if (premier) {
+          premier = false;
+          return _reponse(401, {
+            'success': false,
+            'message': 'Session expirée',
+            'error': {'code': 'TOKEN_EXPIRE'},
+          });
+        }
+        return _reponse(200, {'success': true, 'data': {}});
+      });
+      await c.api.post<dynamic>('/depenses');
+      expect(c.appels, [
+        'POST /depenses',
+        'POST /auth/refresh',
+        'POST /depenses',
+      ]);
+    });
+
+    test(
+      'déconnexion pendant un renouvellement : jeton révoqué, coffre vide',
+      () async {
+        final attente = Completer<void>();
+        final c = client((o) async {
+          if (o.path.endsWith('/auth/deconnexion')) {
+            return _reponse(200, {'success': true, 'data': null});
+          }
+          await attente.future;
+          return _reponse(200, {
+            'success': true,
+            'data': {'access_token': 'A2', 'refresh_token': 'R2'},
+          });
+        });
+        final enCours = c.api.renouveler();
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await c.jetons.effacer();
+        attente.complete();
+        expect(await enCours, isFalse);
+        expect(
+          await const FlutterSecureStorage().read(key: 'gi.refresh_token'),
+          isNull,
+        );
+        expect(c.jetons.accessToken, isNull);
+        expect(c.appels, contains('POST /auth/deconnexion'));
+      },
+    );
+
+    test('compte désactivé : le motif du serveur ferme la session', () async {
+      final c = client(
+        (_) => _reponse(403, {
+          'success': false,
+          'message': 'Compte désactivé. Contactez le support.',
+          'error': {'code': 'COMPTE_INACTIF'},
+        }),
+      );
+      String? motif;
+      c.api.onCompteInactif = (m) => motif = m;
+      await expectLater(
+        c.api.get<dynamic>('/immeubles', cache: false),
+        throwsA(isA<ApiException>()),
+      );
+      expect(motif, 'Compte désactivé. Contactez le support.');
+    });
+
+    test(
+      'lecture finie après le vidage du cache : rien n’est réécrit',
+      () async {
+        final attente = Completer<void>();
+        final c = client((_) async {
+          await attente.future;
+          return _reponse(200, {
+            'success': true,
+            'data': {'a': 1},
+          });
+        });
+        final lecture = c.api.get<Map<String, dynamic>>('/baux');
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await ApiClient.viderCache();
+        attente.complete();
+        await lecture;
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+        final p = await SharedPreferences.getInstance();
+        expect(p.getKeys().where((k) => k.startsWith('cache:')), isEmpty);
+      },
+    );
+  });
+}
+
+ResponseBody _reponse(int status, Object corps) => ResponseBody.fromString(
+  jsonEncode(corps),
+  status,
+  headers: {
+    Headers.contentTypeHeader: [Headers.jsonContentType],
+  },
+);
+
+class _Script implements HttpClientAdapter {
+  final List<String> appels;
+  final FutureOr<ResponseBody> Function(RequestOptions) repondre;
+  _Script(this.appels, this.repondre);
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions o,
+    Stream<Uint8List>? _,
+    Future<void>? _,
+  ) async {
+    appels.add('${o.method} ${o.path}');
+    return repondre(o);
+  }
+
+  @override
+  void close({bool force = false}) {}
 }

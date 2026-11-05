@@ -41,7 +41,11 @@ class CompteRechargeDemande extends AuthEvent {}
 class DeconnexionDemandee extends AuthEvent {}
 
 /// Le client HTTP n'a pas pu renouveler la session (bus d'événements).
-class SessionExpiree extends AuthEvent {}
+class SessionExpiree extends AuthEvent {
+  /// Raison donnée par le serveur (compte désactivé), sinon simple expiration.
+  final String? motif;
+  SessionExpiree([this.motif]);
+}
 
 /// Un écran d'authentification s'ouvre : l'erreur d'un autre écran ne s'y affiche pas.
 class AuthErreurEffacee extends AuthEvent {}

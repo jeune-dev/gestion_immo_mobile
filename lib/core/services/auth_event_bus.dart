@@ -5,10 +5,11 @@ import 'dart:async';
 class AuthEventBus {
   static final instance = AuthEventBus._();
 
-  final _deconnexion = StreamController<void>.broadcast();
+  final _deconnexion = StreamController<String?>.broadcast();
 
-  Stream<void> get onLogout => _deconnexion.stream;
+  /// Porte le motif à afficher, ou `null` pour une simple expiration.
+  Stream<String?> get onLogout => _deconnexion.stream;
   AuthEventBus._();
 
-  void emitLogout() => _deconnexion.add(null);
+  void emitLogout([String? motif]) => _deconnexion.add(motif);
 }

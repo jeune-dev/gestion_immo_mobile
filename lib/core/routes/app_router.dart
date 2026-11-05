@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:gestion_immo_mobile/features/abonnement/presentation/pages/abonnement_page.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_state.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/pages/activation_page.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/pages/changer_mot_de_passe_page.dart';
@@ -108,6 +110,39 @@ class _Demarrage extends StatelessWidget {
   const _Demarrage();
 
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: CircularProgressIndicator()));
+  Widget build(BuildContext context) {
+    final failure = context.select((AuthBloc b) => b.state.failure);
+    final enFermeture = context.select((AuthBloc b) => b.state.deconnexion);
+    if (failure == null || enFermeture) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    final auth = context.read<AuthBloc>();
+    // Session gardée : l'utilisateur réessaie, ou repart de la connexion.
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(failure.messageComplet, textAlign: TextAlign.center),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () => auth.add(AuthDemarree()),
+                  child: const Text('Réessayer'),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => auth.add(DeconnexionDemandee()),
+                  child: const Text('Se déconnecter'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

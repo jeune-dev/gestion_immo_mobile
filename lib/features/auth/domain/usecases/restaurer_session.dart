@@ -19,6 +19,9 @@ class RestaurerSession {
   final AuthRepository repository;
   RestaurerSession(this.repository);
 
+  /// Vrai si le coffre contient encore une session.
+  Future<bool> sessionPresente() => repository.sessionEnregistree();
+
   Future<SessionRestauree> call() async {
     if (!await repository.sessionEnregistree()) return SessionRestauree.aucune;
     if (await repository.restaurerSession()) return SessionRestauree.renouvelee;
