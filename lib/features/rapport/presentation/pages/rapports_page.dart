@@ -1,9 +1,7 @@
-import 'dart:io';
-
 import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:gestion_immo_mobile/core/utils/fichier_temporaire.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
@@ -61,16 +59,17 @@ class _RapportsPageState extends State<RapportsPage>
         if (mounted) afficherErreurApi(context, f);
       },
       (octets) async {
-        final f = File(
-          '${(await getTemporaryDirectory()).path}/rapport-$type-${_periode.du}-${_periode.au}.csv',
+        final f = await ecrireFichierTemporaire(
+          'rapport-$type-${_periode.du}-${_periode.au}.csv',
+          octets,
         );
-        await f.writeAsBytes(octets, flush: true);
         await SharePlus.instance.share(
           ShareParams(
             files: [XFile(f.path, mimeType: 'text/csv')],
             subject: 'Rapport $type',
           ),
         );
+        await supprimerFichierTemporaire(f);
       },
     );
   }

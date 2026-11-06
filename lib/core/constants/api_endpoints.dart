@@ -19,6 +19,7 @@ class ApiEndpoints {
   // ── Compte ─────────────────────────────────────────────────────────────────
   static const compte = '/compte';
   static const compteMotDePasse = '/compte/mot-de-passe';
+  static const comptePhoto = '/compte/photo';
   static const compteSessions = '/compte/sessions';
   static String compteSession(String id) => '/compte/sessions/$id';
   static const compteAppareils = '/compte/appareils';

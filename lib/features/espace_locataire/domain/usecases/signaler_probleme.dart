@@ -9,7 +9,9 @@ class SignalerProbleme {
   final EspaceLocataireRepository repository;
   SignalerProbleme(this.repository);
 
-  /// `Right(null)` : enregistré hors ligne, envoyé au retour du réseau (§ 34).
-  Future<Either<Failure, Incident?>> call(Map<String, dynamic> corps) =>
-      repository.signalerOuDifferer(corps);
+  /// [cle] : la même pour un même formulaire, un nouvel essai ne crée pas de doublon.
+  Future<Either<Failure, Incident>> call(
+    Map<String, dynamic> corps, {
+    required String cle,
+  }) => repository.signaler(corps, cle: cle);
 }

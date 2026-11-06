@@ -16,7 +16,7 @@ class ParametresRemoteDataSourceImpl implements ParametresRemoteDataSource {
 
   @override
   Future<ParametresProprietaire> lire() async => ParametresModel.depuis(
-    await api.get<Map<String, dynamic>>(ApiEndpoints.parametres, cache: false),
+    await api.get<Map<String, dynamic>>(ApiEndpoints.parametres),
   );
 
   @override

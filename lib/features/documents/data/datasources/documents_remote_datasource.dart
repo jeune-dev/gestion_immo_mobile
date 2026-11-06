@@ -66,10 +66,7 @@ class DocumentsRemoteDataSourceImpl implements DocumentsRemoteDataSource {
 
   @override
   Future<LienDocumentModel> lien(String id) async => LienDocumentModel.fromJson(
-    await api.get<Map<String, dynamic>>(
-      ApiEndpoints.documentLien(id),
-      cache: false,
-    ),
+    await api.get<Map<String, dynamic>>(ApiEndpoints.documentLien(id)),
   );
 
   @override

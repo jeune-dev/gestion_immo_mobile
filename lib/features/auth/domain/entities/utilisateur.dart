@@ -10,7 +10,9 @@ class Utilisateur extends Equatable {
   final String nom;
   final String? email;
   final String? telephone;
-  final String? photoUrl;
+
+  /// Date de la photo de profil sur le serveur ; `null` : pas de photo.
+  final String? photoVersion;
   final String langue;
   final bool doitChangerMotDePasse;
   final bool doubleAuthentificationActive;
@@ -28,7 +30,7 @@ class Utilisateur extends Equatable {
     required this.nom,
     this.email,
     this.telephone,
-    this.photoUrl,
+    this.photoVersion,
     this.langue = 'fr',
     this.doitChangerMotDePasse = false,
     this.doubleAuthentificationActive = false,
@@ -42,7 +44,7 @@ class Utilisateur extends Equatable {
     nom,
     email,
     telephone,
-    photoUrl,
+    photoVersion,
     langue,
     doitChangerMotDePasse,
     doubleAuthentificationActive,

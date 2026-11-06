@@ -76,35 +76,20 @@ class _VueFicheState extends State<_VueFiche> {
 
   /// Change après un ajout, une suppression ou un choix : recharge la couverture.
   int _versionCouverture = 0;
-  String? _couvertureId;
-
-  @override
-  void initState() {
-    super.initState();
-    _lireCouverture();
-  }
-
-  Future<void> _lireCouverture() async {
-    final id =
-        widget.fiche.immeuble.couvertureId ??
-        await lireCouvertureImmeuble(widget.id);
-    if (mounted) setState(() => _couvertureId = id);
-  }
+  late String? _couvertureId = widget.fiche.immeuble.couvertureId;
 
   Future<void> _choisirCouverture(DocumentApp photo) async {
-    await definirCouvertureImmeuble(widget.id, photo.id);
     final r = await di.sl<ModifierImmeuble>()(widget.id, {
       'cover_document_id': photo.id,
     });
     if (!mounted) return;
-    setState(() {
-      _couvertureId = photo.id;
-      _versionCouverture++;
+    r.fold((f) => afficherErreurApi(context, f), (_) {
+      setState(() {
+        _couvertureId = photo.id;
+        _versionCouverture++;
+      });
+      afficherSucces(context, 'Photo de couverture modifiée');
     });
-    afficherSucces(
-      context,
-      r.isRight() ? 'Photo de couverture modifiée' : 'Couverture enregistrée sur ce téléphone seulement : le serveur ne l’a pas acceptée.',
-    );
   }
 
   @override

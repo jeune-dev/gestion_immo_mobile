@@ -13,7 +13,7 @@ class UtilisateurModel extends Utilisateur {
     required super.nom,
     super.email,
     super.telephone,
-    super.photoUrl,
+    super.photoVersion,
     super.langue,
     super.doitChangerMotDePasse,
     super.doubleAuthentificationActive,
@@ -27,7 +27,7 @@ class UtilisateurModel extends Utilisateur {
         nom: json['last_name'] as String? ?? '',
         email: json['email'] as String?,
         telephone: json['phone'] as String?,
-        photoUrl: json['avatar_url'] as String?,
+        photoVersion: json['avatar_updated_at'] as String?,
         langue: json['language'] as String? ?? 'fr',
         doitChangerMotDePasse: json['must_change_password'] == true,
         doubleAuthentificationActive:

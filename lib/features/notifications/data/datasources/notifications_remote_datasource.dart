@@ -36,7 +36,6 @@ class NotificationsRemoteDataSourceImpl
   Future<int> compterNonLues() async => entier(
     (await api.get<Map<String, dynamic>>(
       ApiEndpoints.notificationsCompteur,
-      cache: false,
     ))['non_lues'],
   );
 

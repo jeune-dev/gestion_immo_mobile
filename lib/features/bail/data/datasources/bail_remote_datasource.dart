@@ -5,11 +5,7 @@ import 'package:gestion_immo_mobile/core/network/api_client.dart';
 import '../models/bail_model.dart';
 
 abstract class BailRemoteDataSource {
-  Future<PageResultat<BailModel>> getBaux({
-    required int page,
-    String? statut,
-    String? recherche,
-  });
+  Future<PageResultat<BailModel>> getBaux({required int page, String? statut});
   Future<BailModel> getBail(String id);
   Future<List<ContratBailModel>> contrats(String id);
   Future<BailModel> creerBail(
@@ -42,16 +38,10 @@ class BailRemoteDataSourceImpl implements BailRemoteDataSource {
   Future<PageResultat<BailModel>> getBaux({
     required int page,
     String? statut,
-    String? recherche,
   }) async => PageResultat.depuisJson(
     await api.get<Map<String, dynamic>>(
       ApiEndpoints.baux,
-      query: {
-        'page': page,
-        'status': statut,
-        'q': recherche,
-        'tri': '-start_date',
-      },
+      query: {'page': page, 'status': statut, 'tri': '-start_date'},
     ),
     BailModel.fromJson,
   );

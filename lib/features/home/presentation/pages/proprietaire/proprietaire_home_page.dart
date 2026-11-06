@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:gestion_immo_mobile/core/widgets/bandeau_synchronisation.dart';
-import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/pages/profil_proprietaire_page.dart';
 import 'package:gestion_immo_mobile/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:gestion_immo_mobile/features/home/presentation/pages/proprietaire/biens_page.dart';
@@ -43,15 +41,7 @@ class _ProprietaireHomePageState extends State<ProprietaireHomePage> {
       const ProfilProprietairePage(),
     ];
     return Scaffold(
-      body: Column(
-        children: [
-          const BandeauHorsLigne(),
-          const BandeauSynchronisation(),
-          Expanded(
-            child: IndexedStack(index: _onglet, children: pages),
-          ),
-        ],
-      ),
+      body: IndexedStack(index: _onglet, children: pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _onglet,
         onDestinationSelected: _aller,

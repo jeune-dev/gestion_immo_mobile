@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get_it/get_it.dart';
-
 import 'package:gestion_immo_mobile/core/errors/messages.dart';
-import 'package:gestion_immo_mobile/core/network/api_client.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
@@ -445,48 +442,6 @@ class ChiffreCle extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Bandeau « consultation hors ligne » affiché quand les données viennent du cache.
-class BandeauHorsLigne extends StatelessWidget {
-  const BandeauHorsLigne({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: GetIt.instance<ApiClient>().horsLigne,
-      builder: (context, hors, _) => !hors
-          ? const SizedBox.shrink()
-          : Material(
-              color: context.palette.neutreFond,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 6,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.wifi_off,
-                      size: 16,
-                      color: context.palette.neutre,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Hors ligne : dernières données enregistrées.',
-                        style: TextStyle(
-                          color: context.palette.neutre,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
     );
   }
 }

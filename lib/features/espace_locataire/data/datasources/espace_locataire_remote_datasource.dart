@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:gestion_immo_mobile/core/constants/api_endpoints.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
-import 'package:gestion_immo_mobile/core/services/file_attente_service.dart';
 import 'package:gestion_immo_mobile/features/caution/data/models/caution_model.dart';
 import 'package:gestion_immo_mobile/features/echeance/data/models/echeance_model.dart';
 import 'package:gestion_immo_mobile/features/etat_des_lieux/data/models/etat_des_lieux_model.dart';
@@ -48,7 +47,10 @@ abstract class EspaceLocataireRemoteDataSource {
   Future<IncidentModel> incident(String id);
 
   /// Sans réseau, le signalement est mis en file (§ 34) et `null` est renvoyé.
-  Future<IncidentModel?> signalerOuDifferer(Map<String, dynamic> corps);
+  Future<IncidentModel> signaler(
+    Map<String, dynamic> corps, {
+    required String cle,
+  });
   Future<void> ajouterPieceIncident(String id, String chemin);
   Future<PageResultat<EtatDesLieuxModel>> etatsDesLieux({required int page});
   Future<EtatDesLieuxModel> etatDesLieux(String id);
@@ -60,11 +62,7 @@ abstract class EspaceLocataireRemoteDataSource {
 class EspaceLocataireRemoteDataSourceImpl
     implements EspaceLocataireRemoteDataSource {
   final ApiClient api;
-  final FileAttenteService fileAttente;
-  EspaceLocataireRemoteDataSourceImpl({
-    required this.api,
-    required this.fileAttente,
-  });
+  EspaceLocataireRemoteDataSourceImpl({required this.api});
 
   @override
   Future<List<LogementLocataire>> accueil() async {
@@ -133,7 +131,6 @@ class EspaceLocataireRemoteDataSourceImpl
         Map<String, dynamic>.from(
           (await api.get<Map<String, dynamic>>(
                 ApiEndpoints.locTransaction(id),
-                cache: false,
               ))['transaction']
               as Map,
         ),
@@ -144,7 +141,6 @@ class EspaceLocataireRemoteDataSourceImpl
     final r = await api.get<Map<String, dynamic>>(
       ApiEndpoints.locPaiementsMoyens,
       query: {'lease_id': bailId},
-      cache: false,
     );
     return EspaceLocataireModel.moyens(
       Map<String, dynamic>.from(r['methods'] as Map),
@@ -188,10 +184,7 @@ class EspaceLocataireRemoteDataSourceImpl
 
   @override
   Future<List<CautionModel>> cautions() async {
-    final r = await api.get<Map<String, dynamic>>(
-      ApiEndpoints.locCaution,
-      cache: false,
-    );
+    final r = await api.get<Map<String, dynamic>>(ApiEndpoints.locCaution);
     return ((r['deposits'] as List?) ?? const [])
         .map((c) => CautionModel.fromJson(Map<String, dynamic>.from(c as Map)))
         .toList();
@@ -221,7 +214,6 @@ class EspaceLocataireRemoteDataSourceImpl
         Map<String, dynamic>.from(
           (await api.get<Map<String, dynamic>>(
                 ApiEndpoints.locCharge(id),
-                cache: false,
               ))['charge']
               as Map,
         ),
@@ -246,25 +238,24 @@ class EspaceLocataireRemoteDataSourceImpl
     Map<String, dynamic>.from(
       (await api.get<Map<String, dynamic>>(
             ApiEndpoints.locIncident(id),
-            cache: false,
           ))['incident']
           as Map,
     ),
   );
 
   @override
-  Future<IncidentModel?> signalerOuDifferer(Map<String, dynamic> corps) async {
-    final r = await fileAttente.envoyerOuDifferer<Map<String, dynamic>>(
-      libelle: 'Signalement : ${corps['title']}',
-      chemin: ApiEndpoints.locIncidents,
-      // `client_reference` : deux synchronisations du même signalement n'en créent qu'un
-      corps: {...corps, 'client_reference': 'inc-${nouvelleCle()}'},
+  Future<IncidentModel> signaler(
+    Map<String, dynamic> corps, {
+    required String cle,
+  }) async {
+    final r = await api.post<Map<String, dynamic>>(
+      ApiEndpoints.locIncidents,
+      body: corps,
+      idempotence: cle,
     );
-    return r == null
-        ? null
-        : IncidentModel.fromJson(
-            Map<String, dynamic>.from(r['incident'] as Map),
-          );
+    return IncidentModel.fromJson(
+      Map<String, dynamic>.from(r['incident'] as Map),
+    );
   }
 
   @override
@@ -292,7 +283,6 @@ class EspaceLocataireRemoteDataSourceImpl
         Map<String, dynamic>.from(
           (await api.get<Map<String, dynamic>>(
                 ApiEndpoints.locEtatDesLieux(id),
-                cache: false,
               ))['inspection']
               as Map,
         ),

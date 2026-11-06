@@ -1,11 +1,8 @@
 import 'package:gestion_immo_mobile/core/services/push_service.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
 
-import 'core/connection/network_info.dart';
 import 'core/network/api_client.dart';
 import 'core/services/auth_event_bus.dart';
-import 'core/services/file_attente_service.dart';
 import 'core/services/referentiels_service.dart';
 import 'core/services/token_service.dart';
 
@@ -56,6 +53,7 @@ import 'features/account/domain/repositories/account_repository.dart';
 import 'features/account/domain/usecases/activer_mfa.dart';
 import 'features/account/domain/usecases/desactiver_mfa.dart';
 import 'features/account/domain/usecases/get_sessions.dart';
+import 'features/account/domain/usecases/photo_profil.dart';
 import 'features/account/domain/usecases/initialiser_mfa.dart';
 import 'features/account/domain/usecases/modifier_profil.dart';
 import 'features/account/domain/usecases/regenerer_codes_secours.dart';
@@ -333,8 +331,6 @@ Future<void> init() async {
   // CORE
   //================================================
 
-  // Connexion réseau de l'appareil
-  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(Connectivity()));
   sl.registerLazySingleton(() => TokenService());
   sl.registerLazySingleton(() {
     final api = ApiClient(session: sl());
@@ -345,7 +341,6 @@ Future<void> init() async {
   });
   sl.registerLazySingleton(() => ReferentielsService(sl()));
   sl.registerLazySingleton(() => PushService(sl()));
-  sl.registerLazySingleton(() => FileAttenteService(sl()));
 
   //================================================
   // FEATURE — AUTH
@@ -359,7 +354,6 @@ Future<void> init() async {
       remoteDataSource: sl(),
       api: sl(),
       jetons: sl(),
-      fileAttente: sl(),
       push: sl(),
     ),
   );
@@ -456,6 +450,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton(() => ModifierProfil(sl()));
   sl.registerLazySingleton(() => GetSessions(sl()));
+  sl.registerLazySingleton(() => LirePhotoProfil(sl()));
+  sl.registerLazySingleton(() => EnvoyerPhotoProfil(sl()));
+  sl.registerLazySingleton(() => SupprimerPhotoProfil(sl()));
   sl.registerLazySingleton(() => RevoquerSession(sl()));
   sl.registerLazySingleton(() => RevoquerAutresSessions(sl()));
   sl.registerLazySingleton(() => InitialiserMfa(sl()));
@@ -661,7 +658,7 @@ Future<void> init() async {
 
   // Dépenses et catégories (§ 20)
   sl.registerLazySingleton<DepenseRemoteDataSource>(
-    () => DepenseRemoteDataSourceImpl(api: sl(), fileAttente: sl()),
+    () => DepenseRemoteDataSourceImpl(api: sl()),
   );
   sl.registerLazySingleton<DepenseRepository>(
     () => DepenseRepositoryImpl(sl()),
@@ -912,7 +909,7 @@ Future<void> init() async {
   //================================================
 
   sl.registerLazySingleton<EspaceLocataireRemoteDataSource>(
-    () => EspaceLocataireRemoteDataSourceImpl(api: sl(), fileAttente: sl()),
+    () => EspaceLocataireRemoteDataSourceImpl(api: sl()),
   );
   sl.registerLazySingleton<EspaceLocataireRepository>(
     () => EspaceLocataireRepositoryImpl(sl()),

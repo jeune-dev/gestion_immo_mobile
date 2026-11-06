@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
-import 'package:gestion_immo_mobile/core/services/file_attente_service.dart';
 import 'package:gestion_immo_mobile/core/services/token_service.dart';
 
 import '../../domain/entities/compte.dart';
@@ -19,14 +18,12 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
   final ApiClient api;
   final TokenService jetons;
-  final FileAttenteService fileAttente;
   final PushService? push;
 
   AuthRepositoryImpl({
     required this.remoteDataSource,
     required this.api,
     required this.jetons,
-    required this.fileAttente,
     this.push,
   });
 
@@ -44,14 +41,13 @@ class AuthRepositoryImpl implements AuthRepository {
     refresh: data['refresh_token'] as String?,
   );
 
-  /// Nouvelle session : le cache d'un compte précédent ne doit jamais lui être servi.
+  /// Nouvelle session : envoie aussi la révocation restée en attente.
   Future<void> _ouvrirNouvelleSession(Map<String, dynamic> data) async {
-    await ApiClient.viderCache();
     await _ouvrir(data);
     unawaited(_envoyerRevocationReportee());
   }
 
-  /// Révocation d'une session fermée hors ligne ; gardée tant que le réseau manque.
+  /// Révocation d'une session fermée sans réseau ; gardée tant que le réseau manque.
   Future<void> _envoyerRevocationReportee() async {
     try {
       final jeton = await jetons.lireRevocation();
@@ -195,7 +191,6 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, Compte>> lireCompte() async {
     try {
       final resultat = await remoteDataSource.lireCompte();
-      await fileAttente.ouvrirSession(resultat.utilisateur.id);
       return Right(resultat);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
@@ -209,19 +204,13 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> deconnecter({bool sessionExpiree = false}) async {
     // Chaque étape peut échouer : la session se ferme quand même sur l'appareil.
-    await _sansErreur(
-      () => _derniersEnvois(sessionExpiree).timeout(_delaiDerniersEnvois),
-    );
+    await _sansErreur(() => _derniersEnvois().timeout(_delaiDerniersEnvois));
     await _sansErreur(_revoquerSession);
     await _sansErreur(jetons.effacer);
-    await _sansErreur(ApiClient.viderCache);
-    await _sansErreur(fileAttente.fermerSession);
   }
 
-  Future<void> _derniersEnvois(bool sessionExpiree) async {
+  Future<void> _derniersEnvois() async {
     await push?.arreter();
-    // Dernier envoi tant que la session est valide ; le reste attend la reconnexion.
-    if (!sessionExpiree) await fileAttente.synchroniser();
     await api.attendreRenouvellement();
   }
 

@@ -11,9 +11,8 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:gestion_immo_mobile/core/services/push_service.dart';
 import 'package:gestion_immo_mobile/features/notifications/presentation/compteur_notifications.dart';
-import 'package:gestion_immo_mobile/core/connection/network_info.dart';
 import 'package:gestion_immo_mobile/core/routes/app_router.dart';
-import 'package:gestion_immo_mobile/core/services/file_attente_service.dart';
+import 'package:gestion_immo_mobile/core/services/nettoyage_local.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
@@ -33,6 +32,7 @@ Future<void> main() async {
   // l'URL de l'API en dépend
   await dotenv.load(fileName: 'config/.env', isOptional: true);
   await initializeDateFormatting('fr');
+  await nettoyerStockageLocal();
   await di.init();
   // Les référentiels (libellés des statuts) se chargent en arrière-plan, depuis le cache d'abord
   di.sl<ReferentielsService>().charger();
@@ -56,7 +56,6 @@ class _GestionImmoAppState extends State<GestionImmoApp>
     with WidgetsBindingObserver {
   final _auth = di.sl<AuthBloc>()..add(AuthDemarree());
   late final _router = AppRouter.creer(_auth);
-  late final StreamSubscription<bool> _reseau;
   late final StreamSubscription<AuthState> _session;
 
   @override
@@ -66,32 +65,22 @@ class _GestionImmoAppState extends State<GestionImmoApp>
     _session = _auth.stream.listen((etat) {
       if (etat.connecte) di.sl<PushService>().demarrer();
     });
-    // Retour du réseau : les opérations créées hors ligne partent sans attendre
-    _reseau = di.sl<NetworkInfo>().onChange.listen((connecte) {
-      if (connecte) _synchroniser();
-    });
   }
 
   @override
   void dispose() {
-    _reseau.cancel();
     _session.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _auth.close();
     super.dispose();
   }
 
-  /// Retour au premier plan : on tente de synchroniser les opérations créées hors ligne.
+  /// Retour au premier plan : le compteur de notifications se remet à jour.
   @override
   void didChangeAppLifecycleState(AppLifecycleState etat) {
     if (etat == AppLifecycleState.resumed) {
-      _synchroniser();
       if (_auth.state.connecte) CompteurNotifications.rafraichir();
     }
-  }
-
-  void _synchroniser() {
-    if (_auth.state.connecte) di.sl<FileAttenteService>().synchroniser();
   }
 
   @override

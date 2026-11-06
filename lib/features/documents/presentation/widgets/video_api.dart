@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:gestion_immo_mobile/core/utils/fichier_temporaire.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:gestion_immo_mobile/core/widgets/actions.dart';
@@ -11,21 +11,19 @@ import 'package:gestion_immo_mobile/features/documents/domain/usecases/telecharg
 import 'package:gestion_immo_mobile/features/documents/presentation/widgets/image_api.dart';
 import 'package:gestion_immo_mobile/injection_container.dart';
 
-/// Fichier local d'une vidéo de l'API, téléchargée avec le jeton une seule fois
-/// (l'API ne génère pas de miniature de vidéo). `null` si elle est indisponible.
+/// Fichier temporaire d'une vidéo de l'API, téléchargée avec le jeton : il
+/// n'existe que le temps de l'affichage (le lecteur ne lit qu'un fichier).
+/// `null` si la vidéo est indisponible.
 Future<File?> _fichierVideo(DocumentApp doc) async {
-  final dossier = await getTemporaryDirectory();
   final extension = doc.mimeType == 'video/quicktime'
       ? 'mov'
       : doc.mimeType == 'video/webm'
       ? 'webm'
       : 'mp4';
-  final fichier = File('${dossier.path}/video_${doc.id}.$extension');
-  if (await fichier.exists()) return fichier;
   final r = await sl<TelechargerDocument>()(doc.id);
   final octets = r.fold((_) => null, (o) => o);
   if (octets == null) return null;
-  return fichier.writeAsBytes(octets);
+  return ecrireFichierTemporaire('video.$extension', octets);
 }
 
 /// Première image d'une vidéo, avec le bouton de lecture.
@@ -39,6 +37,7 @@ class ApercuVideo extends StatefulWidget {
 
 class _ApercuVideoState extends State<ApercuVideo> {
   VideoPlayerController? _video;
+  File? _fichier;
   bool _chargement = true;
 
   @override
@@ -49,12 +48,13 @@ class _ApercuVideoState extends State<ApercuVideo> {
 
   Future<void> _preparer() async {
     try {
-      final fichier = await _fichierVideo(widget.doc);
+      final fichier = _fichier = await _fichierVideo(widget.doc);
       if (fichier != null) {
         final video = VideoPlayerController.file(fichier);
         await video.initialize();
         if (!mounted) {
           await video.dispose();
+          await supprimerFichierTemporaire(fichier);
           return;
         }
         _video = video;
@@ -67,7 +67,12 @@ class _ApercuVideoState extends State<ApercuVideo> {
 
   @override
   void dispose() {
-    _video?.dispose();
+    final video = _video;
+    final fichier = _fichier;
+    () async {
+      await video?.dispose();
+      if (fichier != null) await supprimerFichierTemporaire(fichier);
+    }();
     super.dispose();
   }
 
@@ -148,6 +153,7 @@ class LecteurVideoPage extends StatefulWidget {
 
 class _LecteurVideoPageState extends State<LecteurVideoPage> {
   VideoPlayerController? _video;
+  File? _fichier;
   bool _erreur = false;
 
   @override
@@ -158,12 +164,13 @@ class _LecteurVideoPageState extends State<LecteurVideoPage> {
 
   Future<void> _preparer() async {
     try {
-      final fichier = await _fichierVideo(widget.doc);
+      final fichier = _fichier = await _fichierVideo(widget.doc);
       if (fichier == null) throw const FileSystemException();
       final video = VideoPlayerController.file(fichier);
       await video.initialize();
       if (!mounted) {
         await video.dispose();
+        await supprimerFichierTemporaire(fichier);
         return;
       }
       await video.play();
@@ -177,7 +184,12 @@ class _LecteurVideoPageState extends State<LecteurVideoPage> {
 
   @override
   void dispose() {
-    _video?.dispose();
+    final video = _video;
+    final fichier = _fichier;
+    () async {
+      await video?.dispose();
+      if (fichier != null) await supprimerFichierTemporaire(fichier);
+    }();
     super.dispose();
   }
 

@@ -1,8 +1,5 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:gestion_immo_mobile/core/constants/api_endpoints.dart';
 import 'package:gestion_immo_mobile/core/models/option_ref.dart';
@@ -13,28 +10,22 @@ export 'package:gestion_immo_mobile/core/models/option_ref.dart';
 /// Raccourci des écrans : le service est enregistré dans `injection_container.dart`.
 ReferentielsService get refs => GetIt.instance<ReferentielsService>();
 
-/// Énumérations servies par `GET /referentiels`, mises en cache sur l'appareil.
+/// Énumérations servies par `GET /referentiels`, gardées en mémoire le temps de la session.
 /// Les libellés ne sont JAMAIS réécrits dans l'application (charte § 4, règle 5).
 class ReferentielsService extends ChangeNotifier {
   final ApiClient _api;
   ReferentielsService(this._api);
-  static const _cle = 'gi.referentiels';
 
   Map<String, List<OptionRef>> _enumerations = {};
 
   Future<void> charger() async {
-    final p = await SharedPreferences.getInstance();
-    final brut = p.getString(_cle);
-    if (brut != null) _appliquer(jsonDecode(brut) as Map<String, dynamic>);
     try {
       final data = await _api.get<Map<String, dynamic>>(
         ApiEndpoints.referentiels,
-        cache: false,
       );
       _appliquer(data);
-      await p.setString(_cle, jsonEncode(data));
     } catch (_) {
-      // Hors ligne : la version en cache suffit ; à défaut les codes s'affichent bruts
+      // Sans réseau, les codes s'affichent bruts jusqu'au prochain chargement
     }
   }
 

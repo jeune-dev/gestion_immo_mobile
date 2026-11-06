@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:gestion_immo_mobile/core/network/api_client.dart';
+
 import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/models/option_ref.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
@@ -24,8 +26,7 @@ Future<List<OptionRef>?> _categories(BuildContext context) async {
   }, (cats) => [for (final c in cats) OptionRef(c.id, c.nom)]);
 }
 
-/// Saisie d'une dépense (§ 20). Hors ligne, elle est mise en file et
-/// synchronisée au retour du réseau (§ 34) grâce à `client_reference`.
+/// Saisie d'une dépense (§ 20).
 /// Avec [travauxId], la dépense est rattachée au chantier (§ 23 étape 7).
 Future<bool> nouvelleDepense(
   BuildContext context, {
@@ -34,6 +35,7 @@ Future<bool> nouvelleDepense(
 }) async {
   final categories = await _categories(context);
   if (categories == null || !context.mounted) return false;
+  final cle = nouvelleCle();
   final r = await EcranFormulaire.ouvrir<Object>(
     context,
     EcranFormulaire(
@@ -100,17 +102,12 @@ Future<bool> nouvelleDepense(
           (await sl<CreerDepenseTravaux>()(travauxId, corps)).ouLeve();
           return true;
         }
-        return (await sl<CreerDepense>()(corps)).ouLeve() ?? 'differee';
+        return (await sl<CreerDepense>()(corps, cle: cle)).ouLeve();
       },
     ),
   );
   if (r == null || !context.mounted) return false;
-  afficherSucces(
-    context,
-    r == 'differee'
-        ? 'Hors ligne : la dépense sera envoyée au retour du réseau.'
-        : 'Dépense enregistrée',
-  );
+  afficherSucces(context, 'Dépense enregistrée');
   return true;
 }
 

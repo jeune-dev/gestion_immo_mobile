@@ -81,7 +81,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         return emit(const AuthState(statut: StatutSession.deconnecte));
       }
       if (r == SessionRestauree.refusee) return await _fermerExpiree(emit);
-      // Renouvelée, ou hors ligne : le compte vient alors du cache de lecture
       final compte = await getCompte();
       await compte.fold(
         (f) async {

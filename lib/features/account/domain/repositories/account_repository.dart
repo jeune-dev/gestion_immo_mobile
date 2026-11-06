@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dartz/dartz.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
@@ -6,6 +8,9 @@ import '../entities/session_appareil.dart';
 
 abstract class AccountRepository {
   Future<Either<Failure, void>> modifierProfil(Map<String, dynamic> corps);
+  Future<Either<Failure, Uint8List>> lirePhoto();
+  Future<Either<Failure, void>> envoyerPhoto(String chemin);
+  Future<Either<Failure, void>> supprimerPhoto();
   Future<Either<Failure, List<SessionAppareil>>> sessions();
   Future<Either<Failure, void>> revoquerSession(String id);
   Future<Either<Failure, void>> revoquerAutres();

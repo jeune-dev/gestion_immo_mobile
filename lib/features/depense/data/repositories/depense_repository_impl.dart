@@ -33,11 +33,12 @@ class DepenseRepositoryImpl implements DepenseRepository {
   }
 
   @override
-  Future<Either<Failure, Depense?>> creerDepense(
-    Map<String, dynamic> corps,
-  ) async {
+  Future<Either<Failure, Depense>> creerDepense(
+    Map<String, dynamic> corps, {
+    required String cle,
+  }) async {
     try {
-      final depense = await remoteDataSource.creerOuDifferer(corps);
+      final depense = await remoteDataSource.creer(corps, cle: cle);
       return Right(depense);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));

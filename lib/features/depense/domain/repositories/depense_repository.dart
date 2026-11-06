@@ -11,8 +11,10 @@ abstract class DepenseRepository {
     String? statut,
   });
 
-  /// `Right(null)` : pas de réseau, la dépense part dans la file hors ligne.
-  Future<Either<Failure, Depense?>> creerDepense(Map<String, dynamic> corps);
+  Future<Either<Failure, Depense>> creerDepense(
+    Map<String, dynamic> corps, {
+    required String cle,
+  });
   Future<Either<Failure, void>> creerPourTravaux(
     String travauxId,
     Map<String, dynamic> corps,

@@ -80,7 +80,7 @@ class ReseauFailure extends Failure {
   const ReseauFailure({required super.errorMessage}) : super(code: 'RESEAU');
 }
 
-/// Donnée locale illisible (cache, file hors ligne).
+/// Coffre de l'appareil illisible.
 class CacheFailure extends Failure {
   const CacheFailure({required super.errorMessage});
 }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:gestion_immo_mobile/core/constants/api_endpoints.dart';
 import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
@@ -6,6 +8,9 @@ import '../models/session_appareil_model.dart';
 
 abstract class AccountRemoteDataSource {
   Future<void> modifierProfil(Map<String, dynamic> corps);
+  Future<Uint8List> lirePhoto();
+  Future<void> envoyerPhoto(String chemin);
+  Future<void> supprimerPhoto();
   Future<List<SessionAppareilModel>> sessions();
   Future<void> revoquerSession(String id);
 
@@ -34,12 +39,22 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
       api.patch<dynamic>(ApiEndpoints.compte, body: corps);
 
   @override
+  Future<Uint8List> lirePhoto() => api.telecharger(ApiEndpoints.comptePhoto);
+
+  @override
+  Future<void> envoyerPhoto(String chemin) =>
+      api.upload<dynamic>(ApiEndpoints.comptePhoto, cheminFichier: chemin);
+
+  @override
+  Future<void> supprimerPhoto() =>
+      api.delete<dynamic>(ApiEndpoints.comptePhoto);
+
+  @override
   Future<List<SessionAppareilModel>> sessions() async {
     // Le refresh token présenté permet au serveur de marquer la session courante.
     final refresh = await api.session.lireRefresh();
     final r = await api.get<Map<String, dynamic>>(
       ApiEndpoints.compteSessions,
-      cache: false,
       headers: refresh != null ? {'X-Refresh-Token': refresh} : null,
     );
     return ((r['sessions'] as List?) ?? const [])

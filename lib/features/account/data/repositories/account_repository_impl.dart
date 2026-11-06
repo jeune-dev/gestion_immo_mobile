@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dartz/dartz.dart';
 import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 
@@ -20,6 +22,48 @@ class AccountRepositoryImpl implements AccountRepository {
     try {
       await remoteDataSource.modifierProfil(corps);
       return const Right(null);
+    } on ApiException catch (e) {
+      return Left(Failure.depuis(e));
+    } catch (e) {
+      return Left(
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, Uint8List>> lirePhoto() async {
+    try {
+      final octets = await remoteDataSource.lirePhoto();
+      return Right(octets);
+    } on ApiException catch (e) {
+      return Left(Failure.depuis(e));
+    } catch (e) {
+      return Left(
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> envoyerPhoto(String chemin) async {
+    try {
+      await remoteDataSource.envoyerPhoto(chemin);
+      return Right(null);
+    } on ApiException catch (e) {
+      return Left(Failure.depuis(e));
+    } catch (e) {
+      return Left(
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> supprimerPhoto() async {
+    try {
+      await remoteDataSource.supprimerPhoto();
+      return Right(null);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
     } catch (e) {

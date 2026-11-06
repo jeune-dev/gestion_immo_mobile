@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:gestion_immo_mobile/core/widgets/bandeau_synchronisation.dart';
-import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/accueil_locataire_page.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/demandes_page.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/loyer_page.dart';
@@ -29,15 +27,7 @@ class _LocataireHomePageState extends State<LocataireHomePage> {
       const ProfilLocatairePage(),
     ];
     return Scaffold(
-      body: Column(
-        children: [
-          const BandeauHorsLigne(),
-          const BandeauSynchronisation(),
-          Expanded(
-            child: IndexedStack(index: _onglet, children: pages),
-          ),
-        ],
-      ),
+      body: IndexedStack(index: _onglet, children: pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _onglet,
         onDestinationSelected: (i) => setState(() => _onglet = i),

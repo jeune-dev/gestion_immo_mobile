@@ -7,8 +7,8 @@ enum SessionRestauree {
   /// Session renouvelée auprès du serveur.
   renouvelee,
 
-  /// Pas de réseau : le jeton reste valable, le compte se lit depuis le cache.
-  horsLigne,
+  /// Serveur injoignable : le jeton reste valable, l'écran propose de réessayer.
+  injoignable,
 
   /// Refus explicite du serveur : la session est terminée.
   refusee,
@@ -27,7 +27,7 @@ class RestaurerSession {
     if (await repository.restaurerSession()) return SessionRestauree.renouvelee;
     // Le client efface le jeton sur un refus (401) ; il le garde sur une erreur réseau.
     return await repository.sessionEnregistree()
-        ? SessionRestauree.horsLigne
+        ? SessionRestauree.injoignable
         : SessionRestauree.refusee;
   }
 }

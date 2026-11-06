@@ -283,11 +283,12 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
   }
 
   @override
-  Future<Either<Failure, Incident?>> signalerOuDifferer(
-    Map<String, dynamic> corps,
-  ) async {
+  Future<Either<Failure, Incident>> signaler(
+    Map<String, dynamic> corps, {
+    required String cle,
+  }) async {
     try {
-      final incident = await remoteDataSource.signalerOuDifferer(corps);
+      final incident = await remoteDataSource.signaler(corps, cle: cle);
       return Right(incident);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));

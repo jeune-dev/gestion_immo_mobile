@@ -4,14 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:gestion_immo_mobile/core/routes/app_router.dart';
-import 'package:gestion_immo_mobile/core/services/file_attente_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/theme/statuts.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
-import 'package:gestion_immo_mobile/core/widgets/bandeau_synchronisation.dart';
 import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/core/widgets/navigation.dart';
-import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/widgets/avatar_utilisateur.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_immo_mobile/features/depense/presentation/pages/categories_page.dart';
@@ -34,7 +31,6 @@ class ProfilProprietairePage extends StatelessWidget {
     final compte = context.select((AuthBloc b) => b.state.compte);
     final u = compte?.utilisateur;
     final abo = compte?.abonnement;
-    final file = sl<FileAttenteService>();
     Widget tuile(
       IconData i,
       String t,
@@ -153,17 +149,6 @@ class ProfilProprietairePage extends StatelessWidget {
                 Icons.lock_outline,
                 'Sécurité',
                 () => ouvrir(context, const SecuritePage()),
-              ),
-              ListenableBuilder(
-                listenable: file,
-                builder: (context, _) => file.operations.isEmpty
-                    ? const SizedBox.shrink()
-                    : tuile(
-                        Icons.cloud_upload_outlined,
-                        'Opérations en attente',
-                        () => ouvrir(context, const OperationsPage()),
-                        fin: Badge(label: Text('${file.operations.length}')),
-                      ),
               ),
             ],
           ),

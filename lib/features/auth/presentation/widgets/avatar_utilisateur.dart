@@ -1,37 +1,33 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:path_provider/path_provider.dart';
+
+import 'package:gestion_immo_mobile/core/errors/failure.dart';
+import 'package:gestion_immo_mobile/features/account/domain/usecases/photo_profil.dart';
+import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.dart';
+import 'package:gestion_immo_mobile/injection_container.dart';
 
 import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 import 'package:gestion_immo_mobile/core/utils/choisir_photo.dart';
 import 'package:gestion_immo_mobile/core/widgets/actions.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
 
-/// Change à chaque modification de la photo : tous les avatars se redessinent.
-final _versionPhoto = ValueNotifier<int>(0);
+/// Dernière photo chargée, en mémoire seulement : tous les avatars la partagent.
+String? _clePhoto;
+Future<Uint8List?>? _photoChargee;
 
-/// Fichier de la photo de profil d'un compte (enregistrée sur ce téléphone :
-/// l'API ne stocke pas encore de photo d'utilisateur).
-Future<File?> _fichierPhoto(String utilisateurId) async {
-  try {
-    final dossier = await getApplicationDocumentsDirectory();
-    return File('${dossier.path}/photo_profil_$utilisateurId.jpg');
-  } on Exception {
-    return null;
-  }
-}
-
-Future<File?> _photoExistante(String? utilisateurId) async {
-  if (utilisateurId == null) return null;
-  final fichier = await _fichierPhoto(utilisateurId);
-  return fichier != null && await fichier.exists() ? fichier : null;
-}
-
-Future<void> _rafraichir(File fichier) async {
-  await FileImage(fichier).evict();
-  _versionPhoto.value++;
+Future<Uint8List?> _photo(String cle) {
+  if (_clePhoto == cle && _photoChargee != null) return _photoChargee!;
+  _clePhoto = cle;
+  return _photoChargee = sl<LirePhotoProfil>()().then((r) {
+    final octets = r.fold((_) => null, (o) => o);
+    // Échec : un prochain affichage réessaiera.
+    if (octets == null && _clePhoto == cle) _photoChargee = null;
+    return octets;
+  });
 }
 
 /// Photo de profil du compte connecté, ou ses initiales s'il n'en a pas
@@ -63,14 +59,7 @@ class AvatarUtilisateur extends StatelessWidget {
         ),
       ),
     );
-    final url = u?.photoUrl;
-    final distante = url == null || url.isEmpty
-        ? initiales
-        : Image.network(
-            url,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => initiales,
-          );
+    final version = u?.photoVersion;
     return Semantics(
       label: u?.nomComplet,
       image: true,
@@ -85,22 +74,22 @@ class AvatarUtilisateur extends StatelessWidget {
             color: surMarque ? Colors.white : context.palette.primaireTeinte,
             shape: BoxShape.circle,
           ),
-          child: ValueListenableBuilder<int>(
-            valueListenable: _versionPhoto,
-            builder: (context, version, _) => FutureBuilder<File?>(
-              key: ValueKey('${u?.id}-$version'),
-              future: _photoExistante(u?.id),
-              builder: (context, s) {
-                final fichier = s.data;
-                if (fichier == null) return distante;
-                return Image.file(
-                  fichier,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => distante,
-                );
-              },
-            ),
-          ),
+          child: version == null
+              ? initiales
+              : FutureBuilder<Uint8List?>(
+                  key: ValueKey('${u?.id}-$version'),
+                  future: _photo('${u?.id}-$version'),
+                  builder: (context, s) {
+                    final octets = s.data;
+                    if (octets == null) return initiales;
+                    return Image.memory(
+                      octets,
+                      fit: BoxFit.cover,
+                      gaplessPlayback: true,
+                      errorBuilder: (_, _, _) => initiales,
+                    );
+                  },
+                ),
         ),
       ),
     );
@@ -112,10 +101,10 @@ class AvatarUtilisateur extends StatelessWidget {
 class EditeurPhotoProfil extends StatelessWidget {
   const EditeurPhotoProfil({super.key});
 
-  Future<void> _modifier(BuildContext context, String utilisateurId) async {
-    final existante = await _photoExistante(utilisateurId);
-    if (!context.mounted) return;
-    if (existante == null) return _choisir(context, utilisateurId);
+  Future<void> _modifier(BuildContext context) async {
+    final existante =
+        context.read<AuthBloc>().state.compte?.utilisateur.photoVersion != null;
+    if (!existante) return _choisir(context);
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -143,25 +132,33 @@ class EditeurPhotoProfil extends StatelessWidget {
       ),
     );
     if (!context.mounted) return;
-    if (action == 'changer') return _choisir(context, utilisateurId);
+    if (action == 'changer') return _choisir(context);
     if (action == 'supprimer') {
-      await existante.delete();
-      await _rafraichir(existante);
+      final r = await sl<SupprimerPhotoProfil>()();
+      if (context.mounted) _appliquer(context, r);
     }
   }
 
-  Future<void> _choisir(BuildContext context, String utilisateurId) async {
+  Future<void> _choisir(BuildContext context) async {
     final photo = await choisirPhoto(context);
-    if (photo == null) return;
-    final fichier = await _fichierPhoto(utilisateurId);
-    if (fichier == null) {
-      if (context.mounted) {
-        afficherErreur(context, "La photo n'a pas pu être enregistrée.");
-      }
-      return;
+    if (photo == null || !context.mounted) return;
+    final r = await sl<EnvoyerPhotoProfil>()(photo.path);
+    // La copie laissée par le sélecteur de photos ne reste pas sur le téléphone.
+    try {
+      await File(photo.path).delete();
+    } on FileSystemException {
+      // Déjà retirée par le système.
     }
-    await File(photo.path).copy(fichier.path);
-    await _rafraichir(fichier);
+    if (context.mounted) _appliquer(context, r);
+  }
+
+  /// Le serveur fait foi : le compte rechargé indique la photo à afficher.
+  void _appliquer(BuildContext context, Either<Failure, void> r) {
+    if (!context.mounted) return;
+    r.fold(
+      (f) => afficherErreurApi(context, f),
+      (_) => context.read<AuthBloc>().add(CompteRechargeDemande()),
+    );
   }
 
   @override
@@ -170,7 +167,7 @@ class EditeurPhotoProfil extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Center(
       child: GestureDetector(
-        onTap: id == null ? null : () => _modifier(context, id),
+        onTap: id == null ? null : () => _modifier(context),
         child: SizedBox.square(
           dimension: 104,
           child: Stack(

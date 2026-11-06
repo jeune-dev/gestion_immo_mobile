@@ -13,6 +13,5 @@ class GetBaux {
   Future<Either<Failure, PageResultat<Bail>>> call({
     required int page,
     String? statut,
-    String? recherche,
-  }) => repository.getBaux(page: page, statut: statut, recherche: recherche);
+  }) => repository.getBaux(page: page, statut: statut);
 }

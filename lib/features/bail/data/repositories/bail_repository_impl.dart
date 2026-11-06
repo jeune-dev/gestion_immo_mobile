@@ -16,14 +16,9 @@ class BailRepositoryImpl implements BailRepository {
   Future<Either<Failure, PageResultat<Bail>>> getBaux({
     required int page,
     String? statut,
-    String? recherche,
   }) async {
     try {
-      final bails = await remoteDataSource.getBaux(
-        page: page,
-        statut: statut,
-        recherche: recherche,
-      );
+      final bails = await remoteDataSource.getBaux(page: page, statut: statut);
       return Right(bails);
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));

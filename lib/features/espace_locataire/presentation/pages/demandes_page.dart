@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:gestion_immo_mobile/core/network/api_client.dart';
+
 import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/statuts.dart';
@@ -39,7 +41,7 @@ class _DemandesPageState extends State<DemandesPage>
   /// le `lease_id` du logement concerné (sinon 422 BAIL_A_PRECISER).
   Future<List<OptionRef>> _logementsActifs() async {
     final r = await sl<GetLogementsLocataire>()();
-    // Hors ligne sans cache : l'API tranchera (bail unique) à la synchronisation
+    // Lecture impossible : l'API tranche s'il n'y a qu'un bail, sinon elle le demande.
     return r.fold(
       (_) => const [],
       (logements) => [
@@ -59,6 +61,7 @@ class _DemandesPageState extends State<DemandesPage>
   Future<void> _signaler() async {
     final logements = await _logementsActifs();
     if (!mounted) return;
+    final cle = nouvelleCle();
     final r = await EcranFormulaire.ouvrir<Object>(
       context,
       EcranFormulaire(
@@ -103,16 +106,10 @@ class _DemandesPageState extends State<DemandesPage>
         ],
         libelleEnvoi: 'Envoyer',
         envoyer: (c) async =>
-            (await sl<SignalerProbleme>()(c)).ouLeve() ?? 'differe',
+            (await sl<SignalerProbleme>()(c, cle: cle)).ouLeve(),
       ),
     );
     if (r == null || !mounted) return;
-    if (r == 'differe') {
-      return afficherSucces(
-        context,
-        'Hors ligne : votre signalement sera envoyé au retour du réseau.',
-      );
-    }
     afficherSucces(context, 'Signalement envoyé');
     _incidents.currentState?.recharger();
     if (r is Incident) await ouvrir(context, IncidentLocatairePage(id: r.id));

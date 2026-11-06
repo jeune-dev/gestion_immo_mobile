@@ -31,7 +31,7 @@ abstract class AuthRepository {
   });
   Future<Either<Failure, Compte>> lireCompte();
 
-  /// Ferme la session : côté serveur si possible, puis sur l'appareil (jetons, cache, file hors ligne).
+  /// Ferme la session : côté serveur si possible, puis sur l'appareil (jetons).
   Future<void> deconnecter({bool sessionExpiree = false});
 
   Future<Either<Failure, void>> demanderReinitialisation(String identifiant);

@@ -3,13 +3,11 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:gestion_immo_mobile/core/config/env.dart';
 import 'package:gestion_immo_mobile/core/constants/api_endpoints.dart';
 import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
-import 'package:gestion_immo_mobile/core/services/coffre_local.dart';
 import 'package:gestion_immo_mobile/core/services/token_service.dart';
 
 /// Clé d'idempotence : un UUID neuf par action utilisateur (contrat § 0).
@@ -49,10 +47,9 @@ String cleStable(String chemin, Object? corps) {
 /// - enveloppe `{ success, message, data }` : renvoie `data` ;
 /// - 401 → UN renouvellement de session (une seule requête en vol) puis rejeu ;
 /// - erreurs normalisées en [ApiException] (`error.code`) ;
-/// - lectures mises en cache pour la consultation hors ligne (cahier des charges § 34).
+/// - aucune donnée gardée sur le téléphone : tout vient du serveur à chaque lecture.
 class ApiClient {
   final TokenService session;
-  final CoffreLocal _coffre;
   final Dio _dio;
 
   /// Appelé quand la session ne peut plus être renouvelée (retour à la connexion).
@@ -61,32 +58,21 @@ class ApiClient {
   /// Appelé quand le serveur signale un compte désactivé (403 `COMPTE_INACTIF`).
   void Function(String motif)? onCompteInactif;
 
-  /// Vrai quand la dernière lecture vient du cache local (pas de réseau).
-  final ValueNotifier<bool> horsLigne = ValueNotifier(false);
-
   String get baseUrl => _dio.options.baseUrl;
 
   Completer<bool>? _renouvellement;
 
-  /// Change à chaque vidage du cache : une lecture partie avant ne s'y réécrit pas.
-  static int _generationCache = 0;
-
-  ApiClient({
-    required this.session,
-    String? baseUrl,
-    Dio? dio,
-    CoffreLocal? coffre,
-  }) : _coffre = coffre ?? CoffreLocal(),
-       _dio =
-           dio ??
-           Dio(
-             BaseOptions(
-               baseUrl: baseUrl ?? Env.baseUrl,
-               connectTimeout: const Duration(seconds: 15),
-               receiveTimeout: const Duration(seconds: 30),
-               headers: {'Accept': 'application/json'},
-             ),
-           ) {
+  ApiClient({required this.session, String? baseUrl, Dio? dio})
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: baseUrl ?? Env.baseUrl,
+              connectTimeout: const Duration(seconds: 15),
+              receiveTimeout: const Duration(seconds: 30),
+              headers: {'Accept': 'application/json'},
+            ),
+          ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -178,7 +164,7 @@ class ApiClient {
       final r = await appel();
       return _deballer<T>(r.data);
     } on DioException catch (e) {
-      // Sans jeton d'accès (démarrage hors ligne), le refresh token du coffre
+      // Sans jeton d'accès (au lancement), le refresh token du coffre
       // suffit à rouvrir la session.
       final erreur = await _normaliser(e);
       if (e.response?.statusCode == 401 &&
@@ -190,7 +176,7 @@ class ApiClient {
           onSessionExpiree?.call();
         } else {
           // Serveur injoignable pendant le renouvellement : la session est
-          // gardée (et le cache de lecture prend le relais).
+          // gardée, l'écran propose de réessayer.
           throw const ApiException(
             'Impossible de renouveler la session pour le moment. Vérifiez votre connexion.',
             code: 'RESEAU',
@@ -269,61 +255,18 @@ class ApiClient {
     headers: idempotence != null ? {'Idempotency-Key': idempotence} : null,
   );
 
-  /// Lecture. Hors ligne, renvoie la dernière réponse connue (si [cache]).
+  /// Lecture : toujours depuis le serveur.
   Future<T> get<T>(
     String chemin, {
     Map<String, dynamic>? query,
-    bool cache = true,
     Map<String, String>? headers,
-  }) async {
-    final q = _nettoyer(query);
-    final generation = _generationCache;
-    final cle =
-        'cache:$chemin?${q == null ? '' : Uri(queryParameters: q.map((k, v) => MapEntry(k, '$v'))).query}';
-    try {
-      final data = await _executer<dynamic>(
-        () => _dio.get<dynamic>(
-          chemin,
-          queryParameters: q,
-          options: Options(headers: headers),
-        ),
-      );
-      horsLigne.value = false;
-      if (cache) unawaited(_memoriser(cle, data, generation));
-      return data as T;
-    } on ApiException catch (e) {
-      if (e.estReseau && cache) {
-        final p = await SharedPreferences.getInstance();
-        final brut = p.getString(cle);
-        final clair = brut == null ? null : await _coffre.dechiffrer(brut);
-        if (clair != null) {
-          horsLigne.value = true;
-          return jsonDecode(clair) as T;
-        }
-      }
-      rethrow;
-    }
-  }
-
-  Future<void> _memoriser(String cle, dynamic data, int generation) async {
-    try {
-      final p = await SharedPreferences.getInstance();
-      final chiffre = await _coffre.chiffrer(jsonEncode(data));
-      if (generation != _generationCache) return;
-      await p.setString(cle, chiffre);
-    } catch (_) {
-      // Le cache est une commodité : son échec ne bloque rien
-    }
-  }
-
-  /// Vide le cache de lecture (déconnexion : aucune donnée ne doit rester sur l'appareil).
-  static Future<void> viderCache() async {
-    _generationCache++;
-    final p = await SharedPreferences.getInstance();
-    for (final k in p.getKeys().where((k) => k.startsWith('cache:')).toList()) {
-      await p.remove(k);
-    }
-  }
+  }) => _executer<T>(
+    () => _dio.get<dynamic>(
+      chemin,
+      queryParameters: _nettoyer(query),
+      options: Options(headers: headers),
+    ),
+  );
 
   Future<T> post<T>(
     String chemin, {

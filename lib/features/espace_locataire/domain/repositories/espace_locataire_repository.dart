@@ -54,9 +54,10 @@ abstract class EspaceLocataireRepository {
     required int page,
   });
   Future<Either<Failure, Incident>> incident(String id);
-  Future<Either<Failure, Incident?>> signalerOuDifferer(
-    Map<String, dynamic> corps,
-  );
+  Future<Either<Failure, Incident>> signaler(
+    Map<String, dynamic> corps, {
+    required String cle,
+  });
   Future<Either<Failure, void>> ajouterPieceIncident(String id, String chemin);
   Future<Either<Failure, PageResultat<EtatDesLieux>>> etatsDesLieux({
     required int page,

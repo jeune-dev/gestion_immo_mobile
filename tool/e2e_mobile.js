@@ -211,7 +211,7 @@ async function pdf(client, libelle, chemin) {
   await etape('GET /categories-depenses (inactives)', () => p.appel('GET', '/categories-depenses', { query: { inclure_inactives: true } }));
   const cat = await etape('POST /categories-depenses', () => p.appel('POST', '/categories-depenses', { body: { name: 'Jardinage', cash_group: 'entretien' } }));
   await etape('PATCH /categories-depenses/:id', () => p.appel('PATCH', `/categories-depenses/${cat.data?.category?.id}`, { body: { name: 'Jardin', cash_group: 'entretien' } }));
-  const dep = await etape('POST /depenses (file hors ligne)', () => p.appel('POST', '/depenses', {
+  const dep = await etape('POST /depenses', () => p.appel('POST', '/depenses', {
     idem: uuid(), body: { building_id: immId, category_id: cat1?.id, amount: 45000, method: 'especes', spent_on: jour(), description: 'Ampoules', client_reference: `dep-${uuid()}` },
   }));
   const depId = dep.data?.expense?.id;
@@ -402,6 +402,9 @@ async function pdf(client, libelle, chemin) {
 
   // ── Fin de bail et déconnexion ─────────────────────────────────────────────
   await etape('POST /baux/:id/terminer', () => p.appel('POST', `/baux/${b2.data?.lease?.id}/terminer`, { body: { ended_on: jour(), termination_reason: 'Départ' } }));
+  await etape('POST /compte/photo', () => p.appel('POST', '/compte/photo', { form: { fichier: image, type: 'image/png', nom: 'photo.png' } }));
+  await etape('GET /compte/photo', () => p.appel('GET', '/compte/photo', { brut: true }));
+  await etape('DELETE /compte/photo', () => p.appel('DELETE', '/compte/photo'));
   await etape('POST /auth/mot-de-passe-oublie', () => new Client().appel('POST', '/auth/mot-de-passe-oublie', { body: { identifiant: `awa.${suffixe}@demo.sn` } }));
   await etape('POST /auth/deconnexion', () => new Client().appel('POST', '/auth/deconnexion', { body: { refresh_token: ref.data?.refresh_token } }));
 

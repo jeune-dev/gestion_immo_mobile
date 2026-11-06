@@ -85,7 +85,7 @@ void main() {
     'sans jeton d’accès (démarrage hors ligne), un 401 renouvelle la session',
     () async {
       monter('ok');
-      final r = await api.get<Map<String, dynamic>>('/compte', cache: false);
+      final r = await api.get<Map<String, dynamic>>('/compte');
       expect(r['ok'], isTrue);
       expect(serveur.appelsRefresh, 1);
       expect(jetons.accessToken, 'acces-neuf');
@@ -98,7 +98,7 @@ void main() {
     () async {
       monter('reseau');
       await expectLater(
-        api.get<dynamic>('/compte', cache: false),
+        api.get<dynamic>('/compte'),
         throwsA(
           isA<ApiException>().having((e) => e.estReseau, 'estReseau', isTrue),
         ),
@@ -111,7 +111,7 @@ void main() {
   test('renouvellement refusé (401) : la session est fermée', () async {
     monter('401');
     await expectLater(
-      api.get<dynamic>('/compte', cache: false),
+      api.get<dynamic>('/compte'),
       throwsA(isA<ApiException>()),
     );
     expect(expirations, 1);
@@ -240,31 +240,39 @@ void main() {
       String? motif;
       c.api.onCompteInactif = (m) => motif = m;
       await expectLater(
-        c.api.get<dynamic>('/immeubles', cache: false),
+        c.api.get<dynamic>('/immeubles'),
         throwsA(isA<ApiException>()),
       );
       expect(motif, 'Compte désactivé. Contactez le support.');
     });
 
     test(
-      'lecture finie après le vidage du cache : rien n’est réécrit',
+      'rien n’est gardé sur le téléphone : sans réseau, la lecture échoue',
       () async {
-        final attente = Completer<void>();
-        final c = client((_) async {
-          await attente.future;
+        var coupe = false;
+        final c = client((o) {
+          if (coupe) {
+            throw DioException.connectionError(
+              requestOptions: o,
+              reason: 'hors ligne',
+            );
+          }
           return _reponse(200, {
             'success': true,
             'data': {'a': 1},
           });
         });
-        final lecture = c.api.get<Map<String, dynamic>>('/baux');
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-        await ApiClient.viderCache();
-        attente.complete();
-        await lecture;
-        await Future<void>.delayed(const Duration(milliseconds: 200));
+        expect((await c.api.get<Map<String, dynamic>>('/baux'))['a'], 1);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
         final p = await SharedPreferences.getInstance();
-        expect(p.getKeys().where((k) => k.startsWith('cache:')), isEmpty);
+        expect(p.getKeys(), isEmpty);
+        coupe = true;
+        await expectLater(
+          c.api.get<Map<String, dynamic>>('/baux'),
+          throwsA(
+            isA<ApiException>().having((e) => e.estReseau, 'estReseau', isTrue),
+          ),
+        );
       },
     );
   });

@@ -176,10 +176,7 @@ class PaiementRemoteDataSourceImpl implements PaiementRemoteDataSource {
 
   @override
   Future<List<MoyenPaiementModel>> moyens() async {
-    final r = await api.get<Map<String, dynamic>>(
-      ApiEndpoints.moyensPaiement,
-      cache: false,
-    );
+    final r = await api.get<Map<String, dynamic>>(ApiEndpoints.moyensPaiement);
     return ((r['providers'] as List?) ?? const [])
         .map(
           (m) =>

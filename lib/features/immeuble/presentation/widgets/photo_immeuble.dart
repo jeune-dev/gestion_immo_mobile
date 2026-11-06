@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
@@ -11,24 +10,8 @@ import 'package:gestion_immo_mobile/features/documents/domain/usecases/ajouter_p
 import 'package:gestion_immo_mobile/features/documents/domain/usecases/get_documents.dart';
 import 'package:gestion_immo_mobile/features/documents/presentation/widgets/image_api.dart';
 
-String _cleCouverture(String immeubleId) => 'couverture_immeuble_$immeubleId';
-
-/// Photo de couverture choisie pour un immeuble (enregistrée sur ce téléphone).
-Future<String?> lireCouvertureImmeuble(String immeubleId) async =>
-    (await SharedPreferences.getInstance()).getString(
-      _cleCouverture(immeubleId),
-    );
-
-Future<void> definirCouvertureImmeuble(
-  String immeubleId,
-  String documentId,
-) async => (await SharedPreferences.getInstance()).setString(
-  _cleCouverture(immeubleId),
-  documentId,
-);
-
 /// Photo de couverture d'un immeuble : celle enregistrée sur le serveur, sinon
-/// celle choisie sur ce téléphone, sinon la plus récente (`null` sans photo).
+/// la plus récente (`null` sans photo).
 Future<DocumentApp?> _photoCouverture(
   String immeubleId,
   String? couvertureServeur,
@@ -39,8 +22,7 @@ Future<DocumentApp?> _photoCouverture(
     (page) => page.items.where((d) => d.estImage).toList(),
   );
   if (photos.isEmpty) return null;
-  final choisie = couvertureServeur ?? await lireCouvertureImmeuble(immeubleId);
-  final trouvee = photos.where((d) => d.id == choisie).firstOrNull;
+  final trouvee = photos.where((d) => d.id == couvertureServeur).firstOrNull;
   if (trouvee != null) return trouvee;
   photos.sort((a, b) => (b.creeLe ?? '').compareTo(a.creeLe ?? ''));
   return photos.first;

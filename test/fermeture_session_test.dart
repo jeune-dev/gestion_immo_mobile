@@ -4,13 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
 import 'package:gestion_immo_mobile/core/routes/app_router.dart';
-import 'package:gestion_immo_mobile/core/services/file_attente_service.dart';
 import 'package:gestion_immo_mobile/core/services/token_service.dart';
 import 'package:gestion_immo_mobile/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:gestion_immo_mobile/features/auth/data/repositories/auth_repository_impl.dart';
@@ -235,9 +233,6 @@ void main() {
 
     setUp(() {
       FlutterSecureStorage.setMockInitialValues({'gi.refresh_token': 'R1'});
-      SharedPreferences.setMockInitialValues({
-        'cache:/baux?': 'compte-precedent',
-      });
       distant = _Distant();
       jetons = TokenService();
       final api = ApiClient(
@@ -248,7 +243,6 @@ void main() {
         remoteDataSource: distant,
         api: api,
         jetons: jetons,
-        fileAttente: FileAttenteService(api),
       );
     });
 
@@ -270,14 +264,5 @@ void main() {
       await depot.deconnecter();
       expect(await jetons.lireRevocation(), isNull);
     });
-
-    test(
-      'nouvelle connexion : le cache du compte précédent disparaît',
-      () async {
-        await depot.connecter(identifiant: 'a@b.sn', motDePasse: 'x');
-        final p = await SharedPreferences.getInstance();
-        expect(p.getKeys().where((k) => k.startsWith('cache:')), isEmpty);
-      },
-    );
   });
 }

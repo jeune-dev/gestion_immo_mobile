@@ -9,7 +9,6 @@ abstract class BailRepository {
   Future<Either<Failure, PageResultat<Bail>>> getBaux({
     required int page,
     String? statut,
-    String? recherche,
   });
   Future<Either<Failure, FicheBail>> getFicheBail(String id);
   Future<Either<Failure, Bail>> creerBail(

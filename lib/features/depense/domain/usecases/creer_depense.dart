@@ -9,7 +9,9 @@ class CreerDepense {
   final DepenseRepository repository;
   CreerDepense(this.repository);
 
-  /// `Right(null)` : enregistrée hors ligne, envoyée au retour du réseau (§ 34).
-  Future<Either<Failure, Depense?>> call(Map<String, dynamic> corps) =>
-      repository.creerDepense(corps);
+  /// [cle] : la même pour un même formulaire, un nouvel essai ne crée pas de doublon.
+  Future<Either<Failure, Depense>> call(
+    Map<String, dynamic> corps, {
+    required String cle,
+  }) => repository.creerDepense(corps, cle: cle);
 }

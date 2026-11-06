@@ -55,8 +55,8 @@ Architecture « clean » reprise de Sign : chaque fonctionnalité a ses couches
 
 ```
 lib/core/network/      client Dio : enveloppe, refresh token tournant (une requête en vol),
-                       erreurs par error.code, Idempotency-Key, cache de lecture hors ligne
-lib/core/services/     jetons (coffre sécurisé), file des créations hors ligne, référentiels
+                       erreurs par error.code, Idempotency-Key
+lib/core/services/     jetons (coffre sécurisé), référentiels, nettoyage des anciennes données locales
 lib/core/connection/   état du réseau (synchronisation au retour de la connexion)
 lib/core/widgets/      listes paginées, formulaires déclaratifs, badges de statut, PDF
 lib/core/theme/        thème de la charte graphique

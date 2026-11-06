@@ -1,11 +1,10 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart';
+import 'package:gestion_immo_mobile/core/utils/fichier_temporaire.dart';
 import 'package:go_router/go_router.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -273,9 +272,7 @@ Future<void> ouvrirPdf(
   );
   try {
     final octets = (await telecharger()).fold((f) => throw f, (o) => o);
-    final dossier = await getTemporaryDirectory();
-    final fichier = File('${dossier.path}/$nomFichier');
-    await fichier.writeAsBytes(octets, flush: true);
+    final fichier = await ecrireFichierTemporaire(nomFichier, octets);
     messenger.hideCurrentSnackBar();
     if (partager) {
       await SharePlus.instance.share(
@@ -284,7 +281,10 @@ Future<void> ouvrirPdf(
           subject: nomFichier,
         ),
       );
+      await supprimerFichierTemporaire(fichier);
     } else {
+      // Ouvert dans une autre application, qui le lit encore : supprimé au
+      // prochain lancement.
       final r = await OpenFilex.open(fichier.path, type: 'application/pdf');
       if (r.type != ResultType.done && context.mounted) {
         await SharePlus.instance.share(
