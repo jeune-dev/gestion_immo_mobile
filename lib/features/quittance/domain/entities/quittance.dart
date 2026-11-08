@@ -11,6 +11,13 @@ class Quittance extends Equatable {
   final String? emiseLe;
   final num? montant;
   final bool annulee;
+  final String? periodeDebut;
+  final String? periodeFin;
+  final String? logementNumero;
+  final String? immeuble;
+
+  /// Références des paiements qui ont soldé l'échéance.
+  final List<String> referencesPaiement;
 
   const Quittance({
     required this.id,
@@ -20,6 +27,11 @@ class Quittance extends Equatable {
     this.emiseLe,
     this.montant,
     this.annulee = false,
+    this.periodeDebut,
+    this.periodeFin,
+    this.logementNumero,
+    this.immeuble,
+    this.referencesPaiement = const [],
   });
 
   @override
@@ -31,5 +43,10 @@ class Quittance extends Equatable {
     emiseLe,
     montant,
     annulee,
+    periodeDebut,
+    periodeFin,
+    logementNumero,
+    immeuble,
+    referencesPaiement,
   ];
 }

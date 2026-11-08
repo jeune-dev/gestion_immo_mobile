@@ -76,7 +76,6 @@ abstract final class AppColors {
 
   // ── Mode sombre ───────────────────────────────────────────────────────────
   static const sombrePrimaire = Color(0xFF64A8F2);
-  static const sombrePrimaireSurvol = Color(0xFF8DBFF5);
   static const sombrePrimaireTeinte = Color(0xFF132E52);
   static const sombreSurPrimaire = Color(0xFF06203F);
   static const sombreSecondaireSurvol = Color(0xFF8BD35A);

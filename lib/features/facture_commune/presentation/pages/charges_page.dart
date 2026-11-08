@@ -9,6 +9,8 @@ import 'package:gestion_immo_mobile/core/widgets/chargement.dart';
 import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/facture_commune/domain/entities/facture_commune.dart';
 import 'package:gestion_immo_mobile/features/facture_commune/domain/usecases/get_charges_refacturees.dart';
+import 'package:gestion_immo_mobile/features/facture_commune/presentation/pages/charge_detail_page.dart';
+import 'package:gestion_immo_mobile/core/widgets/navigation.dart';
 import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
 /// Charges refacturées aux locataires (§ 15).
@@ -62,6 +64,7 @@ class _ChargesPageState extends State<ChargesPage> {
                     Statut(FamilleStatut.charge, 'statut_charge', c.statut),
                   ],
                 ),
+                onTap: () => ouvrir(context, ChargeDetailPage(id: c.id)),
               ),
             ),
           ),

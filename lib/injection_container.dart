@@ -112,6 +112,7 @@ import 'features/echeance/data/datasources/echeance_remote_datasource.dart';
 import 'features/echeance/data/repositories/echeance_repository_impl.dart';
 import 'features/echeance/domain/repositories/echeance_repository.dart';
 import 'features/echeance/domain/usecases/annuler_echeance.dart';
+import 'features/echeance/domain/usecases/get_echeance.dart';
 import 'features/echeance/domain/usecases/get_echeances.dart';
 import 'features/paiement/data/datasources/paiement_remote_datasource.dart';
 import 'features/paiement/data/repositories/paiement_repository_impl.dart';
@@ -135,6 +136,7 @@ import 'features/paiement/presentation/bloc/transaction_bloc.dart';
 import 'features/quittance/data/datasources/quittance_remote_datasource.dart';
 import 'features/quittance/data/repositories/quittance_repository_impl.dart';
 import 'features/quittance/domain/repositories/quittance_repository.dart';
+import 'features/quittance/domain/usecases/get_quittance.dart';
 import 'features/quittance/domain/usecases/get_quittances.dart';
 import 'features/quittance/domain/usecases/telecharger_quittance.dart';
 
@@ -144,6 +146,7 @@ import 'features/facture_commune/data/repositories/facture_commune_repository_im
 import 'features/facture_commune/domain/repositories/facture_commune_repository.dart';
 import 'features/facture_commune/domain/usecases/annuler_facture_commune.dart';
 import 'features/facture_commune/domain/usecases/creer_facture_commune.dart';
+import 'features/facture_commune/domain/usecases/get_charge_refacturee.dart';
 import 'features/facture_commune/domain/usecases/get_charges_refacturees.dart';
 import 'features/facture_commune/domain/usecases/get_facture_commune.dart';
 import 'features/facture_commune/domain/usecases/get_factures_a_repartir.dart';
@@ -575,6 +578,7 @@ Future<void> init() async {
     () => EcheanceRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => GetEcheances(sl()));
+  sl.registerLazySingleton(() => GetEcheance(sl()));
   sl.registerLazySingleton(() => AnnulerEcheance(sl()));
 
   // Quittances (§ 13)
@@ -585,6 +589,7 @@ Future<void> init() async {
     () => QuittanceRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => GetQuittances(sl()));
+  sl.registerLazySingleton(() => GetQuittance(sl()));
   sl.registerLazySingleton(() => TelechargerQuittance(sl()));
 
   // Paiements, transactions, rapprochements, moyens (§ 12, § 51)
@@ -637,6 +642,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RepartirFacture(sl()));
   sl.registerLazySingleton(() => AnnulerFactureCommune(sl()));
   sl.registerLazySingleton(() => GetChargesRefacturees(sl()));
+  sl.registerLazySingleton(() => GetChargeRefacturee(sl()));
   sl.registerFactory(
     () => FactureCommuneBloc(
       getFactureCommune: sl(),

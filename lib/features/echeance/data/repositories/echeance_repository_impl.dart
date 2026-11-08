@@ -5,6 +5,7 @@ import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 
 import '../../domain/entities/echeance.dart';
+import '../../domain/entities/echeance_detail.dart';
 import '../../domain/repositories/echeance_repository.dart';
 import '../datasources/echeance_remote_datasource.dart';
 
@@ -29,6 +30,27 @@ class EcheanceRepositoryImpl implements EcheanceRepository {
         statut: statut,
       );
       return Right(echeances);
+    } on ApiException catch (e) {
+      return Left(Failure.depuis(e));
+    } catch (e) {
+      return Left(
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, EcheanceDetail>> getEcheance(
+    String id, {
+    bool espaceLocataire = false,
+  }) async {
+    try {
+      return Right(
+        await remoteDataSource.getEcheance(
+          id,
+          espaceLocataire: espaceLocataire,
+        ),
+      );
     } on ApiException catch (e) {
       return Left(Failure.depuis(e));
     } catch (e) {

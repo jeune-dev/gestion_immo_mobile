@@ -31,4 +31,5 @@ abstract class FactureCommuneRepository {
     required int page,
     String? statut,
   });
+  Future<Either<Failure, ChargeRefacturee>> charge(String id);
 }

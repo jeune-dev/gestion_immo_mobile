@@ -29,6 +29,7 @@ abstract class FactureCommuneRemoteDataSource {
     required int page,
     String? statut,
   });
+  Future<ChargeRefactureeModel> charge(String id);
 }
 
 class FactureCommuneRemoteDataSourceImpl
@@ -131,4 +132,12 @@ class FactureCommuneRemoteDataSourceImpl
     ),
     ChargeRefactureeModel.fromJson,
   );
+
+  @override
+  Future<ChargeRefactureeModel> charge(String id) async {
+    final r = await api.get<Map<String, dynamic>>(ApiEndpoints.charge(id));
+    return ChargeRefactureeModel.fromJson(
+      Map<String, dynamic>.from(r['charge'] as Map),
+    );
+  }
 }

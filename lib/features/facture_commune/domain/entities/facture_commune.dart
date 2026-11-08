@@ -175,9 +175,10 @@ class CalculCharge extends Equatable {
   final String? numeroFacture;
   final String? periodeDebut;
   final String? periodeFin;
-  final num? base;
-  final num? quotePart;
   final String? explication;
+
+  /// Provision sur charges déjà versée, déduite de la part (propriétaire).
+  final int provisionDeduite;
 
   const CalculCharge({
     this.methode,
@@ -188,9 +189,8 @@ class CalculCharge extends Equatable {
     this.numeroFacture,
     this.periodeDebut,
     this.periodeFin,
-    this.base,
-    this.quotePart,
     this.explication,
+    this.provisionDeduite = 0,
   });
 
   @override
@@ -203,8 +203,7 @@ class CalculCharge extends Equatable {
     numeroFacture,
     periodeDebut,
     periodeFin,
-    base,
-    quotePart,
     explication,
+    provisionDeduite,
   ];
 }

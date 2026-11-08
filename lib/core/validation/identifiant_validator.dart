@@ -29,7 +29,6 @@ class ResultatValidation {
     : this._(NiveauValidation.invalide, null, raison);
 
   bool get estBloquant => niveau == NiveauValidation.invalide;
-  bool get estAcceptable => niveau != NiveauValidation.invalide;
 
   /// Message à passer au `validator:` d'un TextFormField — null si acceptable.
   String? get erreurFormulaire => estBloquant ? message : null;

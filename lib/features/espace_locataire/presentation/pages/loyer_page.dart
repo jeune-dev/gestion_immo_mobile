@@ -10,6 +10,7 @@ import 'package:gestion_immo_mobile/core/widgets/chargement.dart';
 import 'package:gestion_immo_mobile/core/widgets/navigation.dart';
 import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/echeance/domain/entities/echeance.dart';
+import 'package:gestion_immo_mobile/features/echeance/presentation/pages/echeance_detail_page.dart';
 import 'package:gestion_immo_mobile/features/paiement/domain/entities/paiement.dart';
 import 'package:gestion_immo_mobile/features/quittance/presentation/pages/quittances_page.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/domain/usecases/get_mes_echeances.dart';
@@ -89,6 +90,15 @@ class _LoyerPageState extends State<LoyerPage>
                       sl<GetMesEcheances>()(page: page, aPayer: _aPayer),
                   element: (context, e) => TuileEcheance(
                     e,
+                    onTap: () async {
+                      final modifiee = await ouvrir<bool>(
+                        context,
+                        EcheanceDetailPage(id: e.id, espaceLocataire: true),
+                      );
+                      if (modifiee == true) {
+                        _echeances.currentState?.recharger();
+                      }
+                    },
                     onPayer: e.payable && e.bailId != null
                         ? () async {
                             if (await payer(
@@ -183,7 +193,8 @@ class _LoyerPageState extends State<LoyerPage>
 class TuileEcheance extends StatelessWidget {
   final Echeance e;
   final VoidCallback? onPayer;
-  const TuileEcheance(this.e, {super.key, this.onPayer});
+  final VoidCallback? onTap;
+  const TuileEcheance(this.e, {super.key, this.onPayer, this.onTap});
 
   static const _mois = [
     'janv.',
@@ -207,91 +218,94 @@ class TuileEcheance extends StatelessWidget {
     final jour = e.dateEcheance == null
         ? null
         : DateTime.tryParse(e.dateEcheance!);
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.espaceMd),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 52,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: enRetard ? p.dangerFond : p.primaireTeinte,
-                  borderRadius: BorderRadius.circular(AppTheme.rayonPetit),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      jour == null ? '—' : '${jour.day}',
-                      style: TextStyle(
-                        color: enRetard
-                            ? p.danger
-                            : Theme.of(context).colorScheme.primary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        height: 1.1,
-                      ),
-                    ),
-                    if (jour != null)
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.espaceMd),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 52,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: enRetard ? p.dangerFond : p.primaireTeinte,
+                    borderRadius: BorderRadius.circular(AppTheme.rayonPetit),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Text(
-                        _mois[jour.month - 1],
+                        jour == null ? '—' : '${jour.day}',
                         style: TextStyle(
-                          color: p.texteSecondaire,
-                          fontSize: 11,
+                          color: enRetard
+                              ? p.danger
+                              : Theme.of(context).colorScheme.primary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          height: 1.1,
                         ),
                       ),
-                  ],
+                      if (jour != null)
+                        Text(
+                          _mois[jour.month - 1],
+                          style: TextStyle(
+                            color: p.texteSecondaire,
+                            fontSize: 11,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppTheme.espaceMd),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      e.libelle ?? 'Échéance',
-                      style: TextStyle(
-                        color: p.texte,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Montant(
-                      e.payable ? e.reste : e.montantDu,
-                      style: TextStyle(
-                        color: enRetard ? p.danger : p.texte,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (e.montantPaye > 0)
+                const SizedBox(width: AppTheme.espaceMd),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        'Déjà payé : ${montant(e.montantPaye)}',
+                        e.libelle ?? 'Échéance',
                         style: TextStyle(
-                          color: p.texteSecondaire,
-                          fontSize: 12,
+                          color: p.texte,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                  ],
+                      const SizedBox(height: 2),
+                      Montant(
+                        e.payable ? e.reste : e.montantDu,
+                        style: TextStyle(
+                          color: enRetard ? p.danger : p.texte,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (e.montantPaye > 0)
+                        Text(
+                          'Déjà payé : ${montant(e.montantPaye)}',
+                          style: TextStyle(
+                            color: p.texteSecondaire,
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              Statut(FamilleStatut.echeance, 'statut_echeance', e.statut),
-            ],
-          ),
-          if (onPayer != null) ...[
-            const SizedBox(height: AppTheme.espaceMd),
-            FilledButton(
-              style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-              onPressed: onPayer,
-              child: const Text('Payer'),
+                Statut(FamilleStatut.echeance, 'statut_echeance', e.statut),
+              ],
             ),
+            if (onPayer != null) ...[
+              const SizedBox(height: AppTheme.espaceMd),
+              FilledButton(
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+                onPressed: onPayer,
+                child: const Text('Payer'),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

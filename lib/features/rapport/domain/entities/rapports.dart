@@ -291,7 +291,6 @@ class RapportTravaux extends Equatable {
 
 /// Rentabilité d'un appartement, classée par résultat net (§ 48).
 class LigneRentabilite extends Equatable {
-  final int? rang;
   final String? immeuble;
   final String? appartement;
   final num? revenus;
@@ -300,7 +299,6 @@ class LigneRentabilite extends Equatable {
   final num? resultatNet;
 
   const LigneRentabilite({
-    this.rang,
     this.immeuble,
     this.appartement,
     this.revenus,
@@ -311,7 +309,6 @@ class LigneRentabilite extends Equatable {
 
   @override
   List<Object?> get props => [
-    rang,
     immeuble,
     appartement,
     revenus,

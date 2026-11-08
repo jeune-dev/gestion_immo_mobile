@@ -10,6 +10,8 @@ import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/quittance/domain/entities/quittance.dart';
 import 'package:gestion_immo_mobile/features/quittance/domain/usecases/telecharger_quittance.dart';
+import 'package:gestion_immo_mobile/features/quittance/presentation/pages/quittance_detail_page.dart';
+import 'package:gestion_immo_mobile/core/widgets/navigation.dart';
 
 class TuileQuittance extends StatelessWidget {
   final Quittance q;
@@ -36,12 +38,15 @@ class TuileQuittance extends StatelessWidget {
       'Émise le ${date(q.emiseLe)}',
     ].join(' · ');
     return InkWell(
-      onTap: () => _pdf(context),
+      onTap: () => ouvrir(
+        context,
+        QuittanceDetailPage(id: q.id, espaceLocataire: espaceLocataire),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.espaceMd),
         child: Row(
           children: [
-            const IconeOption(Icons.picture_as_pdf_outlined),
+            const IconeOption(Icons.description_outlined),
             const SizedBox(width: AppTheme.espaceMd),
             Expanded(
               child: Column(

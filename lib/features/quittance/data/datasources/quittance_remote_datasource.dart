@@ -13,6 +13,11 @@ abstract class QuittanceRemoteDataSource {
     required bool espaceLocataire,
   });
 
+  Future<QuittanceModel> getQuittance(
+    String id, {
+    required bool espaceLocataire,
+  });
+
   /// 503 QUITTANCE_EN_PREPARATION juste après un paiement : le client réessaie.
   Future<Uint8List> pdf(String id, {required bool espaceLocataire});
 }
@@ -32,6 +37,21 @@ class QuittanceRemoteDataSourceImpl implements QuittanceRemoteDataSource {
     ),
     QuittanceModel.fromJson,
   );
+
+  @override
+  Future<QuittanceModel> getQuittance(
+    String id, {
+    required bool espaceLocataire,
+  }) async {
+    final r = await api.get<Map<String, dynamic>>(
+      espaceLocataire
+          ? ApiEndpoints.locQuittance(id)
+          : ApiEndpoints.quittance(id),
+    );
+    return QuittanceModel.fromJson(
+      Map<String, dynamic>.from(r['receipt'] as Map),
+    );
+  }
 
   @override
   Future<Uint8List> pdf(String id, {required bool espaceLocataire}) =>

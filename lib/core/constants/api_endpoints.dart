@@ -65,6 +65,7 @@ class ApiEndpoints {
 
   // ── Loyers et paiements ────────────────────────────────────────────────────
   static const echeances = '/echeances';
+  static String echeance(String id) => '/echeances/$id';
   static String echeanceAnnuler(String id) => '/echeances/$id/annuler';
   static const paiements = '/paiements';
   static String paiement(String id) => '/paiements/$id';
@@ -84,6 +85,7 @@ class ApiEndpoints {
       '/paiements/rapprochements/$id/rejeter';
   static const moyensPaiement = '/paiements/moyens';
   static const quittances = '/quittances';
+  static String quittance(String id) => '/quittances/$id';
   static String quittancePdf(String id) => '/quittances/$id/pdf';
 
   // ── Charges, dépenses, caisse, cautions ───────────────────────────────────
@@ -95,6 +97,7 @@ class ApiEndpoints {
   static String factureRepartir(String id) => '/factures-communes/$id/repartir';
   static String factureAnnuler(String id) => '/factures-communes/$id/annuler';
   static const charges = '/charges';
+  static String charge(String id) => '/charges/$id';
   static const depenses = '/depenses';
   static String depense(String id) => '/depenses/$id';
   static String depenseAnnuler(String id) => '/depenses/$id/annuler';
@@ -179,6 +182,7 @@ class ApiEndpoints {
   static const locAccueil = '/locataire/accueil';
   static const locLogement = '/locataire/logement';
   static const locEcheances = '/locataire/echeances';
+  static String locEcheance(String id) => '/locataire/echeances/$id';
   static const locPaiements = '/locataire/paiements';
   static const locPaiementsMoyens = '/locataire/paiements/moyens';
   static const locPreuves = '/locataire/paiements/preuves';
@@ -186,6 +190,7 @@ class ApiEndpoints {
   static String locTransaction(String id) =>
       '/locataire/paiements/transactions/$id';
   static const locQuittances = '/locataire/quittances';
+  static String locQuittance(String id) => '/locataire/quittances/$id';
   static String locQuittancePdf(String id) => '/locataire/quittances/$id/pdf';
   static const locCaution = '/locataire/caution';
   static String locContesterRetenue(String transactionId) =>

@@ -13,8 +13,6 @@ class EtatActions extends Equatable {
   final Object? resultat;
   final int version;
 
-  bool get reussi => failure == null && version > 0;
-
   const EtatActions({
     this.enCours = false,
     this.failure,

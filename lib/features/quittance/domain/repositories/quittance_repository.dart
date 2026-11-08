@@ -12,6 +12,10 @@ abstract class QuittanceRepository {
     required int page,
     required bool espaceLocataire,
   });
+  Future<Either<Failure, Quittance>> getQuittance(
+    String id, {
+    required bool espaceLocataire,
+  });
   Future<Either<Failure, Uint8List>> pdf(
     String id, {
     required bool espaceLocataire,

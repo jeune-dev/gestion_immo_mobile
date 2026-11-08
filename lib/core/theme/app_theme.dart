@@ -32,19 +32,9 @@ abstract final class AppTheme {
   static const rayonCarte = 20.0;
   static const rayonFeuille = 28.0;
 
-  /// Ombre douce des cartes (mode clair), teintée du bleu nuit du logo.
-  static const ombreCarte = [
-    BoxShadow(color: Color(0x140B2A5B), blurRadius: 24, offset: Offset(0, 8)),
-    BoxShadow(color: Color(0x0A0B2A5B), blurRadius: 4, offset: Offset(0, 1)),
-  ];
-
   /// Couleur unie de repli des en-têtes ; le rendu final est le dégradé
   /// [AppColors.degradeMarque] posé par `FondMarque`.
   static const bleuEnTete = AppColors.marine;
-
-  /// Durée et courbe des animations de l'interface (fluides, sans lenteur).
-  static const duree = Duration(milliseconds: 280);
-  static const courbe = Curves.easeOutCubic;
 
   static final ThemeData clair = _construire(
     Brightness.light,

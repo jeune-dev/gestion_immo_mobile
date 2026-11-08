@@ -94,12 +94,30 @@ class ChargeRefactureeModel extends ChargeRefacturee {
         montant: entier(json['amount']),
         montantPaye: entier(json['amount_paid']),
         statut: json['status'] as String?,
-        calcul: _calcul(json['calculation']),
+        calcul:
+            _calcul(json['calculation']) ??
+            _repartition(json['invoice'], json['allocation']),
       );
+
+  /// Détail propriétaire (`GET /charges/:id`) : la facture et la ligne de
+  /// répartition du logement, au lieu du calcul préparé pour le locataire.
+  static CalculCharge? _repartition(Object? facture, Object? ligne) {
+    if (facture is! Map) return null;
+    final l = ligne is Map ? ligne : const {};
+    return CalculCharge(
+      methode: facture['allocation_method'] as String?,
+      totalFacture: entier(facture['amount']),
+      fournisseur: facture['supplier'] as String?,
+      numeroFacture: facture['invoice_number'] as String?,
+      periodeDebut: facture['period_start'] as String?,
+      periodeFin: facture['period_end'] as String?,
+      explication: l['explanation'] as String?,
+      provisionDeduite: entier(l['provision_deducted']),
+    );
+  }
 
   static CalculCharge? _calcul(Object? v) {
     if (v is! Map) return null;
-    num? nombre(Object? x) => x is num ? x : num.tryParse('${x ?? ''}');
     return CalculCharge(
       methode: v['method'] as String?,
       methodeLibelle: v['method_label'] as String?,
@@ -109,8 +127,6 @@ class ChargeRefactureeModel extends ChargeRefacturee {
       numeroFacture: v['invoice_number'] as String?,
       periodeDebut: v['period_start'] as String?,
       periodeFin: v['period_end'] as String?,
-      base: nombre(v['basis_value']),
-      quotePart: nombre(v['share']),
       explication: v['explanation'] as String?,
     );
   }

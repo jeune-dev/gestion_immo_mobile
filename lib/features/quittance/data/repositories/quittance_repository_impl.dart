@@ -35,6 +35,27 @@ class QuittanceRepositoryImpl implements QuittanceRepository {
   }
 
   @override
+  Future<Either<Failure, Quittance>> getQuittance(
+    String id, {
+    required bool espaceLocataire,
+  }) async {
+    try {
+      return Right(
+        await remoteDataSource.getQuittance(
+          id,
+          espaceLocataire: espaceLocataire,
+        ),
+      );
+    } on ApiException catch (e) {
+      return Left(Failure.depuis(e));
+    } catch (e) {
+      return Left(
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
+    }
+  }
+
+  @override
   Future<Either<Failure, Uint8List>> pdf(
     String id, {
     required bool espaceLocataire,

@@ -34,11 +34,6 @@ String date(String? v) {
   return d == null ? '—' : DateFormat('dd/MM/yyyy').format(d);
 }
 
-String dateLongue(String? v) {
-  final d = _lire(v);
-  return d == null ? '—' : DateFormat('d MMMM yyyy', 'fr').format(d);
-}
-
 String dateHeure(String? v) {
   final d = _lire(v);
   return d == null ? '—' : DateFormat("dd/MM/yyyy 'à' HH:mm").format(d);

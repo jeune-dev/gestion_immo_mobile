@@ -700,7 +700,3 @@ class _Element extends StatelessWidget {
     );
   }
 }
-
-/// Ouvre la fiche (listes, bail).
-Future<void> ouvrirEtatDesLieux(BuildContext context, String id) =>
-    ouvrir(context, EtatDesLieuxDetailPage(id: id));

@@ -187,4 +187,17 @@ class FactureCommuneRepositoryImpl implements FactureCommuneRepository {
       );
     }
   }
+
+  @override
+  Future<Either<Failure, ChargeRefacturee>> charge(String id) async {
+    try {
+      return Right(await remoteDataSource.charge(id));
+    } on ApiException catch (e) {
+      return Left(Failure.depuis(e));
+    } catch (e) {
+      return Left(
+        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+      );
+    }
+  }
 }

@@ -139,7 +139,6 @@ class RapportsModel {
 
   static LigneRentabilite rentabilite(Map<String, dynamic> a) =>
       LigneRentabilite(
-        rang: a['rang'] == null ? null : entier(a['rang']),
         immeuble: a['building_name'] as String?,
         appartement: a['apartment_number']?.toString(),
         revenus: nombreOuNull(a['revenus']),
