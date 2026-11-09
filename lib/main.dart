@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -28,9 +27,6 @@ Future<void> main() async {
     final ofl = await rootBundle.loadString('assets/fonts/OFL.txt');
     yield LicenseEntryWithLineBreaks(['google_fonts'], ofl);
   });
-  // Configuration (config/.env, facultatif) AVANT le premier accès aux services :
-  // l'URL de l'API en dépend
-  await dotenv.load(fileName: 'config/.env', isOptional: true);
   await initializeDateFormatting('fr');
   await nettoyerStockageLocal();
   await di.init();

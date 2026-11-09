@@ -54,40 +54,7 @@ class DashboardPage extends StatelessWidget {
           child: Scaffold(
             // Barre vide : garde la zone de la barre d'état bleue pendant le défilement.
             appBar: AppBar(flexibleSpace: const FondMarque(), toolbarHeight: 0),
-            floatingActionButton: Builder(
-              builder: (context) {
-                final theme = Theme.of(context);
-                final fab = theme.floatingActionButtonTheme;
-                return Theme(
-                  data: theme.copyWith(
-                    floatingActionButtonTheme: fab.copyWith(
-                      extendedSizeConstraints: const BoxConstraints.tightFor(
-                        height: 44,
-                      ),
-                      extendedPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                      ),
-                      extendedIconLabelSpacing: 6,
-                      extendedTextStyle: fab.extendedTextStyle?.copyWith(
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                  child: FloatingActionButton.extended(
-                    tooltip: 'Encaisser un loyer',
-                    onPressed: () async {
-                      if (await encaisser(context) && context.mounted) {
-                        context.read<DashboardBloc>().add(
-                          RafraichirDashboard(),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.payments_outlined, size: 18),
-                    label: const Text('Encaisser'),
-                  ),
-                );
-              },
-            ),
+            floatingActionButton: const _BoutonEncaisser(),
             body: BlocBuilder<DashboardBloc, DashboardState>(
               // Un échec de rafraîchissement laisse le tableau de bord affiché.
               buildWhen: (_, state) => state is! DashboardActionError,
@@ -111,44 +78,7 @@ class DashboardPage extends StatelessWidget {
                     child: ListView(
                       padding: const EdgeInsets.only(bottom: 104),
                       children: [
-                        // Bandeau bleu derrière l'en-tête et le haut de la carte de synthèse.
-                        Stack(
-                          children: [
-                            const Positioned(
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 64,
-                              // Dégradé du logo, coins bas arrondis.
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.vertical(
-                                  bottom: Radius.circular(
-                                    AppTheme.rayonFeuille,
-                                  ),
-                                ),
-                                child: FondMarque(),
-                              ),
-                            ),
-                            Column(
-                              children: [
-                                _EnTete(
-                                  d: d,
-                                  onNotifications: () => _ouvrir(
-                                    context,
-                                    const NotificationsPage(),
-                                  ),
-                                  onProfil: () => onAller(4),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppTheme.espaceLg,
-                                  ),
-                                  child: _Synthese(d),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                        _bandeau(context, d),
                         const SizedBox(height: AppTheme.espaceXl),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(
@@ -173,52 +103,7 @@ class DashboardPage extends StatelessWidget {
                                 const SizedBox(height: AppTheme.espaceLg),
                               ],
                               _Titre('Ce mois-ci'),
-                              GridView.count(
-                                crossAxisCount: 2,
-                                shrinkWrap: true,
-                                padding: EdgeInsets.zero,
-                                physics: const NeverScrollableScrollPhysics(),
-                                mainAxisSpacing: AppTheme.espaceMd,
-                                crossAxisSpacing: AppTheme.espaceMd,
-                                childAspectRatio: 1.18,
-                                children: [
-                                  ChiffreCle(
-                                    libelle: 'Reste à recevoir',
-                                    valeur: montant(d.resteARecevoir),
-                                    icone: Icons.schedule,
-                                    ton: TonStatut.info,
-                                    sous:
-                                        'sur ${montant(d.aRecevoir)} attendus',
-                                  ),
-                                  ChiffreCle(
-                                    libelle: 'Encaissé',
-                                    valeur: montant(d.revenus),
-                                    icone: Icons.check_circle_outline,
-                                    ton: TonStatut.succes,
-                                    sous: 'Reçu ce mois-ci, tout compris',
-                                  ),
-                                  ChiffreCle(
-                                    libelle: 'Impayés',
-                                    valeur: montant(d.totalImpayes),
-                                    icone: Icons.error_outline,
-                                    ton: TonStatut.danger,
-                                    sous: (d.chargesImpayees ?? 0) > 0
-                                        ? 'dont ${montant(d.chargesImpayees)} de charges'
-                                        : 'Tous mois confondus',
-                                    onTap: () => _ouvrir(
-                                      context,
-                                      const EcheancesPage(impayes: true),
-                                    ),
-                                  ),
-                                  ChiffreCle(
-                                    libelle: 'Dépenses',
-                                    valeur: montant(d.depenses),
-                                    icone: Icons.receipt_long_outlined,
-                                    ton: TonStatut.neutre,
-                                    sous: 'Résultat ${montant(d.resultat)}',
-                                  ),
-                                ],
-                              ),
+                              _chiffresDuMois(context, d),
                               const SizedBox(height: AppTheme.espaceMd),
                               Section(
                                 children: [
@@ -250,45 +135,7 @@ class DashboardPage extends StatelessWidget {
                               _Titre('Revenus et dépenses'),
                               _RevenusDepenses(d),
                               const SizedBox(height: AppTheme.espaceLg),
-                              if (d.depensesParCategorie.isNotEmpty) ...[
-                                _Titre('Dépenses par catégorie'),
-                                Section(
-                                  children: [
-                                    for (final c in d.depensesParCategorie)
-                                      Ligne(c.nom, montant(c.total)),
-                                  ],
-                                ),
-                                const SizedBox(height: AppTheme.espaceLg),
-                              ],
-                              if (d.appartementsCouteux.isNotEmpty) ...[
-                                _Titre('Appartements les plus coûteux'),
-                                Section(
-                                  children: [
-                                    for (final a in d.appartementsCouteux)
-                                      Ligne(
-                                        a.immeuble == null
-                                            ? a.numero
-                                            : '${a.immeuble} · ${a.numero}',
-                                        montant(a.depenses),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: AppTheme.espaceLg),
-                              ],
-                              if (d.aujourdHui.isNotEmpty) ...[
-                                _Titre("Aujourd'hui"),
-                                Section(
-                                  children: [
-                                    for (final e in d.aujourdHui)
-                                      Ligne(
-                                        e.libelle,
-                                        e.montant == null
-                                            ? ''
-                                            : montant(e.montant),
-                                      ),
-                                  ],
-                                ),
-                              ],
+                              ..._repartitions(d),
                             ],
                           ),
                         ),
@@ -300,6 +147,150 @@ class DashboardPage extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Bandeau bleu derrière l'en-tête et le haut de la carte de synthèse.
+  Widget _bandeau(BuildContext context, TableauDeBord d) => Stack(
+    children: [
+      const Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 64,
+        // Dégradé du logo, coins bas arrondis.
+        child: ClipRRect(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(AppTheme.rayonFeuille),
+          ),
+          child: FondMarque(),
+        ),
+      ),
+      Column(
+        children: [
+          _EnTete(
+            d: d,
+            onNotifications: () => _ouvrir(context, const NotificationsPage()),
+            onProfil: () => onAller(4),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.espaceLg),
+            child: _Synthese(d),
+          ),
+        ],
+      ),
+    ],
+  );
+
+  /// Les quatre chiffres clés du mois.
+  Widget _chiffresDuMois(BuildContext context, TableauDeBord d) =>
+      GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        padding: EdgeInsets.zero,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: AppTheme.espaceMd,
+        crossAxisSpacing: AppTheme.espaceMd,
+        childAspectRatio: 1.18,
+        children: [
+          ChiffreCle(
+            libelle: 'Reste à recevoir',
+            valeur: montant(d.resteARecevoir),
+            icone: Icons.schedule,
+            ton: TonStatut.info,
+            sous: 'sur ${montant(d.aRecevoir)} attendus',
+          ),
+          ChiffreCle(
+            libelle: 'Encaissé',
+            valeur: montant(d.revenus),
+            icone: Icons.check_circle_outline,
+            ton: TonStatut.succes,
+            sous: 'Reçu ce mois-ci, tout compris',
+          ),
+          ChiffreCle(
+            libelle: 'Impayés',
+            valeur: montant(d.totalImpayes),
+            icone: Icons.error_outline,
+            ton: TonStatut.danger,
+            sous: (d.chargesImpayees ?? 0) > 0
+                ? 'dont ${montant(d.chargesImpayees)} de charges'
+                : 'Tous mois confondus',
+            onTap: () => _ouvrir(context, const EcheancesPage(impayes: true)),
+          ),
+          ChiffreCle(
+            libelle: 'Dépenses',
+            valeur: montant(d.depenses),
+            icone: Icons.receipt_long_outlined,
+            ton: TonStatut.neutre,
+            sous: 'Résultat ${montant(d.resultat)}',
+          ),
+        ],
+      );
+
+  /// Dépenses par catégorie, appartements coûteux et événements du jour.
+  List<Widget> _repartitions(TableauDeBord d) => [
+    if (d.depensesParCategorie.isNotEmpty) ...[
+      _Titre('Dépenses par catégorie'),
+      Section(
+        children: [
+          for (final c in d.depensesParCategorie)
+            Ligne(c.nom, montant(c.total)),
+        ],
+      ),
+      const SizedBox(height: AppTheme.espaceLg),
+    ],
+    if (d.appartementsCouteux.isNotEmpty) ...[
+      _Titre('Appartements les plus coûteux'),
+      Section(
+        children: [
+          for (final a in d.appartementsCouteux)
+            Ligne(
+              a.immeuble == null ? a.numero : '${a.immeuble} · ${a.numero}',
+              montant(a.depenses),
+            ),
+        ],
+      ),
+      const SizedBox(height: AppTheme.espaceLg),
+    ],
+    if (d.aujourdHui.isNotEmpty) ...[
+      _Titre("Aujourd'hui"),
+      Section(
+        children: [
+          for (final e in d.aujourdHui)
+            Ligne(e.libelle, e.montant == null ? '' : montant(e.montant)),
+        ],
+      ),
+    ],
+  ];
+}
+
+/// Bouton « Encaisser » compact : un encaissement relit le tableau de bord.
+class _BoutonEncaisser extends StatelessWidget {
+  const _BoutonEncaisser();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final fab = theme.floatingActionButtonTheme;
+    return Theme(
+      data: theme.copyWith(
+        floatingActionButtonTheme: fab.copyWith(
+          extendedSizeConstraints: const BoxConstraints.tightFor(height: 44),
+          extendedPadding: const EdgeInsets.symmetric(horizontal: 14),
+          extendedIconLabelSpacing: 6,
+          extendedTextStyle: fab.extendedTextStyle?.copyWith(fontSize: 14),
+        ),
+      ),
+      child: FloatingActionButton.extended(
+        tooltip: 'Encaisser un loyer',
+        onPressed: () async {
+          if (await encaisser(context) && context.mounted) {
+            context.read<DashboardBloc>().add(RafraichirDashboard());
+          }
+        },
+        icon: const Icon(Icons.payments_outlined, size: 18),
+        label: const Text('Encaisser'),
       ),
     );
   }

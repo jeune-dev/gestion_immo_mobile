@@ -1,17 +1,28 @@
 import 'dart:io';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gestion_immo_mobile/core/config/env.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
 
 void main() {
-  test("l'URL de l'API vient de config/.env (ou de l'exemple versionné)", () {
-    final local = File('config/.env');
-    final fichier = local.existsSync() ? local : File('config/.env.example');
-    dotenv.loadFromString(envString: fichier.readAsStringSync());
-    expect(Env.baseUrl, dotenv.get('API_URL'));
+  test("sans --dart-define, l'URL de l'API est celle du backend local", () {
+    expect(Env.baseUrl, Env.urlParDefaut);
     expect(Env.baseUrl, endsWith('/api/v1'));
+  });
+
+  test(
+    "l'exemple de configuration reste lisible par --dart-define-from-file",
+    () {
+      final lignes = File('config/.env.example')
+          .readAsLinesSync()
+          .where((l) => l.trim().isNotEmpty && !l.trimLeft().startsWith('#'));
+      expect(lignes, everyElement(matches(r'^[A-Z_]+=\S+$')));
+      expect(lignes.map((l) => l.split('=').first), contains('API_URL'));
+    },
+  );
+
+  test('aucun fichier de configuration n’est embarqué dans l’application', () {
+    expect(File('pubspec.yaml').readAsStringSync(), isNot(contains('config/')));
   });
 
   test('montants FCFA de la charte', () {

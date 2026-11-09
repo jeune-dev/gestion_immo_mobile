@@ -30,6 +30,15 @@ class BailModel extends Bail {
     super.resteDu,
     super.totalEncaisse,
     super.etatsDesLieux,
+    super.proposeLe,
+    super.accepteLe,
+    super.refuseLe,
+    super.motifRefus,
+    super.modeAccord,
+    super.congePar,
+    super.sortiePrevue,
+    super.motifConge,
+    super.avenants,
   });
 
   factory BailModel.fromJson(Map<String, dynamic> json) {
@@ -77,9 +86,33 @@ class BailModel extends Bail {
             ),
           )
           .toList(),
+      proposeLe: json['proposed_at'] as String?,
+      accepteLe: json['tenant_accepted_at'] as String?,
+      refuseLe: json['tenant_refused_at'] as String?,
+      motifRefus: json['refusal_reason'] as String?,
+      modeAccord: json['acceptance_method'] as String?,
+      congePar: json['notice_given_by'] as String?,
+      sortiePrevue: json['planned_exit_date'] as String?,
+      motifConge: json['notice_reason'] as String?,
+      avenants: listeJson(json['amendments']).map(avenantDepuis).toList(),
     );
   }
 }
+
+/// Avenant de loyer tel que renvoyé par l'API (fiche du bail, espace locataire).
+AvenantLoyer avenantDepuis(Map<String, dynamic> a) => AvenantLoyer(
+  id: '${a['id']}',
+  statut: '${a['status'] ?? 'propose'}',
+  loyerAvant: _entierOuNull(a['previous_rent_amount']) ?? 0,
+  chargesAvant: _entierOuNull(a['previous_charges_amount']) ?? 0,
+  loyer: _entierOuNull(a['rent_amount']) ?? 0,
+  charges: _entierOuNull(a['charges_amount']) ?? 0,
+  dateEffet: '${a['effective_from'] ?? ''}',
+  motif: a['reason'] as String?,
+  motifRefus: a['refusal_reason'] as String?,
+  modeAccord: a['acceptance_method'] as String?,
+  creeLe: a['created_at'] as String?,
+);
 
 class ContratBailModel extends ContratBail {
   const ContratBailModel({

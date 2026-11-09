@@ -8,6 +8,7 @@ import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 import 'package:gestion_immo_mobile/features/echeance/domain/entities/echeance.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/domain/entities/espace_locataire.dart';
+import 'package:gestion_immo_mobile/features/espace_locataire/presentation/widgets/demarches_locataire.dart';
 
 /// Les trois étapes d'un paiement : choix du moyen, paiement, confirmation.
 class EtapesPaiement extends StatelessWidget {
@@ -229,35 +230,15 @@ class ChoixPaiement extends StatelessWidget {
     if (ok == true) onPayerEnLigne(portefeuille);
   }
 
-  void _expliquerEspeces(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.espaceXl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Payer en espèces',
-                style: Theme.of(ctx).textTheme.titleMedium,
-              ),
-              const SizedBox(height: AppTheme.espaceMd),
-              Text(
-                'Remettez ${montant(echeance.reste)} à ${moyens.beneficiaire ?? 'votre propriétaire'}. '
-                'Dès qu’il aura enregistré le paiement, votre échéance sera soldée et votre quittance apparaîtra dans « Mon loyer ».',
-              ),
-              const SizedBox(height: AppTheme.espaceLg),
-              OutlinedButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('J’ai compris'),
-              ),
-            ],
-          ),
-        ),
-      ),
+  /// Espèces : le locataire signale la remise, le bailleur la confirme.
+  Future<void> _declarerEspeces(BuildContext context) async {
+    final ok = await declarerEspeces(
+      context,
+      echeanceId: echeance.id,
+      reste: echeance.reste,
+      beneficiaire: moyens.beneficiaire,
     );
+    if (ok && context.mounted) Navigator.pop(context, true);
   }
 
   @override
@@ -336,8 +317,8 @@ class ChoixPaiement extends StatelessWidget {
           _TuileMoyen(
             pastille: const PastilleMoyen(icone: Icons.payments_outlined),
             titre: 'Espèces',
-            detail: 'Remettez le montant à votre propriétaire',
-            onTap: () => _expliquerEspeces(context),
+            detail: 'Remis en main propre ? Signalez-le à votre propriétaire',
+            onTap: () => _declarerEspeces(context),
           ),
         for (final w in indisponibles)
           _TuileMoyen(

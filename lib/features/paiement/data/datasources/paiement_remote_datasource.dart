@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:gestion_immo_mobile/core/constants/api_endpoints.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
@@ -19,6 +21,12 @@ abstract class PaiementRemoteDataSource {
     Map<String, dynamic> corps, {
     required String cle,
   });
+
+  /// Reçu PDF du paiement (partiel compris).
+  Future<Uint8List> recu(String id);
+
+  /// Réponse à la contestation d'un remboursement par le locataire.
+  Future<void> repondreContestation(String id, String reponse);
 
   Future<PageResultat<TransactionPaiementModel>> transactions({
     required int page,
@@ -105,6 +113,17 @@ class PaiementRemoteDataSourceImpl implements PaiementRemoteDataSource {
     body: corps,
     idempotence: cle,
   );
+
+  @override
+  Future<Uint8List> recu(String id) =>
+      api.telecharger('${ApiEndpoints.paiement(id)}/recu');
+
+  @override
+  Future<void> repondreContestation(String id, String reponse) =>
+      api.post<dynamic>(
+        '${ApiEndpoints.paiement(id)}/contestation/reponse',
+        body: {'response': reponse},
+      );
 
   @override
   Future<PageResultat<TransactionPaiementModel>> transactions({

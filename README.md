@@ -10,15 +10,17 @@ depuis le routeur réel par `npm run doc:routes`). Thème de la charte graphique
 ```bash
 cp config/.env.example config/.env   # facultatif ; API_URL pointe sur le backend local
 flutter pub get
-flutter run
+flutter run --dart-define-from-file=config/.env   # ou simplement `flutter run`
 ```
 
-L'URL de l'API est lue dans `config/.env` (`API_URL`, fichier facultatif et non
-versionné ; à défaut : `http://localhost:3000/api/v1`). Sur l'émulateur Android,
+L'URL de l'API est fixée à la compilation : `config/.env` (`API_URL`, fichier
+facultatif et non versionné) passé par `--dart-define-from-file`, à défaut
+`http://localhost:3000/api/v1`. Aucun fichier de configuration n'est embarqué
+dans l'application. Sur l'émulateur Android,
 `localhost` est remplacé automatiquement par `10.0.2.2` (la machine hôte). Sur un
 téléphone réel, mettez l'adresse IP du Mac (`http://192.168.x.x:3000/api/v1`) et
 lancez l'API avec `HOST=0.0.0.0`. En production, `--dart-define=API_URL=https://…`
-prend le pas sur `config/.env`.
+est obligatoire : un build de publication sans URL `https` est refusé.
 
 ## Publier (Android)
 
@@ -57,8 +59,9 @@ Architecture « clean » reprise de Sign : chaque fonctionnalité a ses couches
 lib/core/network/      client Dio : enveloppe, refresh token tournant (une requête en vol),
                        erreurs par error.code, Idempotency-Key
 lib/core/services/     jetons (coffre sécurisé), référentiels, nettoyage des anciennes données locales
-lib/core/connection/   état du réseau (synchronisation au retour de la connexion)
-lib/core/widgets/      listes paginées, formulaires déclaratifs, badges de statut, PDF
+lib/core/widgets/      listes paginées, fiches chargées par identifiant, formulaires
+                       déclaratifs, badges de statut, PDF
+lib/core/errors/       échecs normalisés ; appelApi() pour tout appel d'un dépôt
 lib/core/theme/        thème de la charte graphique
 lib/injection_container.dart   enregistrement des dépendances (get_it)
 lib/features/auth/     connexion, inscription, mot de passe oublié, activation locataire
@@ -69,10 +72,23 @@ lib/features/…         une fonctionnalité par dossier : immeuble, appartement
 lib/features/espace_locataire/   écrans propres au locataire (payer, loyer, demandes)
 ```
 
+### Gestion de l'état : quel outil pour quel écran
+
+- **Liste paginée** de l'API → `ListePaginee` (filtres, chargement au défilement,
+  tirer-pour-rafraîchir).
+- **Fiche lue par identifiant**, éventuellement rechargée après une action →
+  `FicheChargee` (chargement, erreur avec « Réessayer », puis la fiche).
+- **Écran avec plusieurs états ou actions enchaînées** (connexion, paiement, état des
+  lieux, bail…) → un Bloc/Cubit dans `presentation/bloc/`, testé sans interface.
+- **Action ponctuelle** depuis un écran (annuler, encaisser) → `reussir()` /
+  `executer()` de `core/widgets/actions.dart`, qui affichent le succès ou l'erreur.
+
+Les écrans obtiennent leurs cas d'usage par `sl<…>()` (get_it) ; un dépôt n'est jamais
+appelé directement depuis la présentation. Dans les tests, enregistrer un faux dépôt
+dans `GetIt.instance` (voir `test/fiches_detail_test.dart`).
+
 ## Reste à brancher
 
-- Notifications push FCM : ajouter `firebase_messaging` + fichiers de configuration
-  Firebase, puis `POST /compte/appareils` avec le jeton (route déjà prévue côté API).
 - Icône et écran de lancement définitifs.
 
 ## Notifications push
@@ -86,6 +102,8 @@ Elles restent inactives tant que l'application n'est pas construite avec
 
 ## Version publiée
 
-`API_URL` doit être en `https://`, sinon l'application refuse de démarrer. Sur Android,
+`--dart-define=API_URL=https://…` est obligatoire : sans lui, le build de publication
+échoue (Gradle sur Android, phase « Contrôles de publication » sur iOS, qui retire aussi
+de l'Info.plist les autorisations réseau local réservées au développement). Sur Android,
 `android/key.properties` est obligatoire (`ALLOW_DEBUG_SIGNING=true` autorise la clé de
 debug pour un essai local).

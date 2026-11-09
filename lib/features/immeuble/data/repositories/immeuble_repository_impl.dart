@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 
+import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 
@@ -16,80 +16,25 @@ class ImmeubleRepositoryImpl implements ImmeubleRepository {
   Future<Either<Failure, PageResultat<Immeuble>>> getImmeubles({
     required int page,
     String? recherche,
-  }) async {
-    try {
-      final immeubles = await remoteDataSource.getImmeubles(
-        page: page,
-        recherche: recherche,
-      );
-      return Right(immeubles);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(
+    () => remoteDataSource.getImmeubles(page: page, recherche: recherche),
+  );
 
   @override
-  Future<Either<Failure, Immeuble>> getImmeuble(String id) async {
-    try {
-      final immeuble = await remoteDataSource.getImmeuble(id);
-      return Right(immeuble);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, Immeuble>> getImmeuble(String id) =>
+      appelApi(() => remoteDataSource.getImmeuble(id));
 
   @override
-  Future<Either<Failure, Immeuble>> creerImmeuble(
-    Map<String, dynamic> corps,
-  ) async {
-    try {
-      final immeuble = await remoteDataSource.creerImmeuble(corps);
-      return Right(immeuble);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, Immeuble>> creerImmeuble(Map<String, dynamic> corps) =>
+      appelApi(() => remoteDataSource.creerImmeuble(corps));
 
   @override
   Future<Either<Failure, Immeuble>> modifierImmeuble(
     String id,
     Map<String, dynamic> corps,
-  ) async {
-    try {
-      final immeuble = await remoteDataSource.modifierImmeuble(id, corps);
-      return Right(immeuble);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  ) => appelApi(() => remoteDataSource.modifierImmeuble(id, corps));
 
   @override
-  Future<Either<Failure, void>> supprimerImmeuble(String id) async {
-    try {
-      await remoteDataSource.supprimerImmeuble(id);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, void>> supprimerImmeuble(String id) =>
+      appelApi(() => remoteDataSource.supprimerImmeuble(id));
 }

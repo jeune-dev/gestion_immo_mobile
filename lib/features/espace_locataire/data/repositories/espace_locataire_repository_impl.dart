@@ -1,8 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
-import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 
+import '../../domain/entities/accords.dart';
+
+import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 import 'package:gestion_immo_mobile/features/caution/domain/entities/caution.dart';
@@ -21,118 +23,37 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
   EspaceLocataireRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, List<LogementLocataire>>> accueil() async {
-    try {
-      final logementLocataires = await remoteDataSource.accueil();
-      return Right(logementLocataires);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, List<LogementLocataire>>> accueil() =>
+      appelApi(() => remoteDataSource.accueil());
 
   @override
-  Future<Either<Failure, List<LogementLocataire>>> logements() async {
-    try {
-      final logementLocataires = await remoteDataSource.logements();
-      return Right(logementLocataires);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, List<LogementLocataire>>> logements() =>
+      appelApi(() => remoteDataSource.logements());
 
   @override
   Future<Either<Failure, PageResultat<Echeance>>> echeances({
     required int page,
     required bool aPayer,
-  }) async {
-    try {
-      final echeances = await remoteDataSource.echeances(
-        page: page,
-        aPayer: aPayer,
-      );
-      return Right(echeances);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(() => remoteDataSource.echeances(page: page, aPayer: aPayer));
 
   @override
   Future<Either<Failure, PageResultat<Paiement>>> paiements({
     required int page,
-  }) async {
-    try {
-      final paiements = await remoteDataSource.paiements(page: page);
-      return Right(paiements);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(() => remoteDataSource.paiements(page: page));
 
   @override
   Future<Either<Failure, PageResultat<TransactionPaiement>>> transactions({
     required int page,
-  }) async {
-    try {
-      final transactionPaiements = await remoteDataSource.transactions(
-        page: page,
-      );
-      return Right(transactionPaiements);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(() => remoteDataSource.transactions(page: page));
 
   @override
-  Future<Either<Failure, TransactionPaiement>> transaction(String id) async {
-    try {
-      final transactionPaiement = await remoteDataSource.transaction(id);
-      return Right(transactionPaiement);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, TransactionPaiement>> transaction(String id) =>
+      appelApi(() => remoteDataSource.transaction(id));
 
   @override
   Future<Either<Failure, MoyensPaiementLocataire>> moyensPaiement(
     String bailId,
-  ) async {
-    try {
-      final moyensPaiementLocataire = await remoteDataSource.moyensPaiement(
-        bailId,
-      );
-      return Right(moyensPaiementLocataire);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  ) => appelApi(() => remoteDataSource.moyensPaiement(bailId));
 
   @override
   Future<Either<Failure, DemandePaiement>> payer({
@@ -140,254 +61,100 @@ class EspaceLocataireRepositoryImpl implements EspaceLocataireRepository {
     String? chargeId,
     required String portefeuille,
     int? montant,
-  }) async {
-    try {
-      final demandePaiement = await remoteDataSource.payer(
-        echeanceId: echeanceId,
-        chargeId: chargeId,
-        portefeuille: portefeuille,
-        montant: montant,
-      );
-      return Right(demandePaiement);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(
+    () => remoteDataSource.payer(
+      echeanceId: echeanceId,
+      chargeId: chargeId,
+      portefeuille: portefeuille,
+      montant: montant,
+    ),
+  );
 
   @override
   Future<Either<Failure, void>> declarerPreuve(
     Map<String, dynamic> champs, {
     String? capture,
-  }) async {
-    try {
-      await remoteDataSource.declarerPreuve(champs, capture: capture);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) =>
+      appelApi(() => remoteDataSource.declarerPreuve(champs, capture: capture));
 
   @override
-  Future<Either<Failure, List<Caution>>> cautions() async {
-    try {
-      final cautions = await remoteDataSource.cautions();
-      return Right(cautions);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, List<Caution>>> cautions() =>
+      appelApi(() => remoteDataSource.cautions());
 
   @override
   Future<Either<Failure, void>> contesterRetenue(
     String mouvementId,
     String message,
-  ) async {
-    try {
-      await remoteDataSource.contesterRetenue(mouvementId, message);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  ) => appelApi(() => remoteDataSource.contesterRetenue(mouvementId, message));
 
   @override
   Future<Either<Failure, PageResultat<ChargeRefacturee>>> charges({
     required int page,
-  }) async {
-    try {
-      final chargeRefacturees = await remoteDataSource.charges(page: page);
-      return Right(chargeRefacturees);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(() => remoteDataSource.charges(page: page));
 
   @override
-  Future<Either<Failure, ChargeRefacturee>> charge(String id) async {
-    try {
-      final charge = await remoteDataSource.charge(id);
-      return Right(charge);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, ChargeRefacturee>> charge(String id) =>
+      appelApi(() => remoteDataSource.charge(id));
 
   @override
-  Future<Either<Failure, void>> consentementWhatsapp({
-    required bool accorde,
-  }) async {
-    try {
-      await remoteDataSource.consentementWhatsapp(accorde: accorde);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, AccordsLocataire>> accords() =>
+      appelApi(remoteDataSource.accords);
+
+  @override
+  Future<Either<Failure, void>> action(
+    String chemin, {
+    Map<String, dynamic> corps = const {},
+  }) => appelApi(() => remoteDataSource.action(chemin, corps: corps));
+
+  @override
+  Future<Either<Failure, Uint8List>> recuPaiement(String id) =>
+      appelApi(() => remoteDataSource.recuPaiement(id));
+
+  @override
+  Future<Either<Failure, void>> consentementWhatsapp({required bool accorde}) =>
+      appelApi(() => remoteDataSource.consentementWhatsapp(accorde: accorde));
 
   @override
   Future<Either<Failure, PageResultat<Incident>>> incidents({
     required int page,
-  }) async {
-    try {
-      final incidents = await remoteDataSource.incidents(page: page);
-      return Right(incidents);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(() => remoteDataSource.incidents(page: page));
 
   @override
-  Future<Either<Failure, Incident>> incident(String id) async {
-    try {
-      final incident = await remoteDataSource.incident(id);
-      return Right(incident);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, Incident>> incident(String id) =>
+      appelApi(() => remoteDataSource.incident(id));
 
   @override
   Future<Either<Failure, Incident>> signaler(
     Map<String, dynamic> corps, {
     required String cle,
-  }) async {
-    try {
-      final incident = await remoteDataSource.signaler(corps, cle: cle);
-      return Right(incident);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(() => remoteDataSource.signaler(corps, cle: cle));
 
   @override
   Future<Either<Failure, void>> ajouterPieceIncident(
     String id,
     String chemin,
-  ) async {
-    try {
-      await remoteDataSource.ajouterPieceIncident(id, chemin);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  ) => appelApi(() => remoteDataSource.ajouterPieceIncident(id, chemin));
 
   @override
   Future<Either<Failure, PageResultat<EtatDesLieux>>> etatsDesLieux({
     required int page,
-  }) async {
-    try {
-      final etatDesLieuxs = await remoteDataSource.etatsDesLieux(page: page);
-      return Right(etatDesLieuxs);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(() => remoteDataSource.etatsDesLieux(page: page));
 
   @override
-  Future<Either<Failure, EtatDesLieux>> etatDesLieux(String id) async {
-    try {
-      final etatDesLieux = await remoteDataSource.etatDesLieux(id);
-      return Right(etatDesLieux);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, EtatDesLieux>> etatDesLieux(String id) =>
+      appelApi(() => remoteDataSource.etatDesLieux(id));
 
   @override
-  Future<Either<Failure, Uint8List>> pdfEtatDesLieux(String id) async {
-    try {
-      final octets = await remoteDataSource.pdfEtatDesLieux(id);
-      return Right(octets);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, Uint8List>> pdfEtatDesLieux(String id) =>
+      appelApi(() => remoteDataSource.pdfEtatDesLieux(id));
 
   @override
-  Future<Either<Failure, void>> accepterEtatDesLieux(String id) async {
-    try {
-      await remoteDataSource.accepterEtatDesLieux(id);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, void>> accepterEtatDesLieux(String id) =>
+      appelApi(() => remoteDataSource.accepterEtatDesLieux(id));
 
   @override
   Future<Either<Failure, void>> contesterEtatDesLieux(
     String id,
     String commentaire,
-  ) async {
-    try {
-      await remoteDataSource.contesterEtatDesLieux(id, commentaire);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  ) => appelApi(() => remoteDataSource.contesterEtatDesLieux(id, commentaire));
 }

@@ -11,6 +11,8 @@ import 'package:gestion_immo_mobile/features/incident/data/models/incident_model
 import 'package:gestion_immo_mobile/features/paiement/data/models/paiement_model.dart';
 
 import '../../domain/entities/espace_locataire.dart';
+import '../../domain/entities/accords.dart';
+import '../models/accords_model.dart';
 import '../models/espace_locataire_model.dart';
 
 /// Espace locataire (§ 28) : le locataire ne voit jamais les autres locataires.
@@ -43,6 +45,16 @@ abstract class EspaceLocataireRemoteDataSource {
   Future<PageResultat<ChargeRefactureeModel>> charges({required int page});
   Future<ChargeRefactureeModel> charge(String id);
   Future<void> consentementWhatsapp({required bool accorde});
+
+  /// Bail proposé et nouveau loyer en attente de réponse.
+  Future<AccordsLocataire> accords();
+
+  /// Réponse ou démarche du locataire (`baux/<id>/accepter`, `avenants/<id>/refuser`,
+  /// `baux/<id>/conge`, `paiements/especes`, `paiements/<id>/contester`…).
+  Future<void> action(String chemin, {Map<String, dynamic> corps});
+
+  /// Reçu PDF d'un paiement (partiel compris).
+  Future<Uint8List> recuPaiement(String id);
   Future<PageResultat<IncidentModel>> incidents({required int page});
   Future<IncidentModel> incident(String id);
 
@@ -218,6 +230,18 @@ class EspaceLocataireRemoteDataSourceImpl
               as Map,
         ),
       );
+
+  @override
+  Future<AccordsLocataire> accords() async =>
+      accordsDepuis(await api.get<Map<String, dynamic>>('/locataire/accords'));
+
+  @override
+  Future<void> action(String chemin, {Map<String, dynamic> corps = const {}}) =>
+      api.post<dynamic>('/locataire/$chemin', body: corps);
+
+  @override
+  Future<Uint8List> recuPaiement(String id) =>
+      api.telecharger('/locataire/paiements/$id/recu');
 
   @override
   Future<void> consentementWhatsapp({required bool accorde}) => api

@@ -25,6 +25,7 @@ import 'package:gestion_immo_mobile/features/bail/domain/entities/bail.dart';
 import 'package:gestion_immo_mobile/features/bail/presentation/bloc/bail_bloc.dart';
 import 'package:gestion_immo_mobile/features/bail/presentation/bloc/bail_event.dart';
 import 'package:gestion_immo_mobile/features/bail/presentation/bloc/bail_state.dart';
+import 'package:gestion_immo_mobile/features/bail/presentation/widgets/accord_bail.dart';
 import 'package:gestion_immo_mobile/features/bail/presentation/widgets/formulaire_bail.dart';
 import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
@@ -97,14 +98,69 @@ class _Fiche extends StatelessWidget {
   final VoidCallback recharger;
   const _Fiche({required this.fiche, required this.recharger});
 
+  Bail get b => fiche.bail;
+
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<BailBloc>();
-    final b = fiche.bail;
     final statut = b.statut;
     final caution = b.caution;
+    return Scaffold(
+      appBar: AppBar(
+        flexibleSpace: const FondMarque(),
+        title: Text(b.reference ?? 'Bail'),
+        actions: [MenuActions(actions: _actions(context))],
+      ),
+      floatingActionButton: _boutonPrincipal(context),
+      body: RefreshIndicator(
+        onRefresh: () async => recharger(),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+          children: [
+            EnTeteFiche(
+              surtitre: refs.libelle('type_bail', b.typeBail),
+              titre: nomDe(b.locataire),
+              detail:
+                  'Appartement ${b.logement?.numero ?? ''} · ${montant(b.loyer)}',
+              statut: Statut(FamilleStatut.bail, 'statut_bail', statut),
+            ),
+            const SizedBox(height: AppTheme.espaceLg),
+            if (statut == 'brouillon' ||
+                b.avenantEnAttente != null ||
+                b.sortiePrevue != null) ...[
+              SectionAccordBail(bail: b, recharger: recharger),
+              const SizedBox(height: AppTheme.espaceLg),
+            ],
+            _informations(context),
+            const SizedBox(height: AppTheme.espaceLg),
+            if (statut != 'brouillon') _loyers(context),
+            if (caution != null) ...[
+              const SizedBox(height: AppTheme.espaceLg),
+              _caution(context, caution),
+            ],
+            const SizedBox(height: AppTheme.espaceLg),
+            _etatsDesLieux(context),
+            const SizedBox(height: AppTheme.espaceLg),
+            _contrats(context),
+            const SizedBox(height: AppTheme.espaceLg),
+            SectionDocuments(type: 'lease', id: b.id, partagerPhotos: true),
+            if (statut == 'termine') ...[
+              const SizedBox(height: AppTheme.espaceLg),
+              const Encadre(
+                'Bail terminé : réglez la caution (restitution ou retenue justifiée) puis clôturez le bail depuis le menu.',
+                ton: TonStatut.avertissement,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 
-    final actions = <(String, VoidCallback, bool)>[
+  /// Menu de la barre : actions possibles selon le statut du bail.
+  List<(String, VoidCallback, bool)> _actions(BuildContext context) {
+    final bloc = context.read<BailBloc>();
+    final statut = b.statut;
+    return <(String, VoidCallback, bool)>[
       if (statut == 'brouillon')
         (
           'Modifier',
@@ -113,11 +169,19 @@ class _Fiche extends StatelessWidget {
           },
           false,
         ),
-      if (statut == 'actif')
+      if (statut == 'actif' && b.avenantEnAttente == null)
         (
-          'Réviser le loyer',
+          'Proposer un nouveau loyer',
           () async {
             if (await reviserLoyer(context, b)) recharger();
+          },
+          false,
+        ),
+      if (statut == 'actif' && b.sortiePrevue == null)
+        (
+          'Donner congé',
+          () async {
+            if (await donnerConge(context, b)) recharger();
           },
           false,
         ),
@@ -160,244 +224,212 @@ class _Fiche extends StatelessWidget {
           true,
         ),
     ];
+  }
 
-    return Scaffold(
-      appBar: AppBar(
-        flexibleSpace: const FondMarque(),
-        title: Text(b.reference ?? 'Bail'),
-        actions: [MenuActions(actions: actions)],
-      ),
-      floatingActionButton: statut == 'brouillon'
-          ? FloatingActionButton.extended(
-              onPressed: () async {
-                final ok = await confirmer(
-                  context,
-                  titre: 'Activer le bail',
-                  message: "L'appartement passe « Occupé », les échéances sont générées sur 12 mois et la caution est ouverte.",
-                  action: 'Activer',
-                );
-                if (ok != null) bloc.add(ActiverBailEvent(fiche.bail.id));
-              },
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Activer le bail'),
-            )
-          : statut == 'actif'
-          ? FloatingActionButton.extended(
-              onPressed: () async {
-                if (await encaisser(context, bail: b)) recharger();
-              },
-              icon: const Icon(Icons.payments_outlined),
-              label: const Text('Encaisser'),
-            )
-          : null,
-      body: RefreshIndicator(
-        onRefresh: () async => recharger(),
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-          children: [
-            EnTeteFiche(
-              surtitre: refs.libelle('type_bail', b.typeBail),
-              titre: nomDe(b.locataire),
-              detail:
-                  'Appartement ${b.logement?.numero ?? ''} · ${montant(b.loyer)}',
-              statut: Statut(FamilleStatut.bail, 'statut_bail', statut),
-            ),
-            const SizedBox(height: AppTheme.espaceLg),
-            Section(
-              titre: 'Informations',
-              children: [
-                Ligne(
-                  'Locataire',
-                  null,
-                  widget: TextButton(
-                    onPressed: b.locataire == null
-                        ? null
-                        : () => ouvrir(
-                            context,
-                            LocataireDetailPage(id: b.locataire!.id),
-                          ),
-                    child: Text(nomDe(b.locataire)),
-                  ),
-                ),
-                Ligne(
-                  'Logement',
-                  'Appartement ${b.logement?.numero ?? ''} · ${b.logement?.immeubleNom ?? ''}',
-                ),
-                Ligne(
-                  'Période',
-                  '${date(b.debut)} → ${b.fin == null ? 'durée indéterminée' : date(b.fin)}',
-                ),
-                if (b.sortieLe != null) Ligne('Sorti le', date(b.sortieLe)),
-                Ligne(
-                  'Loyer',
-                  '${montant(b.loyer)} · ${refs.libelle('periodicite', b.periodicite)}',
-                ),
-                Ligne('Charges', montant(b.charges)),
-                Ligne("Jour d'échéance", 'le ${b.jourEcheance ?? '—'}'),
-                Ligne('Préavis', '${b.preavisMois ?? '—'} mois'),
-                if (b.conditionsParticulieres != null)
-                  Ligne('Conditions particulières', b.conditionsParticulieres),
-              ],
-            ),
-            const SizedBox(height: AppTheme.espaceLg),
-            if (statut != 'brouillon')
-              Section(
-                titre: 'Loyers',
-                action: TextButton(
-                  onPressed: () => ouvrir(
-                    context,
-                    EcheancesPage(bailId: b.id, titre: b.reference),
-                  ),
-                  child: const Text('Échéances'),
-                ),
-                children: [
-                  Ligne(
-                    'Reste dû',
-                    null,
-                    widget: Montant(
-                      b.resteDu,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: (b.resteDu ?? 0) > 0
-                            ? context.palette.danger
-                            : null,
-                      ),
-                    ),
-                  ),
-                  Ligne('Total encaissé', montant(b.totalEncaisse)),
-                ],
-              ),
-            if (caution != null) ...[
-              const SizedBox(height: AppTheme.espaceLg),
-              Section(
-                titre: 'Caution',
-                padding: false,
-                children: [
-                  ListTile(
-                    title: Text(
-                      '${montant(caution.recue)} reçus sur ${montant(caution.attendue)}',
-                    ),
-                    subtitle:
-                        (caution.retenue ?? 0) + (caution.restituee ?? 0) > 0
-                        ? Text(
-                            'Retenu ${montant(caution.retenue)} · restitué ${montant(caution.restituee)}',
-                          )
-                        : null,
-                    trailing: Statut(
-                      FamilleStatut.caution,
-                      'statut_caution',
-                      caution.statut,
-                    ),
-                    onTap: () async {
-                      await ouvrir(context, CautionDetailPage(id: caution.id));
-                      recharger();
-                    },
-                  ),
-                ],
-              ),
-            ],
-            const SizedBox(height: AppTheme.espaceLg),
-            Section(
-              titre: 'États des lieux',
-              padding: false,
-              action: statut == 'annule' || statut == 'clos'
-                  ? null
-                  : TextButton(
-                      onPressed: () async {
-                        final type = statut == 'brouillon'
-                            ? 'entree'
-                            : statut == 'termine'
-                            ? 'sortie'
-                            : null;
-                        if (await creerEtatDesLieux(
-                              context,
-                              bailId: b.id,
-                              type: type,
-                            ) !=
-                            null) {
-                          recharger();
-                        }
-                      },
-                      child: const Text('Nouveau'),
-                    ),
-              children: [
-                if (b.etatsDesLieux.isEmpty)
-                  const ListTile(title: Text('Aucun état des lieux')),
-                for (final i in b.etatsDesLieux)
-                  TuileOption(
-                    icone: Icons.description_outlined,
-                    titre:
-                        '${refs.libelle('type_etat_des_lieux', i.type)} · version ${i.version ?? ''}',
-                    detail: date(i.date),
-                    fin: Statut(
-                      FamilleStatut.etatDesLieux,
-                      'statut_etat_des_lieux',
-                      i.statut,
-                    ),
-                    onTap: () async {
-                      await ouvrir(context, EtatDesLieuxDetailPage(id: i.id));
-                      recharger();
-                    },
-                  ),
-                if (b.etatsDesLieux.any((i) => i.type == 'sortie'))
-                  TextButton(
-                    onPressed: () =>
-                        ouvrir(context, ComparaisonPage(bailId: b.id)),
-                    child: const Text('Comparer entrée et sortie'),
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.espaceLg),
-            Section(
-              titre: 'Contrat de bail',
-              padding: false,
-              action: statut == 'annule'
-                  ? null
-                  : TextButton(
-                      onPressed: () async {
-                        if (await genererContrat(context, b)) recharger();
-                      },
-                      child: const Text('Générer'),
-                    ),
-              children: [
-                if (fiche.contrats.isEmpty)
-                  const ListTile(title: Text('Aucun contrat généré')),
-                for (final c in fiche.contrats)
-                  TuileOption(
-                    icone: Icons.description_outlined,
-                    titre: 'Contrat version ${c.version}',
-                    detail:
-                        'Modèle v${c.versionModele ?? ''} · ${date(c.creeLe)}',
-                    fin: IconButton(
-                      tooltip: 'Partager',
-                      icon: const Icon(Icons.share_outlined),
-                      onPressed: () => ouvrirFichierDocument(
-                        context,
-                        c.documentId,
-                        'contrat-${b.reference}-v${c.version}.pdf',
-                        partager: true,
-                      ),
-                    ),
-                    onTap: () => ouvrirFichierDocument(
-                      context,
-                      c.documentId,
-                      'contrat-${b.reference}-v${c.version}.pdf',
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.espaceLg),
-            SectionDocuments(type: 'lease', id: b.id, partagerPhotos: true),
-            if (statut == 'termine') ...[
-              const SizedBox(height: AppTheme.espaceLg),
-              const Encadre(
-                'Bail terminé : réglez la caution (restitution ou retenue justifiée) puis clôturez le bail depuis le menu.',
-                ton: TonStatut.avertissement,
-              ),
-            ],
-          ],
+  /// Action principale : activer un brouillon, encaisser sur un bail actif.
+  Widget? _boutonPrincipal(BuildContext context) {
+    final bloc = context.read<BailBloc>();
+    final statut = b.statut;
+    return statut == 'brouillon'
+        ? FloatingActionButton.extended(
+            onPressed: () async {
+              final ok = await confirmer(
+                context,
+                titre: 'Activer le bail',
+                message: "L'appartement passe « Occupé », les échéances sont générées sur 12 mois et la caution est ouverte.",
+                action: 'Activer',
+              );
+              if (ok != null) bloc.add(ActiverBailEvent(fiche.bail.id));
+            },
+            icon: const Icon(Icons.play_arrow),
+            label: const Text('Activer le bail'),
+          )
+        : statut == 'actif'
+        ? FloatingActionButton.extended(
+            onPressed: () async {
+              if (await encaisser(context, bail: b)) recharger();
+            },
+            icon: const Icon(Icons.payments_outlined),
+            label: const Text('Encaisser'),
+          )
+        : null;
+  }
+
+  Widget _informations(BuildContext context) => Section(
+    titre: 'Informations',
+    children: [
+      Ligne(
+        'Locataire',
+        null,
+        widget: TextButton(
+          onPressed: b.locataire == null
+              ? null
+              : () => ouvrir(context, LocataireDetailPage(id: b.locataire!.id)),
+          child: Text(nomDe(b.locataire)),
         ),
       ),
+      Ligne(
+        'Logement',
+        'Appartement ${b.logement?.numero ?? ''} · ${b.logement?.immeubleNom ?? ''}',
+      ),
+      Ligne(
+        'Période',
+        '${date(b.debut)} → ${b.fin == null ? 'durée indéterminée' : date(b.fin)}',
+      ),
+      if (b.sortieLe != null) Ligne('Sorti le', date(b.sortieLe)),
+      if (b.sortiePrevue != null) Ligne('Sortie prévue', date(b.sortiePrevue)),
+      Ligne(
+        'Loyer',
+        '${montant(b.loyer)} · ${refs.libelle('periodicite', b.periodicite)}',
+      ),
+      Ligne('Charges', montant(b.charges)),
+      Ligne("Jour d'échéance", 'le ${b.jourEcheance ?? '—'}'),
+      Ligne('Préavis', '${b.preavisMois ?? '—'} mois'),
+      if (b.conditionsParticulieres != null)
+        Ligne('Conditions particulières', b.conditionsParticulieres),
+    ],
+  );
+
+  Widget _loyers(BuildContext context) => Section(
+    titre: 'Loyers',
+    action: TextButton(
+      onPressed: () =>
+          ouvrir(context, EcheancesPage(bailId: b.id, titre: b.reference)),
+      child: const Text('Échéances'),
+    ),
+    children: [
+      Ligne(
+        'Reste dû',
+        null,
+        widget: Montant(
+          b.resteDu,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: (b.resteDu ?? 0) > 0 ? context.palette.danger : null,
+          ),
+        ),
+      ),
+      Ligne('Total encaissé', montant(b.totalEncaisse)),
+    ],
+  );
+
+  Widget _caution(BuildContext context, CautionDuBail caution) => Section(
+    titre: 'Caution',
+    padding: false,
+    children: [
+      ListTile(
+        title: Text(
+          '${montant(caution.recue)} reçus sur ${montant(caution.attendue)}',
+        ),
+        subtitle: (caution.retenue ?? 0) + (caution.restituee ?? 0) > 0
+            ? Text(
+                'Retenu ${montant(caution.retenue)} · restitué ${montant(caution.restituee)}',
+              )
+            : null,
+        trailing: Statut(
+          FamilleStatut.caution,
+          'statut_caution',
+          caution.statut,
+        ),
+        onTap: () async {
+          await ouvrir(context, CautionDetailPage(id: caution.id));
+          recharger();
+        },
+      ),
+    ],
+  );
+
+  Widget _etatsDesLieux(BuildContext context) {
+    final statut = b.statut;
+    return Section(
+      titre: 'États des lieux',
+      padding: false,
+      action: statut == 'annule' || statut == 'clos'
+          ? null
+          : TextButton(
+              onPressed: () async {
+                final type = statut == 'brouillon'
+                    ? 'entree'
+                    : statut == 'termine'
+                    ? 'sortie'
+                    : null;
+                if (await creerEtatDesLieux(
+                      context,
+                      bailId: b.id,
+                      type: type,
+                    ) !=
+                    null) {
+                  recharger();
+                }
+              },
+              child: const Text('Nouveau'),
+            ),
+      children: [
+        if (b.etatsDesLieux.isEmpty)
+          const ListTile(title: Text('Aucun état des lieux')),
+        for (final i in b.etatsDesLieux)
+          TuileOption(
+            icone: Icons.description_outlined,
+            titre:
+                '${refs.libelle('type_etat_des_lieux', i.type)} · version ${i.version ?? ''}',
+            detail: date(i.date),
+            fin: Statut(
+              FamilleStatut.etatDesLieux,
+              'statut_etat_des_lieux',
+              i.statut,
+            ),
+            onTap: () async {
+              await ouvrir(context, EtatDesLieuxDetailPage(id: i.id));
+              recharger();
+            },
+          ),
+        if (b.etatsDesLieux.any((i) => i.type == 'sortie'))
+          TextButton(
+            onPressed: () => ouvrir(context, ComparaisonPage(bailId: b.id)),
+            child: const Text('Comparer entrée et sortie'),
+          ),
+      ],
+    );
+  }
+
+  Widget _contrats(BuildContext context) {
+    final statut = b.statut;
+    return Section(
+      titre: 'Contrat de bail',
+      padding: false,
+      action: statut == 'annule'
+          ? null
+          : TextButton(
+              onPressed: () async {
+                if (await genererContrat(context, b)) recharger();
+              },
+              child: const Text('Générer'),
+            ),
+      children: [
+        if (fiche.contrats.isEmpty)
+          const ListTile(title: Text('Aucun contrat généré')),
+        for (final c in fiche.contrats)
+          TuileOption(
+            icone: Icons.description_outlined,
+            titre: 'Contrat version ${c.version}',
+            detail: 'Modèle v${c.versionModele ?? ''} · ${date(c.creeLe)}',
+            fin: IconButton(
+              tooltip: 'Partager',
+              icon: const Icon(Icons.share_outlined),
+              onPressed: () => ouvrirFichierDocument(
+                context,
+                c.documentId,
+                'contrat-${b.reference}-v${c.version}.pdf',
+                partager: true,
+              ),
+            ),
+            onTap: () => ouvrirFichierDocument(
+              context,
+              c.documentId,
+              'contrat-${b.reference}-v${c.version}.pdf',
+            ),
+          ),
+      ],
     );
   }
 }

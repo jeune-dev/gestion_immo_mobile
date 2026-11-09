@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 
+import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 
@@ -20,57 +20,25 @@ class EcheanceRepositoryImpl implements EcheanceRepository {
     String? locataireId,
     bool impayes = false,
     String? statut,
-  }) async {
-    try {
-      final echeances = await remoteDataSource.getEcheances(
-        page: page,
-        bailId: bailId,
-        locataireId: locataireId,
-        impayes: impayes,
-        statut: statut,
-      );
-      return Right(echeances);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(
+    () => remoteDataSource.getEcheances(
+      page: page,
+      bailId: bailId,
+      locataireId: locataireId,
+      impayes: impayes,
+      statut: statut,
+    ),
+  );
 
   @override
   Future<Either<Failure, EcheanceDetail>> getEcheance(
     String id, {
     bool espaceLocataire = false,
-  }) async {
-    try {
-      return Right(
-        await remoteDataSource.getEcheance(
-          id,
-          espaceLocataire: espaceLocataire,
-        ),
-      );
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(
+    () => remoteDataSource.getEcheance(id, espaceLocataire: espaceLocataire),
+  );
 
   @override
-  Future<Either<Failure, void>> annulerEcheance(String id, String motif) async {
-    try {
-      await remoteDataSource.annulerEcheance(id, motif);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, void>> annulerEcheance(String id, String motif) =>
+      appelApi(() => remoteDataSource.annulerEcheance(id, motif));
 }

@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:gestion_immo_mobile/core/utils/journal.dart';
 import 'package:gestion_immo_mobile/core/utils/fichier_temporaire.dart';
 
 /// Toutes les données sont au backend : efface ce que les anciennes versions ont
@@ -15,7 +15,7 @@ Future<void> nettoyerStockageLocal({FlutterSecureStorage? coffre}) async {
     try {
       await action();
     } catch (e) {
-      debugPrint('Nettoyage du stockage local incomplet : $e');
+      journalDebug('Nettoyage du stockage local incomplet : $e');
     }
   }
 

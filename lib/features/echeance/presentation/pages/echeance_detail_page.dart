@@ -1,7 +1,5 @@
-import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart';
 
-import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
@@ -38,21 +36,15 @@ class EcheanceDetailPage extends StatefulWidget {
 }
 
 class _EcheanceDetailPageState extends State<EcheanceDetailPage> {
-  late Future<Either<Failure, EcheanceDetail>> _fiche = _charger();
   bool _modifiee = false;
 
-  Future<Either<Failure, EcheanceDetail>> _charger() =>
-      sl<GetEcheance>()(widget.id, espaceLocataire: widget.espaceLocataire);
-
-  void _recharger() => setState(() => _fiche = _charger());
-
-  void _apresAction(bool reussi) {
+  void _apresAction(bool reussi, VoidCallback recharger) {
     if (!reussi || !mounted) return;
     _modifiee = true;
-    _recharger();
+    recharger();
   }
 
-  Future<void> _annuler(EcheanceDetail d) async {
+  Future<void> _annuler(EcheanceDetail d, VoidCallback recharger) async {
     final motif = await confirmer(
       context,
       titre: "Annuler l'échéance",
@@ -62,13 +54,12 @@ class _EcheanceDetailPageState extends State<EcheanceDetailPage> {
       motif: true,
     );
     if (motif == null || !mounted) return;
-    _apresAction(
-      await reussir(
-        context,
-        () => sl<AnnulerEcheance>()(d.echeance.id, motif),
-        succes: 'Échéance annulée',
-      ),
+    final reussi = await reussir(
+      context,
+      () => sl<AnnulerEcheance>()(d.echeance.id, motif),
+      succes: 'Échéance annulée',
     );
+    _apresAction(reussi, recharger);
   }
 
   @override
@@ -78,26 +69,23 @@ class _EcheanceDetailPageState extends State<EcheanceDetailPage> {
       onPopInvokedWithResult: (aQuitte, _) {
         if (!aQuitte) Navigator.of(context).pop(_modifiee);
       },
-      child: FutureBuilder<Either<Failure, EcheanceDetail>>(
-        future: _fiche,
-        builder: (context, s) {
-          if (!s.hasData) return const VueChargement(titre: 'Échéance');
-          return s.data!.fold(
-            (f) => VueChargement(
-              titre: 'Échéance',
-              failure: f,
-              onReessayer: _recharger,
-            ),
-            (d) => _buildFiche(context, d),
-          );
-        },
+      child: FicheChargee<EcheanceDetail>(
+        titre: 'Échéance',
+        charger: () => sl<GetEcheance>()(
+          widget.id,
+          espaceLocataire: widget.espaceLocataire,
+        ),
+        fiche: _buildFiche,
       ),
     );
   }
 
-  Widget _buildFiche(BuildContext context, EcheanceDetail d) {
+  Widget _buildFiche(
+    BuildContext context,
+    EcheanceDetail d,
+    VoidCallback recharger,
+  ) {
     final e = d.echeance;
-    final payable = e.payable;
     final logement = [
       if (d.immeuble != null) d.immeuble!,
       if (e.logementNumero != null) 'Appartement ${e.logementNumero}',
@@ -108,55 +96,19 @@ class _EcheanceDetailPageState extends State<EcheanceDetailPage> {
         title: Text(e.libelle ?? 'Échéance'),
       ),
       body: RefreshIndicator(
-        onRefresh: () async => _recharger(),
+        onRefresh: () async => recharger(),
         child: ListView(
           padding: const EdgeInsets.all(AppTheme.espaceMd),
           children: [
-            CarteMarque(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'LOYER',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.6,
-                          ),
-                        ),
-                      ),
-                      Statut(
-                        FamilleStatut.echeance,
-                        'statut_echeance',
-                        e.statut,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.espaceSm),
-                  Text(
-                    montant(payable ? e.reste : e.montantDu),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.espaceXs),
-                  Text(
-                    payable
-                        ? 'Reste à payer · échéance ${date(e.dateEcheance)}'
-                        : e.statut == 'paye' && d.payeeLe != null
-                        ? 'Soldée le ${date(d.payeeLe)}'
-                        : 'Échéance ${date(e.dateEcheance)}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ],
+            CarteMontant(
+              surtitre: 'Loyer',
+              statut: Statut(
+                FamilleStatut.echeance,
+                'statut_echeance',
+                e.statut,
               ),
+              montant: e.payable ? e.reste : e.montantDu,
+              sousTitre: _sousTitre(d),
             ),
             const SizedBox(height: AppTheme.espaceLg),
             Section(
@@ -185,21 +137,10 @@ class _EcheanceDetailPageState extends State<EcheanceDetailPage> {
                 if (d.imputations.isEmpty)
                   const Ligne('Aucun paiement pour le moment', null)
                 else
-                  for (final p in d.imputations)
-                    TuileOption(
-                      sansMarge: true,
-                      icone: Icons.check_circle_outline,
-                      titre: montant(p.montant),
-                      detail: [
-                        date(p.payeLe ?? p.imputeLe),
-                        if (p.moyen != null)
-                          refs.libelle('mode_paiement', p.moyen),
-                        if (p.reference != null) p.reference!,
-                      ].join(' · '),
-                    ),
+                  for (final p in d.imputations) _TuileImputation(p),
               ],
             ),
-            if (d.quittance != null) ...[
+            if (d.quittance case final q?) ...[
               const SizedBox(height: AppTheme.espaceMd),
               Section(
                 titre: 'Quittance',
@@ -207,15 +148,13 @@ class _EcheanceDetailPageState extends State<EcheanceDetailPage> {
                   TuileOption(
                     sansMarge: true,
                     icone: Icons.description_outlined,
-                    titre: d.quittance!.numero == null
-                        ? 'Quittance'
-                        : 'N° ${d.quittance!.numero}',
-                    detail: 'Émise le ${date(d.quittance!.emiseLe)}',
+                    titre: q.numero == null ? 'Quittance' : 'N° ${q.numero}',
+                    detail: 'Émise le ${date(q.emiseLe)}',
                     fin: const Icon(Icons.chevron_right),
                     onTap: () => ouvrir(
                       context,
                       QuittanceDetailPage(
-                        id: d.quittance!.id,
+                        id: q.id,
                         espaceLocataire: widget.espaceLocataire,
                       ),
                     ),
@@ -223,40 +162,88 @@ class _EcheanceDetailPageState extends State<EcheanceDetailPage> {
                 ],
               ),
             ],
-            if (payable) ...[
+            if (e.payable) ...[
               const SizedBox(height: AppTheme.espaceLg),
-              if (widget.espaceLocataire)
-                if (e.bailId != null)
-                  FilledButton.icon(
-                    icon: const Icon(Icons.payments_outlined),
-                    label: Text('Payer ${montant(e.reste)}'),
-                    onPressed: () async => _apresAction(
-                      await payer(context, echeance: e, bailId: e.bailId!) ==
-                          true,
-                    ),
-                  )
-                else
-                  const SizedBox.shrink()
-              else ...[
-                FilledButton.icon(
-                  icon: const Icon(Icons.payments_outlined),
-                  label: const Text('Encaisser'),
-                  onPressed: () async =>
-                      _apresAction(await encaisser(context, echeance: e)),
-                ),
-                if (e.montantPaye == 0) ...[
-                  const SizedBox(height: AppTheme.espaceSm),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.block),
-                    label: const Text("Annuler l'échéance"),
-                    onPressed: () => _annuler(d),
-                  ),
-                ],
-              ],
+              ...(widget.espaceLocataire
+                  ? _actionsLocataire(context, d, recharger)
+                  : _actionsProprietaire(context, d, recharger)),
             ],
           ],
         ),
       ),
     );
   }
+
+  String _sousTitre(EcheanceDetail d) {
+    final e = d.echeance;
+    if (e.payable) return 'Reste à payer · échéance ${date(e.dateEcheance)}';
+    if (e.statut == 'paye' && d.payeeLe != null) {
+      return 'Soldée le ${date(d.payeeLe)}';
+    }
+    return 'Échéance ${date(e.dateEcheance)}';
+  }
+
+  /// Le locataire paie en ligne (le bail est nécessaire au choix du moyen).
+  List<Widget> _actionsLocataire(
+    BuildContext context,
+    EcheanceDetail d,
+    VoidCallback recharger,
+  ) {
+    final e = d.echeance;
+    final bailId = e.bailId;
+    if (bailId == null) return const [];
+    return [
+      FilledButton.icon(
+        icon: const Icon(Icons.payments_outlined),
+        label: Text('Payer ${montant(e.reste)}'),
+        onPressed: () async {
+          final paye = await payer(context, echeance: e, bailId: bailId);
+          _apresAction(paye == true, recharger);
+        },
+      ),
+    ];
+  }
+
+  /// Le propriétaire encaisse ; il peut annuler une échéance encore vierge.
+  List<Widget> _actionsProprietaire(
+    BuildContext context,
+    EcheanceDetail d,
+    VoidCallback recharger,
+  ) {
+    final e = d.echeance;
+    return [
+      FilledButton.icon(
+        icon: const Icon(Icons.payments_outlined),
+        label: const Text('Encaisser'),
+        onPressed: () async =>
+            _apresAction(await encaisser(context, echeance: e), recharger),
+      ),
+      if (e.montantPaye == 0) ...[
+        const SizedBox(height: AppTheme.espaceSm),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.block),
+          label: const Text("Annuler l'échéance"),
+          onPressed: () => _annuler(d, recharger),
+        ),
+      ],
+    ];
+  }
+}
+
+/// Paiement imputé : montant, date, moyen et référence.
+class _TuileImputation extends StatelessWidget {
+  final ImputationPaiement p;
+  const _TuileImputation(this.p);
+
+  @override
+  Widget build(BuildContext context) => TuileOption(
+    sansMarge: true,
+    icone: Icons.check_circle_outline,
+    titre: montant(p.montant),
+    detail: [
+      date(p.payeLe ?? p.imputeLe),
+      if (p.moyen != null) refs.libelle('mode_paiement', p.moyen),
+      if (p.reference != null) p.reference!,
+    ].join(' · '),
+  );
 }

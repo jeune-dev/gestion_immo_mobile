@@ -80,6 +80,12 @@ class _BiensPageState extends State<BiensPage>
   }
 
   @override
+  void dispose() {
+    _onglets.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final q = _q.isEmpty ? null : _q;
     return Scaffold(

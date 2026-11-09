@@ -122,157 +122,177 @@ class TravauxDetailPage extends StatelessWidget {
               statut: Statut(FamilleStatut.travaux, 'statut_travaux', t.statut),
             ),
             const SizedBox(height: AppTheme.espaceLg),
-            Section(
-              titre: 'Informations',
-              children: [
-                Ligne('Immeuble', t.immeubleNom ?? ''),
-                if (t.appartementNumero != null)
-                  Ligne('Appartement', t.appartementNumero),
-                Ligne(
-                  'Catégorie',
-                  refs.libelle('categorie_travaux', t.categorie),
-                ),
-                Ligne(
-                  'Priorité',
-                  null,
-                  widget: Statut(
-                    FamilleStatut.priorite,
-                    'priorite',
-                    t.priorite,
-                  ),
-                ),
-                Ligne('Artisan', t.artisanNom),
-                Ligne('Prévu le', date(t.prevuLe)),
-                Ligne('Coût estimé', montant(t.coutEstime)),
-                Ligne('Coût réel', montant(t.coutReel)),
-                Ligne('Dépenses liées', montant(t.totalDepenses)),
-                if (t.incidentReference != null)
-                  Ligne('Incident', t.incidentReference),
-                if (t.description != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(t.description!),
-                  ),
-              ],
-            ),
+            _informations(t),
             if (suivants.isNotEmpty) ...[
               const SizedBox(height: AppTheme.espaceLg),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final s in suivants)
-                    s == 'annule'
-                        ? TextButton(
-                            onPressed: () async {
-                              if (await changerStatutTravaux(context, t, s)) {
-                                bloc.add(RafraichirTravaux(id));
-                              }
-                            },
-                            child: const Text('Annuler les travaux'),
-                          )
-                        : OutlinedButton(
-                            onPressed: () async {
-                              if (await changerStatutTravaux(context, t, s)) {
-                                bloc.add(RafraichirTravaux(id));
-                              }
-                            },
-                            child: Text(
-                              '→ ${refs.libelle('statut_travaux', s)}',
-                            ),
-                          ),
-                ],
-              ),
+              _transitions(context, t, suivants),
             ],
             const SizedBox(height: AppTheme.espaceLg),
             for (final phase in ['avant', 'pendant', 'apres']) ...[
-              Section(
-                titre:
-                    'Photos ${refs.libelle('phase_photo', phase).toLowerCase()}',
-                action: t.ferme
-                    ? null
-                    : IconButton(
-                        tooltip: 'Ajouter',
-                        icon: const Icon(Icons.add_a_photo_outlined),
-                        onPressed: () => photo(phase),
-                      ),
-                children: [
-                  if ((t.photos[phase] ?? const []).isEmpty)
-                    Text(
-                      'Aucune photo',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    )
-                  else
-                    SizedBox(
-                      height: 96,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          for (final p in t.photos[phase]!)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: InkWell(
-                                onTap: () =>
-                                    afficherImage(context, p.document.id),
-                                // Chantier terminé ou annulé : les photos sont des preuves, l'API refuse leur retrait
-                                onLongPress: t.ferme ? null : () => retirer(p),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(
-                                    AppTheme.rayon,
-                                  ),
-                                  child: SizedBox(
-                                    width: 96,
-                                    height: 96,
-                                    child: ImageApi(p.document.id),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                ],
+              _PhotosChantier(
+                travaux: t,
+                phase: phase,
+                onAjouter: () => photo(phase),
+                onRetirer: retirer,
               ),
               const SizedBox(height: AppTheme.espaceSm),
             ],
             const SizedBox(height: AppTheme.espaceSm),
-            Section(
-              titre: 'Dépenses',
-              padding: false,
-              children: [
-                if (t.depenses.isEmpty)
-                  const ListTile(title: Text('Aucune dépense liée')),
-                for (final d in t.depenses)
-                  TuileOption(
-                    icone: Icons.receipt_long_outlined,
-                    titre: d.libelle,
-                    detail: date(d.date),
-                    fin: Montant(d.montant),
-                  ),
-              ],
-            ),
+            _depenses(t),
             const SizedBox(height: AppTheme.espaceLg),
-            Section(
-              titre: 'Historique',
-              padding: false,
-              children: [
-                for (final e in t.historique.reversed)
-                  TuileOption(
-                    icone: Icons.receipt_long_outlined,
-                    titre: refs.libelle('statut_travaux', e.statut),
-                    detail:
-                        '${dateHeure(e.date)}${e.commentaire != null ? ' · ${e.commentaire}' : ''}',
-                    fin: const SizedBox.shrink(),
-                  ),
-              ],
-            ),
+            _historique(t),
           ],
         ),
       ),
     );
   }
+
+  Widget _informations(Travaux t) => Section(
+    titre: 'Informations',
+    children: [
+      Ligne('Immeuble', t.immeubleNom ?? ''),
+      if (t.appartementNumero != null)
+        Ligne('Appartement', t.appartementNumero),
+      Ligne('Catégorie', refs.libelle('categorie_travaux', t.categorie)),
+      Ligne(
+        'Priorité',
+        null,
+        widget: Statut(FamilleStatut.priorite, 'priorite', t.priorite),
+      ),
+      Ligne('Artisan', t.artisanNom),
+      Ligne('Prévu le', date(t.prevuLe)),
+      Ligne('Coût estimé', montant(t.coutEstime)),
+      Ligne('Coût réel', montant(t.coutReel)),
+      Ligne('Dépenses liées', montant(t.totalDepenses)),
+      if (t.incidentReference != null) Ligne('Incident', t.incidentReference),
+      if (t.description != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(t.description!),
+        ),
+    ],
+  );
+
+  /// Passages possibles vers les statuts suivants (§ 18).
+  Widget _transitions(BuildContext context, Travaux t, List<String> suivants) {
+    final bloc = context.read<TravauxBloc>();
+    Future<void> changer(String statut) async {
+      if (await changerStatutTravaux(context, t, statut)) {
+        bloc.add(RafraichirTravaux(id));
+      }
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final s in suivants)
+          s == 'annule'
+              ? TextButton(
+                  onPressed: () => changer(s),
+                  child: const Text('Annuler les travaux'),
+                )
+              : OutlinedButton(
+                  onPressed: () => changer(s),
+                  child: Text('→ ${refs.libelle('statut_travaux', s)}'),
+                ),
+      ],
+    );
+  }
+
+  Widget _depenses(Travaux t) => Section(
+    titre: 'Dépenses',
+    padding: false,
+    children: [
+      if (t.depenses.isEmpty)
+        const ListTile(title: Text('Aucune dépense liée')),
+      for (final d in t.depenses)
+        TuileOption(
+          icone: Icons.receipt_long_outlined,
+          titre: d.libelle,
+          detail: date(d.date),
+          fin: Montant(d.montant),
+        ),
+    ],
+  );
+
+  Widget _historique(Travaux t) => Section(
+    titre: 'Historique',
+    padding: false,
+    children: [
+      for (final e in t.historique.reversed)
+        TuileOption(
+          icone: Icons.receipt_long_outlined,
+          titre: refs.libelle('statut_travaux', e.statut),
+          detail:
+              '${dateHeure(e.date)}${e.commentaire != null ? ' · ${e.commentaire}' : ''}',
+          fin: const SizedBox.shrink(),
+        ),
+    ],
+  );
+}
+
+/// Photos d'une phase du chantier (avant, pendant, après) : toucher pour
+/// agrandir, appui long pour retirer tant que le chantier est ouvert.
+class _PhotosChantier extends StatelessWidget {
+  final Travaux travaux;
+  final String phase;
+  final VoidCallback onAjouter;
+  final void Function(PhotoTravaux photo) onRetirer;
+
+  const _PhotosChantier({
+    required this.travaux,
+    required this.phase,
+    required this.onAjouter,
+    required this.onRetirer,
+  });
+
+  @override
+  Widget build(BuildContext context) => Section(
+    titre: 'Photos ${refs.libelle('phase_photo', phase).toLowerCase()}',
+    action: travaux.ferme
+        ? null
+        : IconButton(
+            tooltip: 'Ajouter',
+            icon: const Icon(Icons.add_a_photo_outlined),
+            onPressed: onAjouter,
+          ),
+    children: [
+      if ((travaux.photos[phase] ?? const []).isEmpty)
+        Text(
+          'Aucune photo',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        )
+      else
+        SizedBox(
+          height: 96,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              for (final p in travaux.photos[phase]!)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: InkWell(
+                    onTap: () => afficherImage(context, p.document.id),
+                    // Chantier terminé ou annulé : les photos sont des preuves, l'API refuse leur retrait
+                    onLongPress: travaux.ferme ? null : () => onRetirer(p),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(AppTheme.rayon),
+                      child: SizedBox(
+                        width: 96,
+                        height: 96,
+                        child: ImageApi(p.document.id),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+    ],
+  );
 }
 
 /// Raccourci réutilisé par l'écran des incidents.

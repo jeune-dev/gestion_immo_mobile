@@ -75,6 +75,12 @@ class _RapportsPageState extends State<RapportsPage>
   }
 
   @override
+  void dispose() {
+    _onglets.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final du = _periode.du, au = _periode.au;
     return Scaffold(

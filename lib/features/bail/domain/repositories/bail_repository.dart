@@ -27,6 +27,12 @@ abstract class BailRepository {
     String id,
     Map<String, dynamic> corps,
   );
+  Future<Either<Failure, Map<String, dynamic>>> action(
+    String id,
+    String chemin, {
+    Map<String, dynamic> corps,
+    String? fichier,
+  });
   Future<Either<Failure, void>> genererContrat(
     String id,
     Map<String, dynamic> corps, {

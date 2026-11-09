@@ -1,9 +1,10 @@
 import 'dart:typed_data';
 
-import 'package:dartz/dartz.dart' show Either;
+import 'package:dartz/dartz.dart' show Either, Right;
 import 'package:flutter/material.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
+import 'package:gestion_immo_mobile/core/services/cache_images.dart';
 import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 import 'package:gestion_immo_mobile/core/widgets/actions.dart';
 import 'package:gestion_immo_mobile/injection_container.dart';
@@ -29,20 +30,28 @@ class ImageApi extends StatefulWidget {
 }
 
 class _ImageApiState extends State<ImageApi> {
-  late Future<Either<Failure, Uint8List>> _image = sl<TelechargerDocument>()(
-    widget.documentId,
-    taille: widget.taille,
-  );
+  late Future<Either<Failure, Uint8List>> _image = _charger();
+
+  /// Depuis le cache mémoire si l'image est déjà venue, sinon depuis l'API.
+  Future<Either<Failure, Uint8List>> _charger() async {
+    final cle = '${widget.documentId}|${widget.taille}';
+    final cache = sl<CacheImages>();
+    final connue = cache.lire(cle);
+    if (connue != null) return Right(connue);
+    final r = await sl<TelechargerDocument>()(
+      widget.documentId,
+      taille: widget.taille,
+    );
+    r.fold((_) {}, (octets) => cache.ecrire(cle, octets));
+    return r;
+  }
 
   @override
   void didUpdateWidget(covariant ImageApi ancien) {
     super.didUpdateWidget(ancien);
     if (ancien.documentId != widget.documentId ||
         ancien.taille != widget.taille) {
-      _image = sl<TelechargerDocument>()(
-        widget.documentId,
-        taille: widget.taille,
-      );
+      _image = _charger();
     }
   }
 

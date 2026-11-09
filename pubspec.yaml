@@ -50,7 +50,6 @@ dependencies:
   open_filex: ^5.0.0
   flutter_localizations:
     sdk: flutter
-  flutter_dotenv: ^6.0.1
   get_it: ^9.3.0
   dartz: ^0.10.1
   equatable: ^3.0.0
@@ -79,7 +78,6 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - config/
     # Logo Kërimmo (picto_kerimmo.png, logo_kerimmo.png)
     - assets/images/
     # Police Inter embarquée (charte § 2) : google_fonts la lit ici, sans réseau

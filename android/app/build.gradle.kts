@@ -1,4 +1,5 @@
 import java.io.FileInputStream
+import java.util.Base64
 import java.util.Properties
 
 plugins {
@@ -83,9 +84,22 @@ if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
 }
 
+// URL de l'API compilée dans l'application (`--dart-define=API_URL=…`, transmis
+// par Flutter en base64 dans la propriété `dart-defines`).
+fun urlApiCompilee(): String? =
+    (project.findProperty("dart-defines") as String?)
+        ?.split(",")
+        ?.map { String(Base64.getDecoder().decode(it)) }
+        ?.firstOrNull { it.startsWith("API_URL=") }
+        ?.removePrefix("API_URL=")
+
 gradle.taskGraph.whenReady {
     val publication = allTasks.any { it.name == "assembleRelease" || it.name == "bundleRelease" }
     if (publication && !keystorePropertiesFile.exists() && System.getenv("ALLOW_DEBUG_SIGNING") != "true") {
         throw GradleException("android/key.properties est requis pour signer une version de publication.")
+    }
+    // Sans URL https, l'application publiée refuserait de démarrer : refus dès le build.
+    if (publication && urlApiCompilee()?.startsWith("https://") != true) {
+        throw GradleException("Version de publication : --dart-define=API_URL=https://… est obligatoire.")
     }
 }

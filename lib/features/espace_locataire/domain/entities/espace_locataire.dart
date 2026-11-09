@@ -27,6 +27,11 @@ class LogementLocataire extends Equatable {
   final int montantEnRetard;
   final int montantDu;
 
+  /// Préavis du bail et congé en cours (date de sortie prévue, par qui).
+  final int? preavisMois;
+  final String? sortiePrevue;
+  final String? congePar;
+
   bool get actif => statutBail == 'actif';
 
   const LogementLocataire({
@@ -48,6 +53,9 @@ class LogementLocataire extends Equatable {
     this.prochaineEcheance,
     this.montantEnRetard = 0,
     this.montantDu = 0,
+    this.preavisMois,
+    this.sortiePrevue,
+    this.congePar,
   });
 
   @override
@@ -67,6 +75,8 @@ class LogementLocataire extends Equatable {
     prochaineEcheance,
     montantEnRetard,
     montantDu,
+    sortiePrevue,
+    congePar,
   ];
 }
 

@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'core/network/api_client.dart';
 import 'core/services/auth_event_bus.dart';
 import 'core/services/referentiels_service.dart';
+import 'core/services/cache_images.dart';
 import 'core/services/token_service.dart';
 
 // Auth
@@ -84,6 +85,7 @@ import 'features/bail/domain/usecases/get_baux.dart';
 import 'features/bail/domain/usecases/get_fiche_bail.dart';
 import 'features/bail/domain/usecases/modifier_bail.dart';
 import 'features/bail/domain/usecases/reviser_loyer.dart';
+import 'features/bail/domain/usecases/action_bail.dart';
 import 'features/bail/domain/usecases/terminer_bail.dart';
 import 'features/bail/presentation/bloc/bail_bloc.dart';
 import 'features/immeuble/data/datasources/immeuble_remote_datasource.dart';
@@ -128,6 +130,7 @@ import 'features/paiement/domain/usecases/get_transactions.dart';
 import 'features/paiement/domain/usecases/rejeter_rapprochement.dart';
 import 'features/paiement/domain/usecases/rejeter_transaction.dart';
 import 'features/paiement/domain/usecases/rembourser_paiement.dart';
+import 'features/paiement/domain/usecases/recu_et_contestation.dart';
 import 'features/paiement/domain/usecases/resoudre_rapprochement.dart';
 import 'features/paiement/domain/usecases/valider_transaction.dart';
 import 'features/paiement/presentation/bloc/moyens_paiement_bloc.dart';
@@ -250,6 +253,7 @@ import 'features/etat_des_lieux/domain/usecases/modifier_releves_edl.dart';
 import 'features/etat_des_lieux/domain/usecases/preciser_element_edl.dart';
 import 'features/etat_des_lieux/domain/usecases/renommer_piece_edl.dart';
 import 'features/etat_des_lieux/domain/usecases/soumettre_etat_des_lieux.dart';
+import 'features/etat_des_lieux/domain/usecases/acceptation_papier_edl.dart';
 import 'features/etat_des_lieux/domain/usecases/supprimer_element_edl.dart';
 import 'features/etat_des_lieux/domain/usecases/supprimer_etat_des_lieux.dart';
 import 'features/etat_des_lieux/domain/usecases/supprimer_photo_edl.dart';
@@ -299,6 +303,7 @@ import 'features/espace_locataire/domain/repositories/espace_locataire_repositor
 import 'features/espace_locataire/domain/usecases/accepter_etat_des_lieux.dart';
 import 'features/espace_locataire/domain/usecases/ajouter_piece_signalement.dart';
 import 'features/espace_locataire/domain/usecases/consentir_whatsapp.dart';
+import 'features/espace_locataire/domain/usecases/accords_locataire.dart';
 import 'features/espace_locataire/domain/usecases/contester_etat_des_lieux.dart';
 import 'features/espace_locataire/domain/usecases/contester_retenue.dart';
 import 'features/espace_locataire/domain/usecases/declarer_preuve_paiement.dart';
@@ -427,6 +432,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetDocuments(sl()));
   sl.registerLazySingleton(() => AjouterPhotoDocument(sl()));
   sl.registerLazySingleton(() => TelechargerDocument(sl()));
+  sl.registerLazySingleton(() => CacheImages(sl()));
   sl.registerLazySingleton(() => GetLienDocument(sl()));
   sl.registerLazySingleton(() => ChangerVisibiliteDocument(sl()));
   sl.registerLazySingleton(() => SupprimerDocument(sl()));
@@ -556,6 +562,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => TerminerBail(sl()));
   sl.registerLazySingleton(() => CloturerBail(sl()));
   sl.registerLazySingleton(() => ReviserLoyer(sl()));
+  sl.registerLazySingleton(() => ActionBail(sl()));
   sl.registerLazySingleton(() => GenererContrat(sl()));
   sl.registerFactory(
     () => BailBloc(
@@ -603,6 +610,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetPaiements(sl()));
   sl.registerLazySingleton(() => GetFichePaiement(sl()));
   sl.registerLazySingleton(() => RembourserPaiement(sl()));
+  sl.registerLazySingleton(() => GetRecuPaiementProprietaire(sl()));
+  sl.registerLazySingleton(() => RepondreContestationPaiement(sl()));
   sl.registerLazySingleton(() => GetTransactions(sl()));
   sl.registerLazySingleton(() => GetTransaction(sl()));
   sl.registerLazySingleton(() => ValiderTransaction(sl()));
@@ -818,6 +827,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AjouterPhotoEdl(sl()));
   sl.registerLazySingleton(() => SupprimerPhotoEdl(sl()));
   sl.registerLazySingleton(() => SoumettreEtatDesLieux(sl()));
+  sl.registerLazySingleton(() => AcceptationPapierEdl(sl()));
   sl.registerLazySingleton(() => CorrigerEtatDesLieux(sl()));
   sl.registerLazySingleton(() => TelechargerPdfEdl(sl()));
   sl.registerLazySingleton(() => GetComparaisonEdl(sl()));
@@ -923,6 +933,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AccepterEtatDesLieux(sl()));
   sl.registerLazySingleton(() => AjouterPieceSignalement(sl()));
   sl.registerLazySingleton(() => ConsentirWhatsapp(sl()));
+  sl.registerLazySingleton(() => GetAccordsLocataire(sl()));
+  sl.registerLazySingleton(() => ActionLocataire(sl()));
+  sl.registerLazySingleton(() => GetRecuPaiement(sl()));
   sl.registerLazySingleton(() => ContesterEtatDesLieux(sl()));
   sl.registerLazySingleton(() => ContesterRetenue(sl()));
   sl.registerLazySingleton(() => DeclarerPreuvePaiement(sl()));

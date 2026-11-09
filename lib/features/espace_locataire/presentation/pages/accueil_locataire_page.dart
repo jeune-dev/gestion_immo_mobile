@@ -21,7 +21,9 @@ import 'package:gestion_immo_mobile/features/espace_locataire/domain/entities/es
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/accueil_locataire_bloc.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/accueil_locataire_event.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/bloc/accueil_locataire_state.dart';
+import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/accords_locataire_page.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/paiement_page.dart';
+import 'package:gestion_immo_mobile/features/espace_locataire/presentation/widgets/demarches_locataire.dart';
 import 'package:gestion_immo_mobile/core/widgets/logo.dart';
 import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
@@ -70,6 +72,13 @@ class AccueilLocatairePage extends StatelessWidget {
               child: logements.isEmpty
                   ? ListView(
                       children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                          child: BandeauAccords(
+                            onReponse: () =>
+                                bloc.add(RafraichirAccueilLocataire()),
+                          ),
+                        ),
                         Vide(
                           'Votre logement apparaîtra ici dès que votre propriétaire aura activé votre bail.',
                           icone: Icons.home_outlined,
@@ -85,6 +94,10 @@ class AccueilLocatairePage extends StatelessWidget {
                   : ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
+                        BandeauAccords(
+                          onReponse: () =>
+                              bloc.add(RafraichirAccueilLocataire()),
+                        ),
                         for (final h in logements) ...[
                           VueLogement(
                             h: h,
@@ -438,6 +451,44 @@ class VueLogement extends StatelessWidget {
                           ouvrirLien(context, 'tel:${h.proprietaireTelephone}'),
                     ),
             ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.espaceXl),
+        GroupeOptions(
+          titre: 'Mon bail',
+          children: [
+            if (h.sortiePrevue != null)
+              TuileOption(
+                icone: Icons.event_outlined,
+                titre: 'Départ prévu le ${date(h.sortiePrevue)}',
+                detail: h.congePar == 'locataire'
+                    ? 'Vous avez donné congé · toucher pour le retirer'
+                    : 'Congé donné par votre propriétaire',
+                onTap: h.congePar == 'locataire'
+                    ? () async {
+                        if (await retirerCongeLocataire(context, h.bailId)) {
+                          onPaye();
+                        }
+                      }
+                    : null,
+              )
+            else
+              TuileOption(
+                icone: Icons.logout,
+                titre: 'Donner congé',
+                detail: h.preavisMois == null || h.preavisMois == 0
+                    ? 'Prévenir votre propriétaire de votre départ'
+                    : 'Préavis de ${h.preavisMois} mois',
+                onTap: () async {
+                  if (await donnerCongeLocataire(
+                    context,
+                    bailId: h.bailId,
+                    preavisMois: h.preavisMois,
+                  )) {
+                    onPaye();
+                  }
+                },
+              ),
           ],
         ),
       ],

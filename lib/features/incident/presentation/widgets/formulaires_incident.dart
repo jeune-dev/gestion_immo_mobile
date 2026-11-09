@@ -68,7 +68,7 @@ Future<bool> planifierTravaux(BuildContext context, Incident i) async {
     context,
     EcranFormulaire(
       titre: 'Planifier des travaux',
-      initial: {'title': i.titre, 'priority': 'normale', 'status': 'valide'},
+      initial: {'title': i.titre, 'priority': 'normale'},
       champs: [
         const Champ('title', 'Intitulé', minLongueur: 2, maxLongueur: 150),
         const Champ(

@@ -41,6 +41,9 @@ abstract class EtatDesLieuxRemoteDataSource {
   Future<void> supprimerPhoto(String id, String photoId);
   Future<void> soumettre(String id);
 
+  /// Version signée sur papier (photo) : le locataire sans application l'accepte ainsi.
+  Future<void> acceptationPapier(String id, String photo);
+
   /// Nouvelle version (brouillon) d'un état des lieux accepté ou contesté.
   Future<EtatDesLieuxModel> corriger(String id);
   Future<Uint8List> pdf(String id);
@@ -158,6 +161,12 @@ class EtatDesLieuxRemoteDataSourceImpl implements EtatDesLieuxRemoteDataSource {
   @override
   Future<void> soumettre(String id) =>
       api.post<dynamic>(ApiEndpoints.etatDesLieuxSoumettre(id));
+
+  @override
+  Future<void> acceptationPapier(String id, String photo) => api.upload<dynamic>(
+    '/etats-des-lieux/$id/acceptation-papier',
+    cheminFichier: photo,
+  );
 
   @override
   Future<EtatDesLieuxModel> corriger(String id) async => _edl(

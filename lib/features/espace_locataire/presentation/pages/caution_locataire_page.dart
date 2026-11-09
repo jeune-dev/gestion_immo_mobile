@@ -145,60 +145,30 @@ class CarteCaution extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        CarteMarque(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'DÉTENU PAR LE PROPRIÉTAIRE',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                  ),
-                  Statut(FamilleStatut.caution, 'statut_caution', c.statut),
-                ],
+        CarteMontant(
+          surtitre: 'Détenu par le propriétaire',
+          statut: Statut(FamilleStatut.caution, 'statut_caution', c.statut),
+          montant: c.solde,
+          sousTitre: 'Bail ${c.bailReference ?? ''}',
+          pied: [
+            if (c.attendue > 0) ...[
+              const SizedBox(height: AppTheme.espaceLg),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progression.clamp(0.0, 1.0).toDouble(),
+                  minHeight: 6,
+                  color: AppColors.vertLogo,
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                ),
               ),
               const SizedBox(height: AppTheme.espaceSm),
               Text(
-                montant(c.solde),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
+                '${montant(c.recue)} versés sur ${montant(c.attendue)}',
+                style: const TextStyle(color: Colors.white, fontSize: 13),
               ),
-              const SizedBox(height: AppTheme.espaceXs),
-              Text(
-                'Bail ${c.bailReference ?? ''}',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.85)),
-              ),
-              if (c.attendue > 0) ...[
-                const SizedBox(height: AppTheme.espaceLg),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progression.clamp(0.0, 1.0).toDouble(),
-                    minHeight: 6,
-                    color: AppColors.vertLogo,
-                    backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  ),
-                ),
-                const SizedBox(height: AppTheme.espaceSm),
-                Text(
-                  '${montant(c.recue)} versés sur ${montant(c.attendue)}',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
-                ),
-              ],
             ],
-          ),
+          ],
         ),
         const SizedBox(height: AppTheme.espaceMd),
         Section(

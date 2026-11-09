@@ -97,7 +97,12 @@ Future<bool> encaisser(
       ],
       libelleEnvoi: 'Encaisser',
       envoyer: (corps) async {
-        if (echeance?.bailId != null) corps['lease_id'] = echeance!.bailId;
+        // L'échéance choisie avant d'ouvrir le formulaire n'en est pas un champ :
+        // sans elle, l'API imputerait le montant aux échéances les plus anciennes.
+        if (echeance != null) {
+          corps['rent_schedule_id'] = echeance.id;
+          if (echeance.bailId != null) corps['lease_id'] = echeance.bailId;
+        }
         if (bail != null) corps['lease_id'] = bail.id;
         return (await sl<EncaisserPaiement>()(corps, cle: cle)).ouLeve();
       },

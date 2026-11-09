@@ -53,6 +53,7 @@ abstract class EtatDesLieuxRepository {
   );
   Future<Either<Failure, void>> supprimerPhoto(String id, String photoId);
   Future<Either<Failure, void>> soumettre(String id);
+  Future<Either<Failure, void>> acceptationPapier(String id, String photo);
   Future<Either<Failure, EtatDesLieux>> corriger(String id);
   Future<Either<Failure, Uint8List>> pdf(String id);
   Future<Either<Failure, ComparaisonEdl>> comparaison(String bailId);

@@ -1,8 +1,6 @@
-import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart';
 
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
-import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/statuts.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
@@ -107,32 +105,18 @@ class ChargeLocataireDetailPage extends StatefulWidget {
 }
 
 class _ChargeLocataireDetailPageState extends State<ChargeLocataireDetailPage> {
-  late Future<Either<Failure, ChargeRefacturee>> _charge = _charger();
-
-  Future<Either<Failure, ChargeRefacturee>> _charger() =>
-      sl<GetMaCharge>()(widget.id);
-
-  void _recharger() => setState(() => _charge = _charger());
-
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<Either<Failure, ChargeRefacturee>>(
-      future: _charge,
-      builder: (context, s) {
-        if (!s.hasData) return const VueChargement(titre: 'Charge');
-        return s.data!.fold(
-          (f) => VueChargement(
-            titre: 'Charge',
-            failure: f,
-            onReessayer: _recharger,
-          ),
-          (c) => _buildFiche(context, c),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => FicheChargee<ChargeRefacturee>(
+    titre: 'Charge',
+    charger: () => sl<GetMaCharge>()(widget.id),
+    fiche: _buildFiche,
+  );
 
-  Widget _buildFiche(BuildContext context, ChargeRefacturee c) {
+  Widget _buildFiche(
+    BuildContext context,
+    ChargeRefacturee c,
+    VoidCallback recharger,
+  ) {
     final k = c.calcul;
     return Scaffold(
       appBar: AppBar(
@@ -140,51 +124,17 @@ class _ChargeLocataireDetailPageState extends State<ChargeLocataireDetailPage> {
         title: Text(c.libelle ?? 'Charge'),
       ),
       body: RefreshIndicator(
-        onRefresh: () async => _recharger(),
+        onRefresh: () async => recharger(),
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            CarteMarque(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          refs
-                              .libelle('type_charge', c.typeCharge)
-                              .toUpperCase(),
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.6,
-                          ),
-                        ),
-                      ),
-                      Statut(FamilleStatut.charge, 'statut_charge', c.statut),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.espaceSm),
-                  Text(
-                    montant(c.payable ? c.reste : c.montant),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.espaceXs),
-                  Text(
-                    c.payable
-                        ? 'Reste à payer · échéance ${date(c.dateEcheance)}'
-                        : 'Échéance ${date(c.dateEcheance)}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ],
-              ),
+            CarteMontant(
+              surtitre: refs.libelle('type_charge', c.typeCharge),
+              statut: Statut(FamilleStatut.charge, 'statut_charge', c.statut),
+              montant: c.payable ? c.reste : c.montant,
+              sousTitre: c.payable
+                  ? 'Reste à payer · échéance ${date(c.dateEcheance)}'
+                  : 'Échéance ${date(c.dateEcheance)}',
             ),
             const SizedBox(height: AppTheme.espaceLg),
             Section(
@@ -225,7 +175,7 @@ class _ChargeLocataireDetailPageState extends State<ChargeLocataireDetailPage> {
                 label: Text('Payer ${montant(c.reste)}'),
                 onPressed: () async {
                   await _payer(context, c);
-                  if (mounted) _recharger();
+                  if (mounted) recharger();
                 },
               ),
             ],

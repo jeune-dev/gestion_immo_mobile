@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:dartz/dartz.dart' show Either;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gestion_immo_mobile/core/utils/fichier_temporaire.dart';
 import 'package:go_router/go_router.dart';
@@ -35,6 +34,20 @@ void afficherErreur(BuildContext context, String message) {
 
 /// Affiche le message de l'API tel quel (contrat § 0). Un 402 propose le
 /// renouvellement : l'espace est en lecture seule tant que l'abonnement est échu.
+/// Schémas que l'application ouvre : pages web chiffrées (paiement), appels et
+/// clé de double authentification. Le `http` en clair n'est admis qu'en
+/// développement (pages de paiement d'un backend local).
+const _schemasAutorises = {'https', 'tel', 'otpauth'};
+
+/// Vrai si [uri] peut être ouvert hors de l'application : un lien reçu du
+/// serveur ne doit jamais lancer un schéma inattendu (`file:`, `intent:`…).
+bool lienAutorise(Uri? uri) {
+  if (uri == null) return false;
+  final schema = uri.scheme.toLowerCase();
+  if (_schemasAutorises.contains(schema)) return true;
+  return schema == 'http' && !kReleaseMode;
+}
+
 /// Ouvre un lien (page de paiement, appel…) et prévient quand le téléphone
 /// ne peut pas l'ouvrir, au lieu d'échouer en silence. Renvoie `true` si ouvert.
 Future<bool> ouvrirLien(
@@ -45,7 +58,7 @@ Future<bool> ouvrirLien(
   final uri = Uri.tryParse(lien);
   var ouvert = false;
   try {
-    ouvert = uri != null && await launchUrl(uri, mode: mode);
+    ouvert = lienAutorise(uri) && await launchUrl(uri!, mode: mode);
   } catch (_) {
     ouvert = false;
   }
@@ -378,6 +391,7 @@ class _SelecteurState extends State<_Selecteur> {
                   ),
                 ),
                 IconButton(
+                  tooltip: 'Fermer',
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close),
                 ),

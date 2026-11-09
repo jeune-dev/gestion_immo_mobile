@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:gestion_immo_mobile/core/utils/journal.dart';
 import 'package:gestion_immo_mobile/core/constants/api_endpoints.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
 
@@ -46,10 +47,12 @@ class PushService {
       if (jeton != null) await _enregistrer(jeton);
       // ignore: deprecated_member_use
       _renouvellement = messagerie.onTokenRefresh.listen(
-        (nouveau) => _enregistrer(nouveau).catchError((_) {}),
+        (nouveau) => _enregistrer(nouveau).catchError(
+          (Object e) => journalDebug('Jeton push non réenregistré : $e'),
+        ),
       );
     } catch (e) {
-      debugPrint('Notifications push indisponibles : $e');
+      journalDebug('Notifications push indisponibles : $e');
     }
   }
 

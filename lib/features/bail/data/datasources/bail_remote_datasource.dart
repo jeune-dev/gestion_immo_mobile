@@ -20,6 +20,15 @@ abstract class BailRemoteDataSource {
   Future<void> terminer(String id, Map<String, dynamic> corps);
   Future<void> cloturer(String id);
   Future<void> reviserLoyer(String id, Map<String, dynamic> corps);
+
+  /// Action du cycle d'accord (`proposer`, `acceptation-papier`, `conge`,
+  /// `avenants/<id>/annuler`…). Avec [fichier] : envoi multipart.
+  Future<Map<String, dynamic>> action(
+    String id,
+    String chemin, {
+    Map<String, dynamic> corps,
+    String? fichier,
+  });
   Future<void> genererContrat(
     String id,
     Map<String, dynamic> corps, {
@@ -110,6 +119,23 @@ class BailRemoteDataSourceImpl implements BailRemoteDataSource {
   @override
   Future<void> reviserLoyer(String id, Map<String, dynamic> corps) =>
       api.post<dynamic>(ApiEndpoints.bailAction(id, 'loyer'), body: corps);
+
+  @override
+  Future<Map<String, dynamic>> action(
+    String id,
+    String chemin, {
+    Map<String, dynamic> corps = const {},
+    String? fichier,
+  }) async {
+    final r = fichier == null
+        ? await api.post<dynamic>(ApiEndpoints.bailAction(id, chemin), body: corps)
+        : await api.upload<dynamic>(
+            ApiEndpoints.bailAction(id, chemin),
+            cheminFichier: fichier,
+            champs: corps,
+          );
+    return r is Map ? Map<String, dynamic>.from(r) : const {};
+  }
 
   @override
   Future<void> genererContrat(

@@ -56,6 +56,12 @@ class _TravauxHubPageState extends State<TravauxHubPage>
   }
 
   @override
+  void dispose() {
+    _onglets.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final fg = Theme.of(context).appBarTheme.foregroundColor;
     return Scaffold(

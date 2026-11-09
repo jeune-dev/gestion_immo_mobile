@@ -300,7 +300,7 @@ class _Section extends StatelessWidget {
                                           Text(
                                             date(d.creeLe),
                                             style: const TextStyle(
-                                              fontSize: 10,
+                                              fontSize: 11,
                                             ),
                                           ),
                                         ],

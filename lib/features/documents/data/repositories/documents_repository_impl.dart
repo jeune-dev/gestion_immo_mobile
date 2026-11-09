@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
-import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 
+import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 
@@ -18,21 +18,7 @@ class DocumentsRepositoryImpl implements DocumentsRepository {
   Future<Either<Failure, PageResultat<DocumentApp>>> getDocuments({
     required String type,
     required String id,
-  }) async {
-    try {
-      final documentApps = await remoteDataSource.getDocuments(
-        type: type,
-        id: id,
-      );
-      return Right(documentApps);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(() => remoteDataSource.getDocuments(type: type, id: id));
 
   @override
   Future<Either<Failure, void>> ajouterPhoto({
@@ -40,83 +26,31 @@ class DocumentsRepositoryImpl implements DocumentsRepository {
     required String id,
     required String chemin,
     bool visibleLocataire = false,
-  }) async {
-    try {
-      await remoteDataSource.ajouterPhoto(
-        type: type,
-        id: id,
-        chemin: chemin,
-        visibleLocataire: visibleLocataire,
-      );
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(
+    () => remoteDataSource.ajouterPhoto(
+      type: type,
+      id: id,
+      chemin: chemin,
+      visibleLocataire: visibleLocataire,
+    ),
+  );
 
   @override
-  Future<Either<Failure, Uint8List>> telecharger(
-    String id, {
-    String? taille,
-  }) async {
-    try {
-      final octets = await remoteDataSource.telecharger(id, taille: taille);
-      return Right(octets);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, Uint8List>> telecharger(String id, {String? taille}) =>
+      appelApi(() => remoteDataSource.telecharger(id, taille: taille));
 
   @override
-  Future<Either<Failure, LienDocument>> lien(String id) async {
-    try {
-      final lienDocument = await remoteDataSource.lien(id);
-      return Right(lienDocument);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, LienDocument>> lien(String id) =>
+      appelApi(() => remoteDataSource.lien(id));
 
   @override
   Future<Either<Failure, void>> changerVisibilite(
     String id, {
     required bool visible,
-  }) async {
-    try {
-      await remoteDataSource.changerVisibilite(id, visible: visible);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) =>
+      appelApi(() => remoteDataSource.changerVisibilite(id, visible: visible));
 
   @override
-  Future<Either<Failure, void>> supprimerDocument(String id) async {
-    try {
-      await remoteDataSource.supprimerDocument(id);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, void>> supprimerDocument(String id) =>
+      appelApi(() => remoteDataSource.supprimerDocument(id));
 }

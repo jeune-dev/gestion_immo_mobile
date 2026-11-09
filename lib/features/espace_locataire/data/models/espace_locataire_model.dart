@@ -31,6 +31,11 @@ class EspaceLocataireModel {
       periodicite: bail['periodicity'] as String?,
       proprietaireNom: owner['display_name'] as String?,
       proprietaireTelephone: owner['phone'] as String?,
+      preavisMois: bail['notice_period_months'] == null
+          ? null
+          : entier(bail['notice_period_months']),
+      sortiePrevue: bail['planned_exit_date'] as String?,
+      congePar: bail['notice_given_by'] as String?,
       prochaineEcheance: prochaine is Map
           ? EcheanceModel.fromJson({
               ...Map<String, dynamic>.from(prochaine),

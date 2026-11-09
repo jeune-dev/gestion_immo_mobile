@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:gestion_immo_mobile/core/utils/journal.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/services/auth_event_bus.dart';
 
@@ -95,7 +96,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         (c) async => emit(AuthState(statut: StatutSession.connecte, compte: c)),
       );
     } catch (e) {
-      debugPrint('Restauration de session impossible : $e');
+      journalDebug('Restauration de session impossible : $e');
       emit(
         const AuthState(
           failure: CacheFailure(
@@ -112,7 +113,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await deconnecter(sessionExpiree: sessionExpiree);
     } catch (e) {
-      debugPrint('Fermeture de session en échec : $e');
+      journalDebug('Fermeture de session en échec : $e');
     }
   }
 

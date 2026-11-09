@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dartz/dartz.dart';
 
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
@@ -20,6 +22,8 @@ abstract class PaiementRepository {
     Map<String, dynamic> corps, {
     required String cle,
   });
+  Future<Either<Failure, Uint8List>> recu(String id);
+  Future<Either<Failure, void>> repondreContestation(String id, String reponse);
   Future<Either<Failure, PageResultat<TransactionPaiement>>> transactions({
     required int page,
     String? statut,

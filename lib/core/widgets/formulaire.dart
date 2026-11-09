@@ -491,6 +491,7 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
             decoration: deco.copyWith(
               suffixIcon: _valeurs[c.nom] != null && !_requis(c)
                   ? IconButton(
+                      tooltip: 'Effacer',
                       icon: const Icon(Icons.close, size: 18),
                       onPressed: () => setState(() {
                         _valeurs[c.nom] = null;

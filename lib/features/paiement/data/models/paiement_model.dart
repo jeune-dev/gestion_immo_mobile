@@ -18,6 +18,9 @@ class PaiementModel extends Paiement {
     super.rembourseLe,
     super.motifRemboursement,
     super.imputations,
+    super.contestation,
+    super.messageContestation,
+    super.reponseContestation,
   });
 
   factory PaiementModel.fromJson(Map<String, dynamic> json) => PaiementModel(
@@ -32,6 +35,9 @@ class PaiementModel extends Paiement {
     commentaire: json['comment'] as String?,
     rembourseLe: json['refunded_at'] as String?,
     motifRemboursement: json['refund_reason'] as String?,
+    contestation: json['dispute_status'] as String?,
+    messageContestation: json['dispute_message'] as String?,
+    reponseContestation: json['dispute_response'] as String?,
     imputations: listeJson(json['allocations'])
         .map(
           (a) => Imputation(

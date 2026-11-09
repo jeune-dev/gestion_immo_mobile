@@ -29,6 +29,11 @@ class Paiement extends Equatable {
   final String? motifRemboursement;
   final List<Imputation> imputations;
 
+  /// Contestation d'un remboursement par le locataire : `conteste` puis `resolu`.
+  final String? contestation;
+  final String? messageContestation;
+  final String? reponseContestation;
+
   const Paiement({
     required this.id,
     this.reference,
@@ -42,6 +47,9 @@ class Paiement extends Equatable {
     this.rembourseLe,
     this.motifRemboursement,
     this.imputations = const [],
+    this.contestation,
+    this.messageContestation,
+    this.reponseContestation,
   });
 
   @override
@@ -58,6 +66,7 @@ class Paiement extends Equatable {
     rembourseLe,
     motifRemboursement,
     imputations,
+    contestation,
   ];
 }
 

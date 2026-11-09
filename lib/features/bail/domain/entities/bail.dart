@@ -63,6 +63,42 @@ class ContratBail extends Equatable {
   List<Object?> get props => [version, documentId, versionModele, creeLe];
 }
 
+/// Nouveau loyer proposé au locataire : appliqué seulement après son accord.
+class AvenantLoyer extends Equatable {
+  final String id;
+  final String statut;
+  final int loyerAvant;
+  final int chargesAvant;
+  final int loyer;
+  final int charges;
+  final String dateEffet;
+  final String? motif;
+  final String? motifRefus;
+  final String? modeAccord;
+  final String? creeLe;
+
+  const AvenantLoyer({
+    required this.id,
+    required this.statut,
+    required this.loyerAvant,
+    required this.chargesAvant,
+    required this.loyer,
+    required this.charges,
+    required this.dateEffet,
+    this.motif,
+    this.motifRefus,
+    this.modeAccord,
+    this.creeLe,
+  });
+
+  bool get enAttente => statut == 'propose';
+  int get totalAvant => loyerAvant + chargesAvant;
+  int get total => loyer + charges;
+
+  @override
+  List<Object?> get props => [id, statut, loyer, charges, dateEffet, motifRefus];
+}
+
 /// Contrat de location (§ 10) et son cycle : brouillon → actif → terminé → clos.
 class Bail extends Equatable {
   final String id;
@@ -88,6 +124,19 @@ class Bail extends Equatable {
   final num? totalEncaisse;
   final List<EtatDesLieuxDuBail> etatsDesLieux;
 
+  /// Accord du locataire sur le brouillon (application ou bail signé joint).
+  final String? proposeLe;
+  final String? accepteLe;
+  final String? refuseLe;
+  final String? motifRefus;
+  final String? modeAccord;
+
+  /// Congé : qui l'a donné et pour quand.
+  final String? congePar;
+  final String? sortiePrevue;
+  final String? motifConge;
+  final List<AvenantLoyer> avenants;
+
   const Bail({
     required this.id,
     this.reference,
@@ -111,7 +160,19 @@ class Bail extends Equatable {
     this.resteDu,
     this.totalEncaisse,
     this.etatsDesLieux = const [],
+    this.proposeLe,
+    this.accepteLe,
+    this.refuseLe,
+    this.motifRefus,
+    this.modeAccord,
+    this.congePar,
+    this.sortiePrevue,
+    this.motifConge,
+    this.avenants = const [],
   });
+
+  AvenantLoyer? get avenantEnAttente =>
+      avenants.where((a) => a.enAttente).firstOrNull;
 
   @override
   List<Object?> get props => [
@@ -137,6 +198,12 @@ class Bail extends Equatable {
     resteDu,
     totalEncaisse,
     etatsDesLieux,
+    proposeLe,
+    accepteLe,
+    refuseLe,
+    congePar,
+    sortiePrevue,
+    avenants,
   ];
 }
 

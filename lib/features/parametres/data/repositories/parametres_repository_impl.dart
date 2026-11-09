@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 
+import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 
 import '../../domain/entities/parametres.dart';
@@ -12,48 +12,14 @@ class ParametresRepositoryImpl implements ParametresRepository {
   ParametresRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, ParametresProprietaire>> lire() async {
-    try {
-      final parametresProprietaire = await remoteDataSource.lire();
-      return Right(parametresProprietaire);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, ParametresProprietaire>> lire() =>
+      appelApi(() => remoteDataSource.lire());
 
   @override
-  Future<Either<Failure, void>> modifierReglages(
-    Map<String, dynamic> corps,
-  ) async {
-    try {
-      await remoteDataSource.modifierReglages(corps);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, void>> modifierReglages(Map<String, dynamic> corps) =>
+      appelApi(() => remoteDataSource.modifierReglages(corps));
 
   @override
-  Future<Either<Failure, void>> modifierEspace(
-    Map<String, dynamic> corps,
-  ) async {
-    try {
-      await remoteDataSource.modifierEspace(corps);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, void>> modifierEspace(Map<String, dynamic> corps) =>
+      appelApi(() => remoteDataSource.modifierEspace(corps));
 }

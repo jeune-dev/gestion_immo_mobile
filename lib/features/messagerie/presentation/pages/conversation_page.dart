@@ -361,7 +361,7 @@ class BulleMessage extends StatelessWidget {
                   ? ''
                   : '${heure.hour.toString().padLeft(2, '0')}:${heure.minute.toString().padLeft(2, '0')}',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 color: texte.withValues(alpha: 0.7),
               ),
             ),

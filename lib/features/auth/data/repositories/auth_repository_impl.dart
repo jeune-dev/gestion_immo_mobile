@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
+import 'package:gestion_immo_mobile/core/utils/journal.dart';
 import 'package:gestion_immo_mobile/core/services/push_service.dart';
 import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
 import 'package:gestion_immo_mobile/core/services/token_service.dart';
@@ -57,7 +59,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ApiException catch (e) {
       if (!_aRetenter(e)) await jetons.oublierRevocation();
     } catch (e) {
-      debugPrint('Révocation différée impossible : $e');
+      journalDebug('Révocation différée impossible : $e');
     }
   }
 
@@ -77,129 +79,74 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, ResultatConnexion>> connecter({
     required String identifiant,
     required String motDePasse,
-  }) async {
-    try {
-      final r = await remoteDataSource.connecter({
-        'identifiant': identifiant.trim(),
-        'password': motDePasse,
-        'device_name': _appareil,
-        'platform': _plateforme,
-      });
-      if (r['mfa_requis'] == true) {
-        return Right(DoubleAuthentificationRequise(r['mfa_token'] as String));
-      }
-      await _ouvrirNouvelleSession(r);
-      return Right(const SessionOuverte());
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
+  }) => appelApi(() async {
+    final r = await remoteDataSource.connecter({
+      'identifiant': identifiant.trim(),
+      'password': motDePasse,
+      'device_name': _appareil,
+      'platform': _plateforme,
+    });
+    if (r['mfa_requis'] == true) {
+      return DoubleAuthentificationRequise(r['mfa_token'] as String);
     }
-  }
+    await _ouvrirNouvelleSession(r);
+    return const SessionOuverte();
+  });
 
   @override
   Future<Either<Failure, void>> verifierMfa({
     required String jeton,
     String? code,
     String? codeSecours,
-  }) async {
-    try {
-      await _ouvrirNouvelleSession(
-        await remoteDataSource.verifierMfa({
-          'mfa_token': jeton,
-          if (code != null) 'code': code,
-          if (codeSecours != null) 'code_secours': codeSecours,
-          'device_name': _appareil,
-          'platform': _plateforme,
-        }),
-      );
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(
+    () async => _ouvrirNouvelleSession(
+      await remoteDataSource.verifierMfa({
+        'mfa_token': jeton,
+        if (code != null) 'code': code,
+        if (codeSecours != null) 'code_secours': codeSecours,
+        'device_name': _appareil,
+        'platform': _plateforme,
+      }),
+    ),
+  );
 
   @override
   Future<Either<Failure, void>> inscrireProprietaire(
     Map<String, dynamic> corps,
-  ) async {
-    try {
-      await _ouvrirNouvelleSession(await remoteDataSource.inscrire(corps));
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  ) => appelApi(
+    () async => _ouvrirNouvelleSession(await remoteDataSource.inscrire(corps)),
+  );
 
   @override
-  Future<Either<Failure, void>> activerLocataire(
-    Map<String, dynamic> corps,
-  ) async {
-    try {
-      await _ouvrirNouvelleSession(
-        await remoteDataSource.activerLocataire({
-          ...corps,
-          'device_name': _appareil,
-          'platform': _plateforme,
-        }),
+  Future<Either<Failure, void>> activerLocataire(Map<String, dynamic> corps) =>
+      appelApi(
+        () async => _ouvrirNouvelleSession(
+          await remoteDataSource.activerLocataire({
+            ...corps,
+            'device_name': _appareil,
+            'platform': _plateforme,
+          }),
+        ),
       );
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
 
   /// Le serveur renvoie une nouvelle session (les autres appareils sont déconnectés).
   @override
   Future<Either<Failure, void>> changerMotDePasse({
     required String actuel,
     required String nouveau,
-  }) async {
-    try {
-      final r = await remoteDataSource.changerMotDePasse({
-        'current_password': actuel,
-        'password': nouveau,
-        'password_confirmation': nouveau,
-        'refresh_token': await jetons.lireRefresh(),
-      });
-      await _ouvrir(r);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(() async {
+    final r = await remoteDataSource.changerMotDePasse({
+      'current_password': actuel,
+      'password': nouveau,
+      'password_confirmation': nouveau,
+      'refresh_token': await jetons.lireRefresh(),
+    });
+    await _ouvrir(r);
+  });
 
   @override
-  Future<Either<Failure, Compte>> lireCompte() async {
-    try {
-      final resultat = await remoteDataSource.lireCompte();
-      return Right(resultat);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  Future<Either<Failure, Compte>> lireCompte() =>
+      appelApi(() => remoteDataSource.lireCompte());
 
   @override
   Future<void> deconnecter({bool sessionExpiree = false}) async {
@@ -230,59 +177,27 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await etape();
     } catch (e) {
-      debugPrint('Déconnexion : étape en échec ($e)');
+      journalDebug('Déconnexion : étape en échec ($e)');
     }
   }
 
   @override
-  Future<Either<Failure, void>> demanderReinitialisation(
-    String identifiant,
-  ) async {
-    try {
-      await remoteDataSource.demanderReinitialisation(identifiant.trim());
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
+  Future<Either<Failure, void>> demanderReinitialisation(String identifiant) =>
+      appelApi(
+        () => remoteDataSource.demanderReinitialisation(identifiant.trim()),
       );
-    }
-  }
 
   @override
   Future<Either<Failure, void>> verifierCodeReinitialisation(
     String identifiant,
     String code,
-  ) async {
-    try {
-      await remoteDataSource.verifierCodeReinitialisation(
-        identifiant.trim(),
-        code,
-      );
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  ) => appelApi(
+    () =>
+        remoteDataSource.verifierCodeReinitialisation(identifiant.trim(), code),
+  );
 
   @override
   Future<Either<Failure, void>> reinitialiserMotDePasse(
     Map<String, dynamic> corps,
-  ) async {
-    try {
-      await remoteDataSource.reinitialiserMotDePasse(corps);
-      return const Right(null);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  ) => appelApi(() => remoteDataSource.reinitialiserMotDePasse(corps));
 }

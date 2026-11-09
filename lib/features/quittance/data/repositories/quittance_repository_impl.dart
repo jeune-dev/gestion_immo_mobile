@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
-import 'package:gestion_immo_mobile/core/errors/exceptions.dart';
 
+import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 
@@ -18,60 +18,26 @@ class QuittanceRepositoryImpl implements QuittanceRepository {
   Future<Either<Failure, PageResultat<Quittance>>> getQuittances({
     required int page,
     required bool espaceLocataire,
-  }) async {
-    try {
-      final quittances = await remoteDataSource.getQuittances(
-        page: page,
-        espaceLocataire: espaceLocataire,
-      );
-      return Right(quittances);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(
+    () => remoteDataSource.getQuittances(
+      page: page,
+      espaceLocataire: espaceLocataire,
+    ),
+  );
 
   @override
   Future<Either<Failure, Quittance>> getQuittance(
     String id, {
     required bool espaceLocataire,
-  }) async {
-    try {
-      return Right(
-        await remoteDataSource.getQuittance(
-          id,
-          espaceLocataire: espaceLocataire,
-        ),
-      );
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(
+    () => remoteDataSource.getQuittance(id, espaceLocataire: espaceLocataire),
+  );
 
   @override
   Future<Either<Failure, Uint8List>> pdf(
     String id, {
     required bool espaceLocataire,
-  }) async {
-    try {
-      final octets = await remoteDataSource.pdf(
-        id,
-        espaceLocataire: espaceLocataire,
-      );
-      return Right(octets);
-    } on ApiException catch (e) {
-      return Left(Failure.depuis(e));
-    } catch (e) {
-      return Left(
-        ServerFailure(errorMessage: 'Réponse inattendue du serveur ($e)'),
-      );
-    }
-  }
+  }) => appelApi(
+    () => remoteDataSource.pdf(id, espaceLocataire: espaceLocataire),
+  );
 }

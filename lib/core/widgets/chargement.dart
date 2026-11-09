@@ -1,8 +1,10 @@
+import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:gestion_immo_mobile/core/bloc/actions_cubit.dart';
 import 'package:gestion_immo_mobile/core/bloc/pagination_cubit.dart';
+import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 
 import 'actions.dart';
@@ -177,6 +179,48 @@ class _GroupeCarte extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Écran de détail chargé par identifiant : chargement, erreur avec
+/// « Réessayer », puis la fiche. [fiche] reçoit de quoi recharger après une
+/// action (paiement, annulation…).
+class FicheChargee<T> extends StatefulWidget {
+  final String titre;
+  final Future<Either<Failure, T>> Function() charger;
+  final Widget Function(BuildContext context, T valeur, VoidCallback recharger)
+  fiche;
+
+  const FicheChargee({
+    super.key,
+    required this.titre,
+    required this.charger,
+    required this.fiche,
+  });
+
+  @override
+  State<FicheChargee<T>> createState() => _FicheChargeeState<T>();
+}
+
+class _FicheChargeeState<T> extends State<FicheChargee<T>> {
+  late Future<Either<Failure, T>> _valeur = widget.charger();
+
+  void _recharger() => setState(() => _valeur = widget.charger());
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<Either<Failure, T>>(
+    future: _valeur,
+    builder: (context, s) {
+      if (!s.hasData) return VueChargement(titre: widget.titre);
+      return s.data!.fold(
+        (f) => VueChargement(
+          titre: widget.titre,
+          failure: f,
+          onReessayer: _recharger,
+        ),
+        (v) => widget.fiche(context, v, _recharger),
+      );
+    },
+  );
 }
 
 /// Contenu d'un écran chargé par un Bloc : chargement, erreur avec « Réessayer », ou données.

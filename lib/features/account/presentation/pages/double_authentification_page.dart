@@ -181,9 +181,16 @@ class _Contenu extends StatelessWidget {
                     ),
                     subtitle: const Text('ou saisissez cette clé à la main'),
                     trailing: IconButton(
+                      tooltip: 'Copier la clé',
                       icon: const Icon(Icons.copy),
-                      onPressed: () =>
-                          Clipboard.setData(ClipboardData(text: secret.secret)),
+                      onPressed: () async {
+                        await Clipboard.setData(
+                          ClipboardData(text: secret.secret),
+                        );
+                        if (context.mounted) {
+                          afficherSucces(context, 'Clé copiée');
+                        }
+                      },
                     ),
                   ),
                 ),

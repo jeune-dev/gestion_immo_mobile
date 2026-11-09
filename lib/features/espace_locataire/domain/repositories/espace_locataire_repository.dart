@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
 
+import '../entities/accords.dart';
+
 import 'package:gestion_immo_mobile/core/errors/failure.dart';
 import 'package:gestion_immo_mobile/core/models/page_resultat.dart';
 import 'package:gestion_immo_mobile/features/caution/domain/entities/caution.dart';
@@ -50,6 +52,12 @@ abstract class EspaceLocataireRepository {
   });
   Future<Either<Failure, ChargeRefacturee>> charge(String id);
   Future<Either<Failure, void>> consentementWhatsapp({required bool accorde});
+  Future<Either<Failure, AccordsLocataire>> accords();
+  Future<Either<Failure, void>> action(
+    String chemin, {
+    Map<String, dynamic> corps,
+  });
+  Future<Either<Failure, Uint8List>> recuPaiement(String id);
   Future<Either<Failure, PageResultat<Incident>>> incidents({
     required int page,
   });

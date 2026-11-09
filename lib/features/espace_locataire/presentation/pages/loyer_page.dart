@@ -19,6 +19,7 @@ import 'package:gestion_immo_mobile/features/espace_locataire/domain/usecases/ge
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/paiement_page.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/pages/suivi_transaction_page.dart';
 import 'package:gestion_immo_mobile/features/espace_locataire/presentation/widgets/choix_paiement.dart';
+import 'package:gestion_immo_mobile/features/espace_locataire/presentation/widgets/demarches_locataire.dart';
 import 'package:gestion_immo_mobile/core/widgets/logo.dart';
 import 'package:gestion_immo_mobile/core/widgets/fond_marque.dart';
 
@@ -35,6 +36,12 @@ class _LoyerPageState extends State<LoyerPage>
   late final _onglets = TabController(length: 3, vsync: this);
   final _echeances = GlobalKey<ListePagineeState<Echeance>>();
   bool _aPayer = true;
+
+  @override
+  void dispose() {
+    _onglets.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,8 +130,10 @@ class _LoyerPageState extends State<LoyerPage>
               icone: Icons.check_circle_outline,
               titre: montant(p.montant),
               detail:
-                  '${date(p.payeLe)} · ${refs.libelle('mode_paiement', p.moyen)}${p.reference == null ? '' : ' · ${p.reference}'}',
+                  '${date(p.payeLe)} · ${refs.libelle('mode_paiement', p.moyen)}${p.reference == null ? '' : ' · ${p.reference}'}'
+                  '${p.contestation == 'conteste' ? ' · contestation envoyée' : p.contestation == 'resolu' ? ' · réponse reçue' : ''}',
               fin: Statut(FamilleStatut.paiement, 'statut_paiement', p.statut),
+              onTap: () => _actionsPaiement(context, p),
             ),
           ),
           ListePaginee<TransactionPaiement>(
@@ -254,7 +263,7 @@ class TuileEcheance extends StatelessWidget {
                           _mois[jour.month - 1],
                           style: TextStyle(
                             color: p.texteSecondaire,
-                            fontSize: 11,
+                            fontSize: 12,
                           ),
                         ),
                     ],
@@ -308,5 +317,44 @@ class TuileEcheance extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Reçu du paiement ; contestation si le bailleur l'a remboursé.
+Future<void> _actionsPaiement(BuildContext context, Paiement p) async {
+  final choix = await showModalBottomSheet<String>(
+    context: context,
+    builder: (ctx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.receipt_long_outlined),
+            title: const Text('Voir le reçu'),
+            subtitle: const Text('Preuve de ce versement, même partiel'),
+            onTap: () => Navigator.pop(ctx, 'recu'),
+          ),
+          if (p.statut == 'rembourse' && p.contestation == null)
+            ListTile(
+              leading: const Icon(Icons.report_outlined),
+              title: const Text('Contester le remboursement'),
+              subtitle: const Text('Argent non reçu, montant différent…'),
+              onTap: () => Navigator.pop(ctx, 'contester'),
+            ),
+          if (p.reponseContestation != null)
+            ListTile(
+              leading: const Icon(Icons.forum_outlined),
+              title: const Text('Réponse de votre bailleur'),
+              subtitle: Text(p.reponseContestation!),
+            ),
+        ],
+      ),
+    ),
+  );
+  if (!context.mounted) return;
+  if (choix == 'recu') {
+    await ouvrirRecuPaiement(context, p.id, p.reference);
+  } else if (choix == 'contester') {
+    await contesterRemboursement(context, p.id);
   }
 }

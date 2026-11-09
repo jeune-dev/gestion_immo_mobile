@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_immo_mobile/features/etat_des_lieux/domain/usecases/acceptation_papier_edl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:gestion_immo_mobile/core/models/personne_resume.dart';
@@ -276,6 +277,18 @@ class _DetailState extends State<_Detail> {
     if (ok != null) _bloc.add(SupprimerPhotoEvent(widget.id, photo.id));
   }
 
+  /// Locataire sans application : photo de l'état des lieux qu'il a signé.
+  Future<void> _joindreSigne() async {
+    final photo = await choisirPhoto(context);
+    if (photo == null || !mounted) return;
+    final r = await di.sl<AcceptationPapierEdl>()(widget.id, photo.path);
+    if (!mounted) return;
+    r.fold((f) => afficherErreurApi(context, f), (_) {
+      afficherSucces(context, 'État des lieux signé enregistré');
+      _bloc.add(RafraichirEtatDesLieux(widget.id));
+    });
+  }
+
   Future<void> _soumettre() async {
     if (!await _enregistrer() || !mounted) return;
     final ok = await confirmer(
@@ -330,7 +343,6 @@ class _DetailState extends State<_Detail> {
   }
 
   Widget _fiche(BuildContext context, EtatDesLieux e) {
-    final statut = e.statut;
     final etats = refs.options('etat_element');
     return PopScope(
       canPop: _saisies.isEmpty,
@@ -364,175 +376,19 @@ class _DetailState extends State<_Detail> {
                 'etat-des-lieux-${e.type}-v${e.version}.pdf',
               ),
             ),
-            MenuActions(
-              actions: [
-                if (e.modifiable)
-                  ('Relevés et observations', () => _releves(e), false),
-                if (e.modifiable) ('Ajouter une pièce', _ajouterPiece, false),
-                if (statut == 'accepte' || statut == 'conteste')
-                  (
-                    'Corriger (nouvelle version)',
-                    () => _bloc.add(CorrigerEtatDesLieuxEvent(widget.id)),
-                    false,
-                  ),
-                if (e.modifiable)
-                  (
-                    'Supprimer le brouillon',
-                    () async {
-                      final ok = await confirmer(
-                        context,
-                        titre: 'Supprimer le brouillon',
-                        message: 'Toutes les saisies seront perdues.',
-                        danger: true,
-                        action: 'Supprimer',
-                      );
-                      if (ok == null || !mounted) return;
-                      setState(_saisies.clear);
-                      _bloc.add(SupprimerEtatDesLieuxEvent(widget.id));
-                    },
-                    true,
-                  ),
-              ],
-            ),
+            MenuActions(actions: _actions(e)),
           ],
         ),
-        bottomNavigationBar: e.modifiable
-            ? SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: _envoi || _saisies.isEmpty
-                              ? null
-                              : _enregistrer,
-                          child: Text(
-                            _saisies.isEmpty
-                                ? 'Enregistré'
-                                : 'Enregistrer (${_saisies.length})',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: _envoi ? null : _soumettre,
-                          child: const Text('Soumettre'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            : null,
+        bottomNavigationBar: e.modifiable ? _barreEnregistrement() : null,
         body: RefreshIndicator(
           onRefresh: () async => _bloc.add(RafraichirEtatDesLieux(widget.id)),
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Section(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${nomDe(e.locataire)} · Appartement ${e.appartementNumero ?? ''}',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                      Statut(
-                        FamilleStatut.etatDesLieux,
-                        'statut_etat_des_lieux',
-                        statut,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.espaceSm),
-                  Ligne('Date', date(e.realiseLe)),
-                  Ligne(
-                    'Compteur d’eau',
-                    e.compteurEau == null ? null : '${e.compteurEau} m³',
-                  ),
-                  Ligne(
-                    'Compteur d’électricité',
-                    e.compteurElectricite == null
-                        ? null
-                        : '${e.compteurElectricite} kWh',
-                  ),
-                  Ligne(
-                    'Clés',
-                    e.nbCles == null
-                        ? null
-                        : '${e.nbCles}${e.detailCles != null ? ' · ${e.detailCles}' : ''}',
-                  ),
-                  if (e.observations != null)
-                    Ligne('Observations', e.observations),
-                  if (e.limiteReponse != null && statut == 'soumis')
-                    Ligne(
-                      'Réponse attendue avant le',
-                      dateHeure(e.limiteReponse),
-                    ),
-                  if (e.accepteTacitement)
-                    const Ligne('Acceptation', 'Tacite (délai écoulé)'),
-                  if (e.contestation != null) ...[
-                    const SizedBox(height: 8),
-                    Encadre(
-                      'Contestation du locataire : « ${e.contestation} »',
-                      ton: TonStatut.danger,
-                    ),
-                  ],
-                ],
-              ),
+              _resume(context, e),
               const SizedBox(height: AppTheme.espaceLg),
               for (final p in e.pieces) ...[
-                Card(
-                  clipBehavior: Clip.antiAlias,
-                  child: ExpansionTile(
-                    title: Text(p.nom),
-                    subtitle: Text('${p.elements.length} élément(s)'),
-                    trailing: e.modifiable
-                        ? PopupMenuButton<String>(
-                            tooltip: 'Actions sur la pièce',
-                            onSelected: (a) => switch (a) {
-                              'element' => _ajouterElement(p),
-                              'renommer' => _renommerPiece(p),
-                              _ => _supprimerPiece(p),
-                            },
-                            itemBuilder: (_) => const [
-                              PopupMenuItem(
-                                value: 'element',
-                                child: Text('Ajouter un élément'),
-                              ),
-                              PopupMenuItem(
-                                value: 'renommer',
-                                child: Text('Renommer'),
-                              ),
-                              PopupMenuItem(
-                                value: 'supprimer',
-                                child: Text('Supprimer la pièce'),
-                              ),
-                            ],
-                          )
-                        : null,
-                    children: [
-                      for (final el in p.elements)
-                        _Element(
-                          element: el,
-                          etats: etats,
-                          modifiable: e.modifiable,
-                          saisie: _saisies[el.id],
-                          onChange: (etat, commentaire) => setState(
-                            () => _saisies[el.id] = (etat, commentaire),
-                          ),
-                          onPhoto: () => _photo(el),
-                          onPreciser: () => _preciserElement(el),
-                          onSupprimer: () => _supprimerElement(el),
-                          onSupprimerPhoto: _supprimerPhoto,
-                        ),
-                    ],
-                  ),
-                ),
+                _piece(e, p, etats),
                 const SizedBox(height: AppTheme.espaceSm),
               ],
             ],
@@ -541,6 +397,161 @@ class _DetailState extends State<_Detail> {
       ),
     );
   }
+
+  /// Menu de la barre : saisie, correction et suppression selon le statut.
+  List<(String, VoidCallback, bool)> _actions(EtatDesLieux e) {
+    final statut = e.statut;
+    return [
+      if (e.modifiable) ('Relevés et observations', () => _releves(e), false),
+      if (e.modifiable) ('Ajouter une pièce', _ajouterPiece, false),
+      if (statut == 'soumis')
+        ('Joindre la version signée', _joindreSigne, false),
+      if (statut == 'accepte' || statut == 'conteste')
+        (
+          'Corriger (nouvelle version)',
+          () => _bloc.add(CorrigerEtatDesLieuxEvent(widget.id)),
+          false,
+        ),
+      if (e.modifiable)
+        (
+          'Supprimer le brouillon',
+          () async {
+            final ok = await confirmer(
+              context,
+              titre: 'Supprimer le brouillon',
+              message: 'Toutes les saisies seront perdues.',
+              danger: true,
+              action: 'Supprimer',
+            );
+            if (ok == null || !mounted) return;
+            setState(_saisies.clear);
+            _bloc.add(SupprimerEtatDesLieuxEvent(widget.id));
+          },
+          true,
+        ),
+    ];
+  }
+
+  /// Enregistrer les saisies en cours, ou soumettre au locataire.
+  Widget _barreEnregistrement() => SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: _envoi || _saisies.isEmpty ? null : _enregistrer,
+              child: Text(
+                _saisies.isEmpty
+                    ? 'Enregistré'
+                    : 'Enregistrer (${_saisies.length})',
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: FilledButton(
+              onPressed: _envoi ? null : _soumettre,
+              child: const Text('Soumettre'),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  /// Locataire, logement, relevés et réponse du locataire.
+  Widget _resume(BuildContext context, EtatDesLieux e) {
+    final statut = e.statut;
+    return Section(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${nomDe(e.locataire)} · Appartement ${e.appartementNumero ?? ''}',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            Statut(FamilleStatut.etatDesLieux, 'statut_etat_des_lieux', statut),
+          ],
+        ),
+        const SizedBox(height: AppTheme.espaceSm),
+        Ligne('Date', date(e.realiseLe)),
+        Ligne(
+          'Compteur d’eau',
+          e.compteurEau == null ? null : '${e.compteurEau} m³',
+        ),
+        Ligne(
+          'Compteur d’électricité',
+          e.compteurElectricite == null ? null : '${e.compteurElectricite} kWh',
+        ),
+        Ligne(
+          'Clés',
+          e.nbCles == null
+              ? null
+              : '${e.nbCles}${e.detailCles != null ? ' · ${e.detailCles}' : ''}',
+        ),
+        if (e.observations != null) Ligne('Observations', e.observations),
+        if (e.limiteReponse != null && statut == 'soumis')
+          Ligne('Réponse attendue avant le', dateHeure(e.limiteReponse)),
+        if (e.accepteTacitement)
+          const Ligne('Acceptation', 'Tacite (délai écoulé)'),
+        if (e.contestation != null) ...[
+          const SizedBox(height: 8),
+          Encadre(
+            'Contestation du locataire : « ${e.contestation} »',
+            ton: TonStatut.danger,
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Une pièce et ses éléments, avec les actions de saisie.
+  Widget _piece(EtatDesLieux e, PieceEdl p, List<OptionRef> etats) => Card(
+    clipBehavior: Clip.antiAlias,
+    child: ExpansionTile(
+      title: Text(p.nom),
+      subtitle: Text('${p.elements.length} élément(s)'),
+      trailing: e.modifiable
+          ? PopupMenuButton<String>(
+              tooltip: 'Actions sur la pièce',
+              onSelected: (a) => switch (a) {
+                'element' => _ajouterElement(p),
+                'renommer' => _renommerPiece(p),
+                _ => _supprimerPiece(p),
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: 'element',
+                  child: Text('Ajouter un élément'),
+                ),
+                PopupMenuItem(value: 'renommer', child: Text('Renommer')),
+                PopupMenuItem(
+                  value: 'supprimer',
+                  child: Text('Supprimer la pièce'),
+                ),
+              ],
+            )
+          : null,
+      children: [
+        for (final el in p.elements)
+          _Element(
+            element: el,
+            etats: etats,
+            modifiable: e.modifiable,
+            saisie: _saisies[el.id],
+            onChange: (etat, commentaire) =>
+                setState(() => _saisies[el.id] = (etat, commentaire)),
+            onPhoto: () => _photo(el),
+            onPreciser: () => _preciserElement(el),
+            onSupprimer: () => _supprimerElement(el),
+            onSupprimerPhoto: _supprimerPhoto,
+          ),
+      ],
+    ),
+  );
 }
 
 class _Element extends StatelessWidget {

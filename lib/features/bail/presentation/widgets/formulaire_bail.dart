@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:gestion_immo_mobile/features/bail/presentation/widgets/accord_bail.dart';
+
 import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/core/errors/gestion_erreurs.dart';
 import 'package:gestion_immo_mobile/core/network/api_client.dart';
@@ -175,31 +177,45 @@ Future<Bail?> formulaireBail(
   );
 }
 
-/// Révision du loyer d'un bail actif : les échéances à partir de la date d'effet sont recalculées.
+/// Nouveau loyer : proposé au locataire, appliqué aux échéances après son accord.
 Future<bool> reviserLoyer(BuildContext context, Bail b) async {
+  // Préavis par défaut du serveur (`rent_change_notice_days`) : il refuse une date plus proche.
+  final auPlusTot = dansLeFutur(jours: 30);
   final r = await EcranFormulaire.ouvrir<Object>(
     context,
     EcranFormulaire(
       controle: (c) => c['rent_amount'] == null && c['charges_amount'] == null
           ? 'Indiquez le nouveau loyer ou les nouvelles charges.'
           : null,
-      titre: 'Réviser le loyer',
+      titre: 'Proposer un nouveau loyer',
       intro: const Text(
-        'Les échéances à partir de la date d’effet sont recalculées. La date ne peut pas être passée.',
+        'Le locataire reçoit la proposition dans son espace. Le nouveau loyer ne s’applique qu’après son accord '
+        '(ou l’avenant signé que vous joindrez), à partir de la date d’effet. S’il refuse, le loyer actuel reste.',
       ),
-      initial: {'rent_amount': b.loyer, 'charges_amount': b.charges},
+      initial: {
+        'rent_amount': b.loyer,
+        'charges_amount': b.charges,
+        'effective_from': auPlusTot,
+      },
       champs: [
         Champ('rent_amount', 'Nouveau loyer', min: 1, type: TypeChamp.montant),
         Champ('charges_amount', 'Nouvelles charges', type: TypeChamp.montant),
         Champ(
           'effective_from',
           "Date d'effet",
-          pasDansLePasse: true,
+          dateMin: auPlusTot,
           type: TypeChamp.date,
           obligatoire: true,
         ),
+        const Champ(
+          'reason',
+          'Motif (révision annuelle, travaux…)',
+          type: TypeChamp.multiligne,
+          maxLongueur: 1000,
+        ),
       ],
-      messageSucces: 'Loyer révisé',
+      libelleEnvoi: 'Envoyer la proposition',
+      messageSucces: 'Proposition envoyée au locataire',
       envoyer: (c) async => (await sl<ReviserLoyer>()(b.id, c)).ouLeve(),
     ),
   );

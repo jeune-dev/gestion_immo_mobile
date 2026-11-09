@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
+import 'package:gestion_immo_mobile/core/utils/format.dart' as format;
 
 /// Dégradé de marque du mode en cours (bleu nuit → roi → ciel).
 LinearGradient degradeMarque(BuildContext context) =>
@@ -52,6 +53,69 @@ class CarteMarque extends StatelessWidget {
     child: ClipRRect(
       borderRadius: BorderRadius.circular(AppTheme.rayonCarte),
       child: Padding(padding: padding, child: child),
+    ),
+  );
+}
+
+/// En-tête d'une fiche : surtitre, statut, grand montant et sous-titre sur la
+/// carte de marque (échéance, quittance, charge, caution…).
+class CarteMontant extends StatelessWidget {
+  final String surtitre;
+  final num? montant;
+  final String? sousTitre;
+
+  /// À droite du surtitre, en général la pastille de statut.
+  final Widget? statut;
+
+  /// Lignes ajoutées sous le sous-titre (progression d'un versement…).
+  final List<Widget> pied;
+
+  const CarteMontant({
+    super.key,
+    required this.surtitre,
+    required this.montant,
+    this.sousTitre,
+    this.statut,
+    this.pied = const [],
+  });
+
+  @override
+  Widget build(BuildContext context) => CarteMarque(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                surtitre.toUpperCase(),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ),
+            if (statut != null) statut!,
+          ],
+        ),
+        const SizedBox(height: AppTheme.espaceSm),
+        Text(
+          format.montant(montant),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+          ),
+        ),
+        if (sousTitre != null) ...[
+          const SizedBox(height: AppTheme.espaceXs),
+          Text(sousTitre!, style: const TextStyle(color: Colors.white)),
+        ],
+        ...pied,
+      ],
     ),
   );
 }
