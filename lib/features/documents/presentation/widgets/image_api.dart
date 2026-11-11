@@ -55,6 +55,28 @@ class _ImageApiState extends State<ImageApi> {
     }
   }
 
+  /// Largeur de décodage, en pixels physiques, d'après la place réellement
+  /// occupée à l'écran.
+  ///
+  /// Sans elle, `Image.memory` décode à la taille du fichier : une miniature
+  /// de 480 px occupe 480 × 480 × 4 ≈ 0,9 Mo en mémoire, qu'elle soit affichée
+  /// en pleine largeur ou dans une vignette de 48 px. Vingt vignettes à
+  /// l'écran, et ce sont 18 Mo de bitmaps pour en montrer moins d'un.
+  ///
+  /// La largeur vient de `LayoutBuilder`, donc de la boîte réelle : aucune
+  /// valeur n'est devinée, et un même widget s'adapte à la vignette comme au
+  /// bandeau. Deux cas renvoient `null`, c'est-à-dire « décode tout » :
+  ///
+  ///  - la taille `originale`, qu'on affiche dans un `InteractiveViewer` :
+  ///    décoder à la taille de l'écran rendrait le zoom flou ;
+  ///  - une contrainte infinie (hors d'une boîte dimensionnée), où il n'y a
+  ///    rien à déduire.
+  int? _largeurDecodage(BoxConstraints c, double densite) {
+    if (widget.taille == 'originale') return null;
+    if (!c.maxWidth.isFinite || c.maxWidth <= 0) return null;
+    return (c.maxWidth * densite).round();
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Either<Failure, Uint8List>>(
@@ -62,7 +84,17 @@ class _ImageApiState extends State<ImageApi> {
       builder: (context, s) {
         final octets = s.data?.fold((_) => null, (o) => o);
         if (octets != null) {
-          return Image.memory(octets, fit: widget.fit, gaplessPlayback: true);
+          return LayoutBuilder(
+            builder: (context, contraintes) => Image.memory(
+              octets,
+              fit: widget.fit,
+              gaplessPlayback: true,
+              cacheWidth: _largeurDecodage(
+                contraintes,
+                MediaQuery.devicePixelRatioOf(context),
+              ),
+            ),
+          );
         }
         return ColoredBox(
           color: context.palette.surfaceAlt,
