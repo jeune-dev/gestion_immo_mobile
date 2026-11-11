@@ -31,9 +31,11 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^2.0.0
+  # cupertino_icons retiré : il n'apporte que la classe `CupertinoIcons` et sa
+  # police, et aucune des deux n'est employée ici (0 occurrence de
+  # `CupertinoIcons.` dans lib/, test/ et tool/). L'import
+  # `package:flutter/cupertino.dart` d'app_theme.dart vient du SDK Flutter,
+  # pas de ce paquet, et reste valide.
   dio: ^5.11.1
   flutter_secure_storage: ^11.2.0
   shared_preferences: ^2.5.6

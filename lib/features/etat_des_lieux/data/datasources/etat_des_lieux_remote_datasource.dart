@@ -163,10 +163,11 @@ class EtatDesLieuxRemoteDataSourceImpl implements EtatDesLieuxRemoteDataSource {
       api.post<dynamic>(ApiEndpoints.etatDesLieuxSoumettre(id));
 
   @override
-  Future<void> acceptationPapier(String id, String photo) => api.upload<dynamic>(
-    '/etats-des-lieux/$id/acceptation-papier',
-    cheminFichier: photo,
-  );
+  Future<void> acceptationPapier(String id, String photo) =>
+      api.upload<dynamic>(
+        '/etats-des-lieux/$id/acceptation-papier',
+        cheminFichier: photo,
+      );
 
   @override
   Future<EtatDesLieuxModel> corriger(String id) async => _edl(

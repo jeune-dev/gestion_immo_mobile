@@ -198,8 +198,17 @@ Future<bool> reviserLoyer(BuildContext context, Bail b) async {
         'effective_from': auPlusTot,
       },
       champs: [
-        const Champ('rent_amount', 'Nouveau loyer', min: 1, type: TypeChamp.montant),
-        const Champ('charges_amount', 'Nouvelles charges', type: TypeChamp.montant),
+        const Champ(
+          'rent_amount',
+          'Nouveau loyer',
+          min: 1,
+          type: TypeChamp.montant,
+        ),
+        const Champ(
+          'charges_amount',
+          'Nouvelles charges',
+          type: TypeChamp.montant,
+        ),
         Champ(
           'effective_from',
           "Date d'effet",

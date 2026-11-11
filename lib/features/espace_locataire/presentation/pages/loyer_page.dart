@@ -131,7 +131,11 @@ class _LoyerPageState extends State<LoyerPage>
               titre: montant(p.montant),
               detail:
                   '${date(p.payeLe)} · ${refs.libelle('mode_paiement', p.moyen)}${p.reference == null ? '' : ' · ${p.reference}'}'
-                  '${p.contestation == 'conteste' ? ' · contestation envoyée' : p.contestation == 'resolu' ? ' · réponse reçue' : ''}',
+                  '${p.contestation == 'conteste'
+                      ? ' · contestation envoyée'
+                      : p.contestation == 'resolu'
+                      ? ' · réponse reçue'
+                      : ''}',
               fin: Statut(FamilleStatut.paiement, 'statut_paiement', p.statut),
               onTap: () => _actionsPaiement(context, p),
             ),

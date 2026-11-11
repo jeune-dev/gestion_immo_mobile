@@ -96,7 +96,14 @@ class AvenantLoyer extends Equatable {
   int get total => loyer + charges;
 
   @override
-  List<Object?> get props => [id, statut, loyer, charges, dateEffet, motifRefus];
+  List<Object?> get props => [
+    id,
+    statut,
+    loyer,
+    charges,
+    dateEffet,
+    motifRefus,
+  ];
 }
 
 /// Contrat de location (§ 10) et son cycle : brouillon → actif → terminé → clos.

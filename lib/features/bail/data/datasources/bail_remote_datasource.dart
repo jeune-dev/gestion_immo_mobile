@@ -128,7 +128,10 @@ class BailRemoteDataSourceImpl implements BailRemoteDataSource {
     String? fichier,
   }) async {
     final r = fichier == null
-        ? await api.post<dynamic>(ApiEndpoints.bailAction(id, chemin), body: corps)
+        ? await api.post<dynamic>(
+            ApiEndpoints.bailAction(id, chemin),
+            body: corps,
+          )
         : await api.upload<dynamic>(
             ApiEndpoints.bailAction(id, chemin),
             cheminFichier: fichier,

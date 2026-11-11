@@ -134,8 +134,7 @@ class PaiementDetailPage extends StatelessWidget {
     final reponse = await confirmer(
       context,
       titre: 'Répondre au locataire',
-      message:
-          'Expliquez comment le remboursement a été fait (date, moyen, preuve). Le locataire reçoit votre réponse.',
+      message: 'Expliquez comment le remboursement a été fait (date, moyen, preuve). Le locataire reçoit votre réponse.',
       action: 'Envoyer',
       motif: true,
       libelleMotif: 'Votre réponse',
