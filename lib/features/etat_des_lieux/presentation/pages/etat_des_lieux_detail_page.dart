@@ -137,6 +137,10 @@ class _DetailState extends State<_Detail> {
   }) {
     final ctrl = TextEditingController(text: initial ?? '');
     String? erreur;
+    // Libéré par `whenComplete` en fin de méthode, et non dans les boutons :
+    // la boîte se ferme aussi par Annuler, par le retour d'Android et par un
+    // toucher à côté. Un `TextEditingController` est un ChangeNotifier, et
+    // chaque pièce ou élément ajouté en abandonnait un sans le libérer.
     return showDialog<String>(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -166,7 +170,7 @@ class _DetailState extends State<_Detail> {
           ],
         ),
       ),
-    );
+    ).whenComplete(ctrl.dispose);
   }
 
   Future<void> _ajouterPiece() async {

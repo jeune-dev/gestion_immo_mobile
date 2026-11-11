@@ -28,11 +28,30 @@ Future<void> main() async {
     yield LicenseEntryWithLineBreaks(['google_fonts'], ofl);
   });
   await initializeDateFormatting('fr');
-  await nettoyerStockageLocal();
+  // `init()` ne fait qu'enregistrer des fabriques — 253 paresseuses, aucune
+  // instanciation, aucun `await` dedans. Le coût est négligeable, et il doit
+  // précéder le premier écran qui réclame une dépendance.
   await di.init();
   // Les référentiels (libellés des statuts) se chargent en arrière-plan, depuis le cache d'abord
   di.sl<ReferentielsService>().charger();
   runApp(const GestionImmoApp());
+
+  // Ménage des versions précédentes : APRÈS la première image, jamais avant.
+  //
+  // Il était attendu entre `initializeDateFormatting` et `runApp`, et il
+  // parcourt le dossier temporaire ET le dossier des documents en comparant
+  // chaque nom à une expression régulière. Sur un téléphone qui a servi, cela
+  // se compte en centaines de millisecondes — passées sur un écran vide,
+  // avant que la moindre pixel ne s'affiche.
+  //
+  // Le déplacer est sans effet de bord, et c'est vérifiable : rien dans
+  // l'application ne lit `SharedPreferences` à part ce nettoyage lui-même, et
+  // la seule clé qu'il retire du coffre est `gi.cle_donnees_locales` — jamais
+  // le jeton de session. Il n'efface donc rien que l'application vienne
+  // d'écrire.
+  WidgetsBinding.instance.addPostFrameCallback(
+    (_) => unawaited(nettoyerStockageLocal()),
+  );
 }
 
 /// Police Inter (charte § 2) appliquée au thème de la charte, sans le modifier.
