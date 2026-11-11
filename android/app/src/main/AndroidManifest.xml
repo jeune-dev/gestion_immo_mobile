@@ -7,9 +7,18 @@
          message, sur tout téléphone récent. Le défaut ne se voyait pas tant que
          les fichiers Firebase manquaient ; il se verrait maintenant. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Trafic en clair REFUSÉ, explicitement.
+         Android 9 (API 28) et au-delà le refusent par défaut, mais `minSdk`
+         vaut 24 : sur Android 7.0 et 8.x, encore répandus ici, la valeur par
+         défaut est l'inverse et une requête HTTP serait acceptée. `Env` la
+         refuse déjà côté Dart en version publiée ; cette ligne ferme la même
+         porte au niveau du système, pour les appareils où elle était ouverte.
+         Les builds de développement la rouvrent pour eux seuls, voir
+         src/debug/AndroidManifest.xml. -->
     <application
         android:label="Kërimmo"
         android:allowBackup="false"
+        android:usesCleartextTraffic="false"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
