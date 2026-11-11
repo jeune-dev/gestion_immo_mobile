@@ -144,16 +144,16 @@ class _EnTeteMarque extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (compact) {
-      return Row(
+      return const Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _PastilleLogo(
             rayon: AppTheme.rayonPetit,
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-            child: const LogoKerimmo(largeur: 62),
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+            child: LogoKerimmo(largeur: 62),
           ),
-          const SizedBox(width: AppTheme.espaceSm),
-          const NomKerimmo(taille: 24, surFonce: true),
+          SizedBox(width: AppTheme.espaceSm),
+          NomKerimmo(taille: 24, surFonce: true),
         ],
       );
     }

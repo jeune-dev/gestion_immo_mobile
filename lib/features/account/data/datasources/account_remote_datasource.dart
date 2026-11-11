@@ -76,7 +76,7 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
   Future<void> revoquerAutres() async {
     final liste = await sessions();
     if (!liste.any((s) => s.courante)) {
-      throw ApiException(
+      throw const ApiException(
         'Impossible de reconnaître cet appareil parmi les sessions. Réessayez.',
         code: 'SESSION_COURANTE_INCONNUE',
       );

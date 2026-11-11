@@ -65,6 +65,23 @@ android {
             } else {
                 null
             }
+
+            // R8 : réduction du code mort et obscurcissement de la couche
+            // Android. Il était désactivé, donc l'application partait avec tout
+            // le code des bibliothèques natives, y compris ce qu'elle n'appelle
+            // jamais, et des noms de classes lisibles tels quels.
+            //
+            // Le code Dart n'est pas concerné : il est compilé en natif ARM et
+            // s'obscurcit à part (`flutter build --obfuscate`). Ce qui l'est,
+            // ce sont les plugins — d'où les règles de `proguard-rules.pro`,
+            // qui gardent ce que R8 ne peut pas suivre : le moteur Flutter,
+            // Firebase, et tout ce qui est atteint par réflexion.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

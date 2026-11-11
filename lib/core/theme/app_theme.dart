@@ -179,7 +179,7 @@ abstract final class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         systemOverlayStyle: SystemUiOverlayStyle.light,
-        titleTextStyle: TextStyle(
+        titleTextStyle: const TextStyle(
           fontFamily: police,
           fontSize: 19,
           fontWeight: FontWeight.w700,

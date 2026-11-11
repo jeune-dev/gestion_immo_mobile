@@ -609,7 +609,7 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
         padding: EdgeInsets.only(
           bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
-        child: Container(
+        child: DecoratedBox(
           decoration: BoxDecoration(
             color: cs.surface,
             border: Border(top: BorderSide(color: context.palette.bordure)),

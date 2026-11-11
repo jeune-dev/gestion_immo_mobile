@@ -40,7 +40,7 @@ import 'package:gestion_immo_mobile/features/paiement/presentation/widgets/encai
 
 // ── Connexion avec double authentification ───────────────────────────────────
 
-final _compte = CompteModel.fromJson({
+final _compte = CompteModel.fromJson(const {
   'user': {
     'id': 'u1',
     'role': 'proprietaire',

@@ -423,7 +423,7 @@ class ChiffreCle extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   valeur,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.6,

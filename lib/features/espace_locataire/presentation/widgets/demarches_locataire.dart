@@ -92,7 +92,7 @@ Future<bool> declarerEspeces(
         'Pas de relance de loyer pendant ce temps.',
       ),
       initial: {'amount': reste, 'paid_on': aujourdhui()},
-      champs: [
+      champs: const [
         Champ(
           'amount',
           'Montant remis',
@@ -100,7 +100,7 @@ Future<bool> declarerEspeces(
           obligatoire: true,
           min: 1,
         ),
-        const Champ(
+        Champ(
           'paid_on',
           'Date de la remise',
           type: TypeChamp.date,

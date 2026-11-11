@@ -32,7 +32,7 @@ class _Depot implements AuthRepository {
     appels.add('verification:$identifiant:$code');
     return code == 'K7P2QX9M'
         ? const Right(null)
-        : Left(
+        : const Left(
             ServerFailure(
               errorMessage: 'Code incorrect',
               code: 'CODE_INVALIDE',
@@ -126,7 +126,7 @@ void main() {
 
   test('code expiré entre la vérification et la réinitialisation : retour à l’étape du code', () async {
     final depot = _Depot()
-      ..echecReinitialisation = ServerFailure(
+      ..echecReinitialisation = const ServerFailure(
         errorMessage: 'Trop d’essais',
         code: 'CODE_EPUISE',
       );

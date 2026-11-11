@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "532555756771",
+    "project_id": "keerimmo-f664b",
+    "storage_bucket": "keerimmo-f664b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532555756771:android:5bcd1ac4052c6e02fa41d6",
+        "android_client_info": {
+          "package_name": "sn.gestionimmo.gestionImmoMobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3b_cRz4rLJpj2-Majk4AndkZfOJ0aHrQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

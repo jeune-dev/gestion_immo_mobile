@@ -64,7 +64,7 @@ class _ImageApiState extends State<ImageApi> {
         if (octets != null) {
           return Image.memory(octets, fit: widget.fit, gaplessPlayback: true);
         }
-        return Container(
+        return ColoredBox(
           color: context.palette.surfaceAlt,
           child: Center(
             child: s.data?.isLeft() ?? false

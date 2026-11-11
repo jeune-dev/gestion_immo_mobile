@@ -6,7 +6,7 @@ import 'package:gestion_immo_mobile/features/paiement/data/models/paiement_model
 
 void main() {
   test('bail : accord du locataire, congé et avenant en attente', () {
-    final b = BailModel.fromJson({
+    final b = BailModel.fromJson(const {
       'id': 'b1',
       'status': 'actif',
       'proposed_at': '2026-11-01T10:00:00Z',
@@ -95,7 +95,7 @@ void main() {
   });
 
   test('paiement remboursé et contesté', () {
-    final p = PaiementModel.fromJson({
+    final p = PaiementModel.fromJson(const {
       'id': 'p1',
       'status': 'rembourse',
       'dispute_status': 'resolu',

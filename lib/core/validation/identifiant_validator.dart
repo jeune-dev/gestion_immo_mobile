@@ -162,7 +162,7 @@ class IdentifiantValidator {
   static ResultatValidation codeReinitialisation(String? saisie) {
     final brut = (saisie ?? '').replaceAll(RegExp(r'\s'), '').toUpperCase();
     if (!RegExp(r'^[A-Z0-9]{8}$').hasMatch(brut)) {
-      return ResultatValidation.invalide('8 lettres ou chiffres');
+      return const ResultatValidation.invalide('8 lettres ou chiffres');
     }
     return ResultatValidation.valide(brut);
   }

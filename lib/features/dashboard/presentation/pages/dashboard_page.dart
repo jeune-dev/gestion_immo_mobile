@@ -102,7 +102,7 @@ class DashboardPage extends StatelessWidget {
                                 ),
                                 const SizedBox(height: AppTheme.espaceLg),
                               ],
-                              _Titre('Ce mois-ci'),
+                              const _Titre('Ce mois-ci'),
                               _chiffresDuMois(context, d),
                               const SizedBox(height: AppTheme.espaceMd),
                               Section(
@@ -125,14 +125,14 @@ class DashboardPage extends StatelessWidget {
                               ),
                               const SizedBox(height: AppTheme.espaceLg),
                               if (d.totalDebiteurs > 0) ...[
-                                _Titre("Qui n'a pas payé ?"),
+                                const _Titre("Qui n'a pas payé ?"),
                                 _Impayes(
                                   d: d,
                                   ouvrir: (w) => _ouvrir(context, w),
                                 ),
                                 const SizedBox(height: AppTheme.espaceLg),
                               ],
-                              _Titre('Revenus et dépenses'),
+                              const _Titre('Revenus et dépenses'),
                               _RevenusDepenses(d),
                               const SizedBox(height: AppTheme.espaceLg),
                               ..._repartitions(d),
@@ -231,7 +231,7 @@ class DashboardPage extends StatelessWidget {
   /// Dépenses par catégorie, appartements coûteux et événements du jour.
   List<Widget> _repartitions(TableauDeBord d) => [
     if (d.depensesParCategorie.isNotEmpty) ...[
-      _Titre('Dépenses par catégorie'),
+      const _Titre('Dépenses par catégorie'),
       Section(
         children: [
           for (final c in d.depensesParCategorie)
@@ -241,7 +241,7 @@ class DashboardPage extends StatelessWidget {
       const SizedBox(height: AppTheme.espaceLg),
     ],
     if (d.appartementsCouteux.isNotEmpty) ...[
-      _Titre('Appartements les plus coûteux'),
+      const _Titre('Appartements les plus coûteux'),
       Section(
         children: [
           for (final a in d.appartementsCouteux)
@@ -254,7 +254,7 @@ class DashboardPage extends StatelessWidget {
       const SizedBox(height: AppTheme.espaceLg),
     ],
     if (d.aujourdHui.isNotEmpty) ...[
-      _Titre("Aujourd'hui"),
+      const _Titre("Aujourd'hui"),
       Section(
         children: [
           for (final e in d.aujourdHui)
@@ -386,9 +386,9 @@ class _EnTete extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 2),
-            Text(
+            const Text(
               'Tableau de bord',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 26,
                 fontWeight: FontWeight.w700,

@@ -204,10 +204,10 @@ class _ConversationState extends State<_Conversation> {
                           maxLength,
                         }) => null,
                         textCapitalization: TextCapitalization.sentences,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: 'Votre message',
                           isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
+                          contentPadding: EdgeInsets.symmetric(
                             horizontal: AppTheme.espaceLg,
                             vertical: 11,
                           ),

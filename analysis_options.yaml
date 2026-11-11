@@ -33,5 +33,27 @@ linter:
     # `'cle': ?x`.
     use_null_aware_elements: false
 
+    # ── Performance de l'interface ──────────────────────────────────────────
+    #
+    # `flutter_lints` ne contient AUCUNE de ces règles, et c'est la raison pour
+    # laquelle un projet peut afficher « No issues found » tout en reconstruisant
+    # des widgets identiques à chaque image.
+    #
+    # Un widget `const` est instancié une fois pour toutes : Flutter le
+    # reconnaît à l'identique entre deux images, saute sa reconstruction et son
+    # comparaison. Sans le mot-clé, le même bouton est rebâti soixante fois par
+    # seconde pour rien.
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+
+    # Des nœuds d'arbre en moins, donc moins de mise en page à calculer :
+    # un `Container` sans décoration est un `Padding` ou un `SizedBox` déguisé.
+    avoid_unnecessary_containers: true
+    sized_box_for_whitespace: true
+    use_colored_box: true
+    use_decorated_box: true
+
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

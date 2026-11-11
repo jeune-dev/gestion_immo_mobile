@@ -28,7 +28,7 @@ class _Depot implements AuthRepository {
     if (appel.memberName == #connecter) {
       envois.add(appel.namedArguments[#identifiant] as String);
       return Future.value(
-        Left<Failure, ResultatConnexion>(ServerFailure(errorMessage: 'Refusé')),
+        const Left<Failure, ResultatConnexion>(ServerFailure(errorMessage: 'Refusé')),
       );
     }
     return super.noSuchMethod(appel);

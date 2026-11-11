@@ -56,7 +56,7 @@ class CautionDetailPage extends StatelessWidget {
             min: 1,
             max: versement ? c.resteAVerser : c.solde,
           ),
-          Champ(
+          const Champ(
             'method',
             'Moyen',
             type: TypeChamp.selection,

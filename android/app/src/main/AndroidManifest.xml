@@ -1,5 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Android 13 (API 33) et au-delà : afficher une notification demande une
+         autorisation de l'utilisateur, et cette autorisation ne peut même pas
+         être DEMANDÉE si la permission n'est pas déclarée ici.
+         `PushService.requestPermission()` revenait donc refusée sans le moindre
+         message, sur tout téléphone récent. Le défaut ne se voyait pas tant que
+         les fichiers Firebase manquaient ; il se verrait maintenant. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="Kërimmo"
         android:allowBackup="false"
