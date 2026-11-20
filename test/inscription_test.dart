@@ -210,6 +210,41 @@ void main() {
     });
   });
 
+  testWidgets('sans téléphone, l’inscription passe et le champ est omis', (
+    t,
+  ) async {
+    await ouvrir(t);
+    await saisir(t, 'Awa', 'Awa');
+    await saisir(t, 'Diop', 'Diop');
+    await continuer(t, 'Continuer');
+    // Le téléphone est laissé vide : l'étape ne doit pas retenir.
+    await saisir(t, 'exemple@email.com', 'awa@demo.sn');
+    await continuer(t, 'Continuer');
+    expect(find.text('Obligatoire'), findsNothing);
+
+    await saisir(t, 'Choisissez un mot de passe', 'Secret123');
+    await continuer(t, 'Recevoir mon code');
+    await saisirCode(t, '048213');
+    await continuer(t, 'Terminer');
+
+    // Absent du corps, et non envoyé vide : l'index d'unicité du serveur ne
+    // couvre que les numéros renseignés.
+    expect(bloc.demandes.single.containsKey('phone'), isFalse);
+    expect(bloc.demandes.single['email'], 'awa@demo.sn');
+  });
+
+  testWidgets('un téléphone saisi reste contrôlé', (t) async {
+    await ouvrir(t);
+    await saisir(t, 'Awa', 'Awa');
+    await saisir(t, 'Diop', 'Diop');
+    await continuer(t, 'Continuer');
+    await saisir(t, 'exemple@email.com', 'awa@demo.sn');
+    await saisir(t, '77 123 45 67', '12');
+    await continuer(t, 'Continuer');
+    expect(find.text('Le numéro doit contenir 9 chiffres'), findsOneWidget);
+    expect(find.text('Vos coordonnées'), findsOneWidget);
+  });
+
   testWidgets('société et ville restent facultatives', (t) async {
     await ouvrir(t);
     await jusquAuCode(t);

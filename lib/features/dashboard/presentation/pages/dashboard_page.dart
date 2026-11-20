@@ -206,7 +206,7 @@ class DashboardPage extends StatelessWidget {
             valeur: montant(d.revenus),
             icone: Icons.check_circle_outline,
             ton: TonStatut.succes,
-            sous: 'Reçu ce mois-ci, tout compris',
+            sous: 'Reçu ce mois-ci',
           ),
           ChiffreCle(
             libelle: 'Impayés',
@@ -283,6 +283,10 @@ class _BoutonEncaisser extends StatelessWidget {
         ),
       ),
       child: FloatingActionButton.extended(
+        // Sans étiquette, deux boutons flottants présents pendant une même
+        // transition partagent le tag Hero par défaut. L'assertion qui suit
+        // casse l'arbre de widgets : écran rouge au retour d'un formulaire.
+        heroTag: null,
         tooltip: 'Encaisser un loyer',
         onPressed: () async {
           if (await encaisser(context) && context.mounted) {

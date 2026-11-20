@@ -48,6 +48,10 @@ class FinancesPage extends StatelessWidget {
         title: const Text('Finances'),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        // Sans étiquette, deux boutons flottants présents pendant une même
+        // transition partagent le tag Hero par défaut. L'assertion qui suit
+        // casse l'arbre de widgets : écran rouge au retour d'un formulaire.
+        heroTag: null,
         onPressed: () => encaisser(context),
         icon: const Icon(Icons.payments_outlined),
         label: const Text('Encaisser'),

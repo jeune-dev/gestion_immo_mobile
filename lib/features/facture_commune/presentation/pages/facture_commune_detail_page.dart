@@ -109,6 +109,10 @@ class FactureCommuneDetailPage extends StatelessWidget {
       ),
       floatingActionButton: f.brouillon
           ? FloatingActionButton.extended(
+              // Sans étiquette, deux boutons flottants présents pendant une même
+              // transition partagent le tag Hero par défaut. L'assertion qui suit
+              // casse l'arbre de widgets : écran rouge au retour d'un formulaire.
+              heroTag: null,
               onPressed: () async {
                 if (await ouvrir<bool>(context, RepartitionPage(facture: f)) ==
                     true) {

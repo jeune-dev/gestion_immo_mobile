@@ -232,6 +232,10 @@ class _Fiche extends StatelessWidget {
     final statut = b.statut;
     return statut == 'brouillon'
         ? FloatingActionButton.extended(
+            // Sans étiquette, deux boutons flottants présents pendant une même
+            // transition partagent le tag Hero par défaut. L'assertion qui suit
+            // casse l'arbre de widgets : écran rouge au retour d'un formulaire.
+            heroTag: null,
             onPressed: () async {
               final ok = await confirmer(
                 context,
@@ -246,6 +250,10 @@ class _Fiche extends StatelessWidget {
           )
         : statut == 'actif'
         ? FloatingActionButton.extended(
+            // Sans étiquette, deux boutons flottants présents pendant une même
+            // transition partagent le tag Hero par défaut. L'assertion qui suit
+            // casse l'arbre de widgets : écran rouge au retour d'un formulaire.
+            heroTag: null,
             onPressed: () async {
               if (await encaisser(context, bail: b)) recharger();
             },

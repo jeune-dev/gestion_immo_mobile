@@ -125,6 +125,10 @@ class _VueFicheState extends State<_VueFiche> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        // Sans étiquette, deux boutons flottants présents pendant une même
+        // transition partagent le tag Hero par défaut. L'assertion qui suit
+        // casse l'arbre de widgets : écran rouge au retour d'un formulaire.
+        heroTag: null,
         onPressed: () async {
           if (await formulaireAppartement(context, immeuble: b) != null) {
             bloc.add(RafraichirImmeuble(id));

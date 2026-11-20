@@ -145,6 +145,10 @@ class _DemandesPageState extends State<DemandesPage>
       ),
       floatingActionButton: _onglets.index == 0
           ? FloatingActionButton.extended(
+              // Sans étiquette, deux boutons flottants présents pendant une même
+              // transition partagent le tag Hero par défaut. L'assertion qui suit
+              // casse l'arbre de widgets : écran rouge au retour d'un formulaire.
+              heroTag: null,
               onPressed: _signaler,
               icon: const Icon(Icons.add),
               label: const Text('Signaler'),

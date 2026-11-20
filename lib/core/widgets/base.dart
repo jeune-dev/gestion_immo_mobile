@@ -430,12 +430,21 @@ class ChiffreCle extends StatelessWidget {
                   ).merge(chiffresFixes).copyWith(color: context.palette.texte),
                 ),
               ),
+              // La tuile a une hauteur imposée par la grille. Sans `Flexible`
+              // ni limite de lignes, une légende un peu longue passait à la
+              // ligne et débordait la carte — bandes jaunes à l'écran. Elle
+              // cède maintenant la place et se termine par des points de
+              // suspension.
               if (sous != null)
-                Text(
-                  sous!,
-                  style: TextStyle(
-                    color: context.palette.texteDiscret,
-                    fontSize: 12,
+                Flexible(
+                  child: Text(
+                    sous!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: context.palette.texteDiscret,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
             ],

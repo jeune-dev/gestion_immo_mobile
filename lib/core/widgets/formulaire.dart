@@ -527,9 +527,16 @@ class _EcranFormulaireState extends State<EcranFormulaire> {
               : c.type == TypeChamp.montant && initial is num
               ? nombre(initial)
               : '$initial',
-          decoration: deco.copyWith(
-            suffixText: c.type == TypeChamp.montant ? 'FCFA' : null,
-          ),
+          // L'unité va dans le suffixe sur un champ pleine largeur, et dans
+          // l'étiquette sur un demi-champ : « FCFA » y mangeait la place, et
+          // un montant à sept chiffres — une caution de 3 300 000 — se
+          // retrouvait tronqué derrière lui, illisible une fois la saisie
+          // terminée. L'étiquette flotte au-dessus : elle a de la place.
+          decoration: c.type != TypeChamp.montant
+              ? deco
+              : c.moitie
+              ? deco.copyWith(labelText: '${deco.labelText} (FCFA)')
+              : deco.copyWith(suffixText: 'FCFA'),
           keyboardType: clavier,
           textCapitalization: c.type == TypeChamp.nom
               ? TextCapitalization.words

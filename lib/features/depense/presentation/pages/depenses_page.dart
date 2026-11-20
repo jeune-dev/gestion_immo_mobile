@@ -41,6 +41,10 @@ class _DepensesPageState extends State<DepensesPage> {
             title: const Text('Dépenses'),
           ),
           floatingActionButton: FloatingActionButton.extended(
+            // Sans étiquette, deux boutons flottants présents pendant une même
+            // transition partagent le tag Hero par défaut. L'assertion qui suit
+            // casse l'arbre de widgets : écran rouge au retour d'un formulaire.
+            heroTag: null,
             onPressed: () async {
               if (await nouvelleDepense(context)) {
                 _liste.currentState?.recharger();

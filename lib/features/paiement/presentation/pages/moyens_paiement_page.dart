@@ -221,6 +221,10 @@ class MoyensPaiementPage extends StatelessWidget {
         title: const Text('Moyens de paiement'),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        // Sans étiquette, deux boutons flottants présents pendant une même
+        // transition partagent le tag Hero par défaut. L'assertion qui suit
+        // casse l'arbre de widgets : écran rouge au retour d'un formulaire.
+        heroTag: null,
         onPressed: () async {
           if (await _configurer(context)) bloc.add(RafraichirMoyensPaiement());
         },

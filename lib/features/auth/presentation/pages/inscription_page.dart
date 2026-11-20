@@ -197,7 +197,12 @@ class _InscriptionPageState extends State<InscriptionPage> {
       InscriptionDemandee({
         'first_name': _prenom.text.trim(),
         'last_name': _nom.text.trim(),
-        'phone': IdentifiantValidator.telephone(_telephone.text).valeur!,
+        // Facultatif : absent du corps plutôt qu'envoyé vide. Sans numéro, le
+        // validateur rend la chaîne vide, pas `null` — d'où le test sur le
+        // contenu et non sur la nullité.
+        if (IdentifiantValidator.telephone(_telephone.text).valeur
+            case final tel? when tel.isNotEmpty)
+          'phone': tel,
         'email': _adresse,
         'password': _mdp.text,
         // Le serveur exige la confirmation ; l'œil du champ permet de relire
@@ -370,18 +375,18 @@ class _InscriptionPageState extends State<InscriptionPage> {
                 IdentifiantValidator.email(v, obligatoire: true).erreurFormulaire,
           ),
           const SizedBox(height: AppTheme.espaceMd),
+          // Facultatif : l'adresse suffit à créer le compte et à s'y
+          // connecter. Saisi, le numéro est contrôlé comme avant.
           _Champ(
-            libelle: 'Téléphone',
+            libelle: 'Téléphone (facultatif)',
             exemple: '77 123 45 67',
             controleur: _telephone,
             icone: Icons.phone_outlined,
             clavier: TextInputType.phone,
             autofill: const [AutofillHints.telephoneNumber],
             filtres: [FilteringTextInputFormatter.allow(RegExp(r'[\d\s+().-]'))],
-            validator: (v) => IdentifiantValidator.telephone(
-              v,
-              obligatoire: true,
-            ).erreurFormulaire,
+            validator: (v) =>
+                IdentifiantValidator.telephone(v).erreurFormulaire,
           ),
         ],
       ),
