@@ -10,10 +10,15 @@ import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.d
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_state.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/pages/activation_page.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/pages/changer_mot_de_passe_page.dart';
+import 'package:gestion_immo_mobile/features/auth/presentation/pages/choix_profil_page.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/pages/connexion_page.dart';
+import 'package:gestion_immo_mobile/features/auth/presentation/pages/espace_pret_page.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/pages/inscription_page.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/pages/mot_de_passe_oublie_page.dart';
+import 'package:gestion_immo_mobile/core/services/premiere_ouverture.dart';
 import 'package:gestion_immo_mobile/features/home/presentation/pages/locataire/locataire_home_page.dart';
+import 'package:gestion_immo_mobile/features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:gestion_immo_mobile/injection_container.dart';
 import 'package:gestion_immo_mobile/features/home/presentation/pages/proprietaire/proprietaire_home_page.dart';
 
 /// Rafraîchit le routeur à chaque changement de session.
@@ -36,6 +41,8 @@ class AppRouter {
   AppRouter._();
 
   static const demarrage = '/';
+  static const onboarding = '/bienvenue';
+  static const choixProfil = '/creer-compte';
   static const connexion = '/connexion';
   static const inscription = '/inscription';
   static const motDePasseOublie = '/mot-de-passe-oublie';
@@ -43,9 +50,12 @@ class AppRouter {
   static const motDePasseProvisoire = '/mot-de-passe';
   static const proprietaire = '/p';
   static const abonnement = '/p/abonnement';
+  static const espacePret = '/p/espace-pret';
   static const locataire = '/l';
 
   static const _publiques = [
+    onboarding,
+    choixProfil,
     connexion,
     inscription,
     motDePasseOublie,
@@ -65,6 +75,10 @@ class AppRouter {
           return ici == demarrage ? null : demarrage;
         }
         if (s.statut == StatutSession.deconnecte) {
+          // Toute première ouverture : les trois écrans d'accueil, une fois.
+          if (!sl<PremiereOuverture>().vu) {
+            return ici == onboarding ? null : onboarding;
+          }
           return _publiques.contains(ici) ? null : connexion;
         }
         // Connecté : mot de passe provisoire d'abord (403 CHANGEMENT_MOT_DE_PASSE_REQUIS sinon)
@@ -73,6 +87,10 @@ class AppRouter {
         }
         final estLocataire = s.compte?.estLocataire ?? false;
         final accueil = estLocataire ? locataire : proprietaire;
+        // Compte tout juste créé : un mot d'accueil avant le tableau de bord.
+        if (s.nouveauCompte && !estLocataire) {
+          return ici == espacePret ? null : espacePret;
+        }
         if (ici == demarrage ||
             _publiques.contains(ici) ||
             ici == motDePasseProvisoire) {
@@ -84,6 +102,8 @@ class AppRouter {
       },
       routes: [
         GoRoute(path: demarrage, builder: (_, _) => const _Demarrage()),
+        GoRoute(path: onboarding, builder: (_, _) => const OnboardingPage()),
+        GoRoute(path: choixProfil, builder: (_, _) => const ChoixProfilPage()),
         GoRoute(path: connexion, builder: (_, _) => const ConnexionPage()),
         GoRoute(path: inscription, builder: (_, _) => const InscriptionPage()),
         GoRoute(
@@ -100,6 +120,7 @@ class AppRouter {
           builder: (_, _) => const ProprietaireHomePage(),
         ),
         GoRoute(path: abonnement, builder: (_, _) => const AbonnementPage()),
+        GoRoute(path: espacePret, builder: (_, _) => const EspacePretPage()),
         GoRoute(path: locataire, builder: (_, _) => const LocataireHomePage()),
       ],
     );

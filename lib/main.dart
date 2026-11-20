@@ -12,6 +12,7 @@ import 'package:gestion_immo_mobile/core/services/push_service.dart';
 import 'package:gestion_immo_mobile/features/notifications/presentation/compteur_notifications.dart';
 import 'package:gestion_immo_mobile/core/routes/app_router.dart';
 import 'package:gestion_immo_mobile/core/services/nettoyage_local.dart';
+import 'package:gestion_immo_mobile/core/services/premiere_ouverture.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
@@ -32,6 +33,9 @@ Future<void> main() async {
   // instanciation, aucun `await` dedans. Le coût est négligeable, et il doit
   // précéder le premier écran qui réclame une dépendance.
   await di.init();
+  // Lu AVANT le premier écran : le routeur demande dès sa première redirection
+  // si l'onboarding a déjà été vu, et il ne peut pas attendre une réponse.
+  await di.sl<PremiereOuverture>().charger();
   // Les référentiels (libellés des statuts) se chargent en arrière-plan, depuis le cache d'abord
   di.sl<ReferentielsService>().charger();
   runApp(const GestionImmoApp());
@@ -103,7 +107,7 @@ class _GestionImmoAppState extends State<GestionImmoApp>
     return BlocProvider.value(
       value: _auth,
       child: MaterialApp.router(
-        title: 'Kërimmo',
+        title: 'TerangaLoc',
         debugShowCheckedModeBanner: false,
         theme: _avecInter(AppTheme.clair),
         darkTheme: _avecInter(AppTheme.sombre),

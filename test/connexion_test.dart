@@ -150,8 +150,10 @@ void main() {
       // Exemples visibles avant toute saisie.
       expect(find.text('exemple@email.com'), findsOneWidget);
       expect(find.text('Votre mot de passe'), findsOneWidget);
-      expect(find.text('Je suis propriétaire'), findsOneWidget);
-      expect(find.text('Je suis locataire'), findsOneWidget);
+      // Le choix du profil a sa propre page : la connexion n'en garde que
+      // la porte d'entrée.
+      expect(find.text('Créer un compte'), findsOneWidget);
+      expect(find.text('Je suis propriétaire'), findsNothing);
 
       await t.tap(bouton);
       await t.pump();
@@ -218,10 +220,10 @@ void main() {
           await t.pump();
           await t.tap(bouton);
           await t.pump();
-          await t.ensureVisible(find.text('Je suis locataire'));
+          await t.ensureVisible(find.text('Créer un compte'));
           await t.pumpAndSettle();
           expect(
-            t.getBottomLeft(find.text('Je suis locataire')).dy,
+            t.getBottomLeft(find.text('Créer un compte')).dy,
             lessThanOrEqualTo(hauteur),
           );
           expect(t.takeException(), isNull);

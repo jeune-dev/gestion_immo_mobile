@@ -25,6 +25,18 @@ abstract class AuthRepository {
     Map<String, dynamic> corps,
   );
   Future<Either<Failure, void>> activerLocataire(Map<String, dynamic> corps);
+
+  /// Inscription, étape 1 : envoi du code à l'adresse.
+  Future<Either<Failure, void>> demanderCodeInscription(
+    String email, {
+    String? prenom,
+  });
+
+  /// Inscription, étape 2 : le jeton qui atteste la vérification de l'adresse.
+  Future<Either<Failure, String>> verifierCodeInscription(
+    String email,
+    String code,
+  );
   Future<Either<Failure, void>> changerMotDePasse({
     required String actuel,
     required String nouveau,

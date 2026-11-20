@@ -55,7 +55,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (_, emit) => emit(state.copyWith(effacerMfa: true, effacerFailure: true)),
     );
     on<InscriptionDemandee>(
-      (e, emit) => _ouvrir(emit, () => inscrireProprietaire(e.corps)),
+      (e, emit) => _ouvrir(
+        emit,
+        () => inscrireProprietaire(e.corps),
+        // Compte tout juste créé : l'écran de bienvenue avant le tableau de bord.
+        nouveauCompte: true,
+      ),
     );
     on<ActivationDemandee>(
       (e, emit) => _ouvrir(emit, () => activerLocataire(e.corps)),
@@ -64,6 +69,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<CompteRechargeDemande>(_onRecharge);
     on<DeconnexionDemandee>(_onDeconnexion);
     on<SessionExpiree>(_onSessionExpiree);
+    on<BienvenueVue>(
+      (_, emit) => emit(state.copyWith(nouveauCompte: false)),
+    );
     on<AuthErreurEffacee>(
       (_, emit) =>
           emit(state.copyWith(effacerFailure: true, effacerSucces: true)),
@@ -177,13 +185,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _ouvrir(
     Emitter<AuthState> emit,
-    Future<Either<Failure, void>> Function() action,
-  ) async {
+    Future<Either<Failure, void>> Function() action, {
+    bool nouveauCompte = false,
+  }) async {
     emit(state.copyWith(enCours: true, effacerFailure: true));
     final r = await action();
     await r.fold(
       (f) async => emit(state.copyWith(enCours: false, failure: f)),
-      (_) => _chargerCompte(emit, nouvelleSession: true),
+      (_) => _chargerCompte(
+        emit,
+        nouvelleSession: true,
+        nouveauCompte: nouveauCompte,
+      ),
     );
   }
 
@@ -219,6 +232,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit, {
     String? succes,
     bool nouvelleSession = false,
+    bool nouveauCompte = false,
   }) async {
     final r = await getCompte();
     await r.fold(
@@ -238,6 +252,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           compte: c,
           succes: succes,
           version: state.version + (succes == null ? 0 : 1),
+          nouveauCompte: nouveauCompte,
         ),
       ),
     );

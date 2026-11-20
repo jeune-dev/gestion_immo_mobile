@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 
-/// Palette tirée du logo Kërimmo : dégradé de bleus (nuit → roi → ciel),
-/// vert « immo » (foncé → citron) et blanc. Rouge et orange restent réservés
-/// aux erreurs et aux alertes.
+/// Palette tirée du logo TerangaLoc : bleu nuit de la tuile, vert « Loc »
+/// (foncé → citron) et blanc, plus un bleu roi pour les boutons et les liens.
+/// Rouge et orange restent réservés aux erreurs et aux alertes.
 ///
 /// Dans les écrans, préférer `Theme.of(context).colorScheme` et l'extension
 /// [AppPalette] (`context.palette`) : elles basculent seules en mode sombre.
 abstract final class AppColors {
   // ── Marque ────────────────────────────────────────────────────────────────
-  /// Bleu nuit du mot « Kër » et des ombres du logo.
-  static const marine = Color(0xFF0B2A5B);
+  /// Bleu nuit de la tuile du logo : en-têtes, barre d'état, mot « Teranga ».
+  static const marine = Color(0xFF0B2545);
+
+  /// Second bleu nuit du dégradé des en-têtes : même famille, éclairci juste
+  /// assez pour que le dégradé se voie sans virer au bleu ciel.
+  static const marineClair = Color(0xFF14407A);
   static const primaire = Color(0xFF0E56B0);
   static const primaireSurvol = Color(0xFF0A4590);
   static const primaireTeinte = Color(0xFFE6F0FC);
@@ -19,28 +23,26 @@ abstract final class AppColors {
   static const secondaireSurvol = Color(0xFF23850F);
   static const secondaireTeinte = Color(0xFFE8F6E2);
 
-  /// Bleu ciel des immeubles du logo (dégradés, accents).
-  static const bleuLogo = Color(0xFF1E88E5);
-
-  /// Vert citron de l'arc du logo (accents sur fond bleu).
+  /// Vert citron de la porte du logo (accents sur fond bleu).
   static const vertLogo = Color(0xFF7CC42A);
 
   /// Texte sur le vert : blanc, en gras.
   static const surSecondaire = Color(0xFFFFFFFF);
 
   // ── Dégradés de marque ────────────────────────────────────────────────────
-  /// En-têtes et barres : bleu nuit → bleu roi → bleu ciel, de gauche à droite
-  /// (horizontal : deux bandeaux de hauteurs différentes se raccordent sans
-  /// couture).
+  /// En-têtes et barres : bleu nuit, de gauche à droite (horizontal : deux
+  /// bandeaux de hauteurs différentes se raccordent sans couture).
+  ///
+  /// Deux teintes seulement, prises dans la tuile du logo : un troisième bleu
+  /// plus clair à droite tirait le bandeau vers le bleu ciel et affaiblissait
+  /// le blanc du logo posé dessus.
   static const degradeMarque = LinearGradient(
-    colors: [marine, primaire, bleuLogo],
-    stops: [0, 0.55, 1],
+    colors: [marine, marineClair],
   );
 
   /// Variante du mode sombre : mêmes teintes, assourdies.
   static const degradeMarqueSombre = LinearGradient(
-    colors: [Color(0xFF061730), Color(0xFF0A346E), Color(0xFF0F4E94)],
-    stops: [0, 0.55, 1],
+    colors: [Color(0xFF071A32), Color(0xFF0E2F5A)],
   );
 
   /// Vert du logo, foncé → citron (accents, jauges, pastilles).

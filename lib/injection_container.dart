@@ -5,6 +5,7 @@ import 'core/network/api_client.dart';
 import 'core/services/auth_event_bus.dart';
 import 'core/services/referentiels_service.dart';
 import 'core/services/cache_images.dart';
+import 'core/services/premiere_ouverture.dart';
 import 'core/services/token_service.dart';
 
 // Auth
@@ -18,6 +19,8 @@ import 'features/auth/domain/usecases/deconnecter.dart';
 import 'features/auth/domain/usecases/demander_reinitialisation.dart';
 import 'features/auth/domain/usecases/get_compte.dart';
 import 'features/auth/domain/usecases/inscrire_proprietaire.dart';
+import 'features/auth/domain/usecases/demander_code_inscription.dart';
+import 'features/auth/domain/usecases/verifier_code_inscription.dart';
 import 'features/auth/domain/usecases/reinitialiser_mot_de_passe.dart';
 import 'features/auth/domain/usecases/verifier_code_reinitialisation.dart';
 import 'features/auth/domain/usecases/restaurer_session.dart';
@@ -368,7 +371,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RestaurerSession(sl()));
   sl.registerLazySingleton(() => Connecter(sl()));
   sl.registerLazySingleton(() => VerifierMfa(sl()));
+  sl.registerLazySingleton(() => PremiereOuverture());
   sl.registerLazySingleton(() => InscrireProprietaire(sl()));
+  sl.registerLazySingleton(() => DemanderCodeInscription(sl()));
+  sl.registerLazySingleton(() => VerifierCodeInscription(sl()));
   sl.registerLazySingleton(() => ActiverLocataire(sl()));
   sl.registerLazySingleton(() => ChangerMotDePasse(sl()));
   sl.registerLazySingleton(() => GetCompte(sl()));

@@ -9,6 +9,8 @@ class ApiEndpoints {
   static const connexion = '/auth/connexion';
   static const mfa = '/auth/mfa';
   static const inscription = '/auth/inscription';
+  static const inscriptionCode = '/auth/inscription/code';
+  static const inscriptionVerifierCode = '/auth/inscription/verifier-code';
   static const refresh = '/auth/refresh';
   static const deconnexion = '/auth/deconnexion';
   static const motDePasseOublie = '/auth/mot-de-passe-oublie';

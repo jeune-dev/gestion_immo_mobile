@@ -2,85 +2,78 @@ import 'package:flutter/material.dart';
 
 import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 
-/// Pictogramme Kërimmo : maison et immeubles enlacés d'un arc vert, tiré du
-/// logo officiel (`assets/images/picto_kerimmo.png`, fond transparent).
-/// Plus large que haut (≈ 2,5 : 1) : on le dimensionne par sa [largeur].
-class LogoKerimmo extends StatelessWidget {
+/// Picto TerangaLoc : une maison, carrée, en deux versions.
+///
+/// Sur un fond clair, la tuile bleu nuit (`picto_terangaloc.png`). Sur l'en-tête
+/// ou une barre marine, [clair] prend la version sans tuile
+/// (`picto_terangaloc_clair.png`) : maison blanche et porte verte sur fond
+/// transparent. La tuile marine posée sur du marine ne se verrait pas.
+class LogoTerangaLoc extends StatelessWidget {
   final double largeur;
-  const LogoKerimmo({super.key, this.largeur = 48});
 
-  static const asset = 'assets/images/picto_kerimmo.png';
+  /// Version claire, pour les fonds foncés.
+  final bool clair;
+  const LogoTerangaLoc({super.key, this.largeur = 48, this.clair = false});
+
+  static const asset = 'assets/images/picto_terangaloc.png';
+  static const assetClair = 'assets/images/picto_terangaloc_clair.png';
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Kërimmo',
+    label: 'TerangaLoc',
     image: true,
     child: Image.asset(
-      asset,
+      clair ? assetClair : asset,
       width: largeur,
-      // Hauteur réservée : la pastille garde sa taille pendant le chargement.
-      height: largeur / 2.5,
+      // Le picto est carré ; la hauteur est réservée pour que la mise en page
+      // ne bouge pas pendant le chargement.
+      height: largeur,
       fit: BoxFit.contain,
       filterQuality: FilterQuality.medium,
     ),
   );
 }
 
-/// Pictogramme en haut à gauche de la barre des écrans racines (onglets),
-/// comme dans Yobante. Sur un écran empilé, renvoie `null` : la barre garde
-/// son bouton retour.
+/// Picto en haut à gauche de la barre des écrans racines (onglets). Sur un
+/// écran empilé, renvoie `null` : la barre garde son bouton retour.
 class LogoBarre extends StatelessWidget {
   /// Marge gauche (dans une barre d'application) ; aucune dans un en-tête.
   final bool marge;
   const LogoBarre({super.key, this.marge = true});
 
-  static const largeur = 84.0;
+  static const largeur = 56.0;
 
   static Widget? siRacine(BuildContext context) =>
       (ModalRoute.of(context)?.canPop ?? false) ? null : const LogoBarre();
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.only(left: marge ? 16 : 0),
-    child: Align(
+    padding: EdgeInsets.only(left: marge ? 14 : 0),
+    child: const Align(
       alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 7),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33061730),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: const LogoKerimmo(largeur: 58),
-      ),
+      child: LogoTerangaLoc(largeur: 32, clair: true),
     ),
   );
 }
 
-/// Nom de la marque : « Kër » en bleu, « immo » en vert.
-class NomKerimmo extends StatelessWidget {
+/// Nom de la marque : « Teranga » en bleu nuit, « Loc » en vert.
+class NomTerangaLoc extends StatelessWidget {
   final double taille;
 
-  /// Sur fond bleu : « Kër » en blanc.
+  /// Sur fond marine : « Teranga » en blanc et « Loc » en vert clair.
   final bool surFonce;
-  const NomKerimmo({super.key, this.taille = 22, this.surFonce = false});
+  const NomTerangaLoc({super.key, this.taille = 22, this.surFonce = false});
 
   @override
   Widget build(BuildContext context) => Text.rich(
     TextSpan(
       children: [
         TextSpan(
-          text: 'Kër',
+          text: 'Teranga',
           style: TextStyle(color: surFonce ? Colors.white : AppColors.marine),
         ),
         TextSpan(
-          text: 'immo',
+          text: 'Loc',
           style: TextStyle(
             color: surFonce ? AppColors.vertLogo : AppColors.secondaire,
           ),

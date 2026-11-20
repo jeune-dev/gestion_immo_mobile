@@ -1,4 +1,4 @@
-# Règles R8 — Kërimmo
+# Règles R8 — TerangaLoc
 #
 # L'essentiel du code métier est en Dart, compilé en natif ARM : R8 ne le voit
 # pas et ne le touche pas. Ces règles ne concernent que la couche Android et

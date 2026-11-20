@@ -1,5 +1,5 @@
 name: gestion_immo_mobile
-description: "Gestion Immo — propriétaires et locataires"
+description: "TerangaLoc — propriétaires et locataires"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -71,7 +71,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  # Icônes de l'application, tirées du logo Kërimmo.
+  # Icônes de l'application, tirées du logo TerangaLoc.
   flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
@@ -80,7 +80,7 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    # Logo Kërimmo (picto_kerimmo.png, logo_kerimmo.png)
+    # Logo TerangaLoc (picto_terangaloc.png, picto_terangaloc_clair.png)
     - assets/images/
     # Police Inter embarquée (charte § 2) : google_fonts la lit ici, sans réseau
     - assets/fonts/
@@ -121,12 +121,12 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
-# Icônes Kërimmo : `dart run flutter_launcher_icons` (PNG tirés du logo
+# Icônes TerangaLoc : `dart run flutter_launcher_icons` (PNG tirés du logo
 # officiel : icone_app.png, icone_app_avant_plan.png).
 flutter_launcher_icons:
   android: true
   ios: true
   remove_alpha_ios: true
   image_path: "assets/images/icone_app.png"
-  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_background: "#0B2545"
   adaptive_icon_foreground: "assets/images/icone_app_avant_plan.png"

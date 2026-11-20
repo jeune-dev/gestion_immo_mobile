@@ -30,6 +30,11 @@ class AuthState extends Equatable {
   /// Change à chaque message ponctuel, pour qu'un même message se réaffiche.
   final int version;
 
+  /// Le compte vient d'être créé (inscription) : l'écran de bienvenue s'affiche
+  /// avant le tableau de bord. Levée par [BienvenueVue], elle ne survit pas au
+  /// redémarrage de l'application — on ne souhaite la bienvenue qu'une fois.
+  final bool nouveauCompte;
+
   bool get connecte => statut == StatutSession.connecte;
   bool get doitChangerMotDePasse =>
       compte?.utilisateur.doitChangerMotDePasse ?? false;
@@ -45,6 +50,7 @@ class AuthState extends Equatable {
     this.mfaJeton,
     this.succes,
     this.version = 0,
+    this.nouveauCompte = false,
   });
 
   AuthState copyWith({
@@ -55,6 +61,7 @@ class AuthState extends Equatable {
     bool? deconnexion,
     String? mfaJeton,
     String? succes,
+    bool? nouveauCompte,
     bool effacerFailure = false,
     bool effacerMfa = false,
     bool effacerSucces = false,
@@ -69,6 +76,7 @@ class AuthState extends Equatable {
     mfaJeton: effacerMfa ? null : mfaJeton ?? this.mfaJeton,
     succes: effacerSucces ? null : succes ?? this.succes,
     version: failure != null || succes != null ? version + 1 : version,
+    nouveauCompte: nouveauCompte ?? this.nouveauCompte,
   );
 
   @override
@@ -82,5 +90,6 @@ class AuthState extends Equatable {
     mfaJeton,
     succes,
     version,
+    nouveauCompte,
   ];
 }

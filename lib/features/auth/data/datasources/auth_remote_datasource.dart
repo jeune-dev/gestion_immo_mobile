@@ -10,6 +10,12 @@ abstract class AuthRemoteDataSource {
   Future<Map<String, dynamic>> connecter(Map<String, dynamic> corps);
   Future<Map<String, dynamic>> verifierMfa(Map<String, dynamic> corps);
   Future<Map<String, dynamic>> inscrire(Map<String, dynamic> corps);
+
+  /// Inscription, étape 1 : un code part à l'adresse saisie.
+  Future<void> demanderCodeInscription(String email, String? prenom);
+
+  /// Inscription, étape 2 : rend le jeton qui atteste la vérification.
+  Future<String> verifierCodeInscription(String email, String code);
   Future<Map<String, dynamic>> activerLocataire(Map<String, dynamic> corps);
   Future<Map<String, dynamic>> changerMotDePasse(Map<String, dynamic> corps);
   Future<CompteModel> lireCompte();
@@ -46,6 +52,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         body: corps,
         sansJeton: true,
       );
+
+  @override
+  Future<void> demanderCodeInscription(String email, String? prenom) =>
+      api.post<dynamic>(
+        ApiEndpoints.inscriptionCode,
+        body: {
+          'email': email,
+          if (prenom != null && prenom.isNotEmpty) 'first_name': prenom,
+        },
+        sansJeton: true,
+      );
+
+  @override
+  Future<String> verifierCodeInscription(String email, String code) async {
+    final reponse = await api.post<Map<String, dynamic>>(
+      ApiEndpoints.inscriptionVerifierCode,
+      body: {'email': email, 'code': code},
+      sansJeton: true,
+    );
+    return reponse['email_token'] as String;
+  }
 
   @override
   Future<Map<String, dynamic>> activerLocataire(Map<String, dynamic> corps) =>

@@ -6,7 +6,7 @@ import 'failure.dart';
 const _messagesParCode = {
   'MODELE_NON_PUBLIE':
       'La génération de contrat n’est pas encore disponible pour ce type de bail. '
-      'Le modèle doit d’abord être validé et publié par l’équipe Kërimmo.',
+      'Le modèle doit d’abord être validé et publié par l’équipe TerangaLoc.',
 };
 
 /// Message à afficher pour une erreur quelconque remontée à la présentation.

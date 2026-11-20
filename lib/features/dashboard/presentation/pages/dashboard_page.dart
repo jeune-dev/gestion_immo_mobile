@@ -364,7 +364,7 @@ class _EnTete extends StatelessWidget {
               children: [
                 const LogoBarre(marge: false),
                 const SizedBox(width: 10),
-                const NomKerimmo(taille: 20, surFonce: true),
+                const NomTerangaLoc(taille: 20, surFonce: true),
                 const Spacer(),
                 IconButton(
                   tooltip: 'Notifications',

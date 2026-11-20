@@ -29,6 +29,9 @@ class ActivationDemandee extends AuthEvent {
   ActivationDemandee(this.corps);
 }
 
+/// L'écran de bienvenue a été vu : l'application passe au tableau de bord.
+class BienvenueVue extends AuthEvent {}
+
 class MotDePasseChangeDemande extends AuthEvent {
   final String actuel;
   final String nouveau;

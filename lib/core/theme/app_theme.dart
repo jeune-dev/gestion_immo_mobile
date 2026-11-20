@@ -215,7 +215,7 @@ abstract final class AppTheme {
       cardTheme: CardThemeData(
         color: cs.surface,
         elevation: clair ? 1.5 : 0,
-        shadowColor: const Color(0x400B2A5B),
+        shadowColor: const Color(0x400B2545),
         surfaceTintColor: Colors.transparent,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
@@ -379,7 +379,7 @@ abstract final class AppTheme {
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 8,
-        shadowColor: const Color(0x330B2A5B),
+        shadowColor: const Color(0x330B2545),
         height: 70,
         indicatorColor: p.primaireTeinte,
         indicatorShape: const StadiumBorder(),

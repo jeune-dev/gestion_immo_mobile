@@ -210,29 +210,13 @@ class _ConnexionPageState extends State<ConnexionPage> {
                   const SizedBox(height: AppTheme.espaceLg),
                   const _SeparateurAcces(),
                   const SizedBox(height: AppTheme.espaceMd),
-                  IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: _ChoixAcces(
-                            icone: Icons.apartment_outlined,
-                            titre: 'Je suis propriétaire',
-                            detail: 'Créer mon compte',
-                            onTap: () => context.push(AppRouter.inscription),
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.espaceSm),
-                        Expanded(
-                          child: _ChoixAcces(
-                            icone: Icons.key_outlined,
-                            titre: 'Je suis locataire',
-                            detail: "J'ai un code d'invitation",
-                            onTap: () => context.push(AppRouter.activation),
-                          ),
-                        ),
-                      ],
-                    ),
+                  // Le choix entre les deux profils a sa propre page : il
+                  // décide de tout le parcours qui suit, et deux cartes
+                  // coincées sous le bouton de connexion le faisaient passer
+                  // pour un détail.
+                  OutlinedButton(
+                    onPressed: () => context.push(AppRouter.choixProfil),
+                    child: const Text('Créer un compte'),
                   ),
                 ],
               ],
@@ -327,67 +311,4 @@ class _SeparateurAcces extends StatelessWidget {
       const Expanded(child: Divider()),
     ],
   );
-}
-
-/// Accès pour un nouvel utilisateur : icône, profil, action.
-class _ChoixAcces extends StatelessWidget {
-  final IconData icone;
-  final String titre;
-  final String detail;
-  final VoidCallback onTap;
-  const _ChoixAcces({
-    required this.icone,
-    required this.titre,
-    required this.detail,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final cs = Theme.of(context).colorScheme;
-    final rayon = BorderRadius.circular(AppTheme.rayon);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: rayon,
-        child: Ink(
-          padding: const EdgeInsets.all(AppTheme.espaceMd),
-          decoration: BoxDecoration(
-            borderRadius: rayon,
-            border: Border.all(color: p.bordure),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: p.primaireTeinte,
-                  borderRadius: BorderRadius.circular(AppTheme.rayonPetit),
-                ),
-                child: Icon(icone, color: cs.primary, size: 20),
-              ),
-              const SizedBox(height: AppTheme.espaceSm),
-              Text(
-                titre,
-                style: TextStyle(
-                  color: p.texte,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                detail,
-                style: TextStyle(color: p.texteSecondaire, fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

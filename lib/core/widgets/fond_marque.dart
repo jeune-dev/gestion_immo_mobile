@@ -4,7 +4,7 @@ import 'package:gestion_immo_mobile/core/theme/app_colors.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart' as format;
 
-/// Dégradé de marque du mode en cours (bleu nuit → roi → ciel).
+/// Dégradé de marque du mode en cours (bleu nuit, foncé → un peu moins foncé).
 LinearGradient degradeMarque(BuildContext context) =>
     Theme.of(context).brightness == Brightness.dark
     ? AppColors.degradeMarqueSombre
@@ -44,7 +44,7 @@ class CarteMarque extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppTheme.rayonCarte),
       boxShadow: const [
         BoxShadow(
-          color: Color(0x400B2A5B),
+          color: Color(0x400B2545),
           blurRadius: 24,
           offset: Offset(0, 10),
         ),

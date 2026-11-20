@@ -118,6 +118,22 @@ class AuthRepositoryImpl implements AuthRepository {
   );
 
   @override
+  Future<Either<Failure, void>> demanderCodeInscription(
+    String email, {
+    String? prenom,
+  }) => appelApi(
+    () => remoteDataSource.demanderCodeInscription(email.trim(), prenom?.trim()),
+  );
+
+  @override
+  Future<Either<Failure, String>> verifierCodeInscription(
+    String email,
+    String code,
+  ) => appelApi(
+    () => remoteDataSource.verifierCodeInscription(email.trim(), code.trim()),
+  );
+
+  @override
   Future<Either<Failure, void>> activerLocataire(Map<String, dynamic> corps) =>
       appelApi(
         () async => _ouvrirNouvelleSession(

@@ -318,7 +318,7 @@ void main() {
     for (final ok in [
       'https://pay.wave.com/c/123',
       'tel:+221770000000',
-      'otpauth://totp/Kerimmo:awa?secret=ABC',
+      'otpauth://totp/TerangaLoc:awa?secret=ABC',
     ]) {
       expect(lienAutorise(Uri.parse(ok)), isTrue, reason: ok);
     }

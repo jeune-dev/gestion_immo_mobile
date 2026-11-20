@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="TerangaLoc">
+  <title>TerangaLoc</title>
+  <desc>Tuile bleu nuit, maison blanche, porte verte. Source vectorielle du picto ; les PNG de assets/images en sont tires (voir design/README.md).</desc>
+  <rect width="64" height="64" rx="16" fill="#0B2545"/>
+  <g transform="translate(32 32) scale(0.9) translate(-32 -32)">
+    <path d="M32 12 L52 30 L46.5 30 L46.5 51 L17.5 51 L17.5 30 L12 30 Z" fill="#FFFFFF"/>
+    <rect x="27.5" y="39" width="9" height="12" rx="2" fill="#7CC42A"/>
+  </g>
+</svg>

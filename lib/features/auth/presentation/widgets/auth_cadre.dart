@@ -136,7 +136,7 @@ class AuthCadre extends StatelessWidget {
   }
 }
 
-/// Marque de l'en-tête : logo sur pastille blanche, nom, signature.
+/// Marque de l'en-tête : picto clair, nom, signature.
 class _EnTeteMarque extends StatelessWidget {
   final bool compact;
   const _EnTeteMarque({required this.compact});
@@ -147,30 +147,28 @@ class _EnTeteMarque extends StatelessWidget {
       return const Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _PastilleLogo(
-            rayon: AppTheme.rayonPetit,
-            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-            child: LogoKerimmo(largeur: 62),
-          ),
+          LogoTerangaLoc(largeur: 30, clair: true),
           SizedBox(width: AppTheme.espaceSm),
-          NomKerimmo(taille: 24, surFonce: true),
+          // Le nom rétrécit au lieu de déborder sur un écran étroit.
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: NomTerangaLoc(taille: 24, surFonce: true),
+            ),
+          ),
         ],
       );
     }
-    return Column(
+    return const Column(
       children: [
-        _PastilleLogo(
-          rayon: AppTheme.rayonFeuille,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Image.asset(
-            'assets/images/logo_kerimmo.png',
-            width: 120,
-            semanticLabel: 'Kërimmo',
-            filterQuality: FilterQuality.medium,
-          ),
+        LogoTerangaLoc(largeur: 64, clair: true),
+        SizedBox(height: AppTheme.espaceSm),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: NomTerangaLoc(taille: 30, surFonce: true),
         ),
-        const SizedBox(height: AppTheme.espaceSm),
-        const Text(
+        SizedBox(height: AppTheme.espaceXs),
+        Text(
           'Gérez, suivez, valorisez votre patrimoine',
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -182,34 +180,6 @@ class _EnTeteMarque extends StatelessWidget {
       ],
     );
   }
-}
-
-class _PastilleLogo extends StatelessWidget {
-  final double rayon;
-  final EdgeInsetsGeometry padding;
-  final Widget child;
-  const _PastilleLogo({
-    required this.rayon,
-    required this.padding,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: padding,
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(rayon),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x33061730),
-          blurRadius: 16,
-          offset: Offset(0, 6),
-        ),
-      ],
-    ),
-    child: child,
-  );
 }
 
 /// Libellé au-dessus d'un champ : l'exemple reste visible avant la saisie.

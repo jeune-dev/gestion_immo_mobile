@@ -16,7 +16,7 @@
          Les builds de développement la rouvrent pour eux seuls, voir
          src/debug/AndroidManifest.xml. -->
     <application
-        android:label="Kërimmo"
+        android:label="TerangaLoc"
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:name="${applicationName}"

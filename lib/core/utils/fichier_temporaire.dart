@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 /// vidéo et le partage du système ne savent travailler que sur un fichier.
 /// Aucun n'est conservé : chacun est supprimé après usage, et les restes
 /// (application fermée entre-temps) le sont au lancement suivant.
-const _dossierTemporaire = 'kerimmo';
+const _dossierTemporaire = 'terangaloc';
 
 Future<Directory> _racine() async =>
     Directory('${(await getTemporaryDirectory()).path}/$_dossierTemporaire');
