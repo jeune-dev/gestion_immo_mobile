@@ -31,11 +31,25 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # cupertino_icons retiré : il n'apporte que la classe `CupertinoIcons` et sa
-  # police, et aucune des deux n'est employée ici (0 occurrence de
-  # `CupertinoIcons.` dans lib/, test/ et tool/). L'import
-  # `package:flutter/cupertino.dart` d'app_theme.dart vient du SDK Flutter,
-  # pas de ce paquet, et reste valide.
+  # Remis après l'avoir retiré. Le retrait partait d'un constat juste — aucune
+  # occurrence de `CupertinoIcons.` dans lib/, test/ et tool/ — mais incomplet :
+  # ce n'est pas le code de l'application qui réclame cette police, c'est le
+  # KERNEL compilé. Deux choses y font entrer la bibliothèque Cupertino de
+  # Flutter : `GlobalCupertinoLocalizations` (main.dart) et
+  # `CupertinoPageTransitionsBuilder` (app_theme.dart, le glissé iOS). Or
+  # `const_finder`, l'outil qui élague les polices d'icônes, travaille sur
+  # l'arbre syntaxique et non sur ce qui est réellement atteint : il y trouve
+  # un `IconData`, réclame la police, et chaque build de publication affichait
+  # « Expected to find fonts for (packages/cupertino_icons/CupertinoIcons,
+  # MaterialIcons), but found (MaterialIcons) ».
+  #
+  # Mesuré, pas supposé : la police élaguée pèse 848 OCTETS, sur 257 628, et ne
+  # garde qu'un seul point de code — 0xF3CF, `CupertinoIcons.back`, le chevron
+  # de retour que seule une `CupertinoNavigationBar` dessine. L'application n'en
+  # emploie aucune, donc rien n'était cassé à l'écran ; mais 848 octets pour
+  # faire taire un avertissement de build et fermer le piège — un glyphe vide
+  # le jour où un widget Cupertino apparaît — c'est le bon échange.
+  cupertino_icons: ^1.0.8
   dio: ^5.11.1
   flutter_secure_storage: ^11.2.0
   shared_preferences: ^2.5.6
