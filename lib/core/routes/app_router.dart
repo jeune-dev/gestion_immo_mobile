@@ -53,6 +53,11 @@ class AppRouter {
   static const espacePret = '/p/espace-pret';
   static const locataire = '/l';
 
+  /// Navigateur racine, pour les ouvertures qui n'ont pas de `BuildContext` :
+  /// un appui sur une notification push arrive du système, hors de l'arbre de
+  /// widgets, et doit pourtant pousser un écran.
+  static final navigateur = GlobalKey<NavigatorState>();
+
   static const _publiques = [
     onboarding,
     choixProfil,
@@ -64,6 +69,7 @@ class AppRouter {
 
   static GoRouter creer(AuthBloc auth) {
     return GoRouter(
+      navigatorKey: navigateur,
       initialLocation: demarrage,
       refreshListenable: _Ecoute(
         auth.stream.map((s) => (s.statut, s.compte)).distinct(),

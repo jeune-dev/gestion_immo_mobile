@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
 import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/core/widgets/navigation.dart';
+import 'package:gestion_immo_mobile/core/widgets/version_app.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/pages/modifier_profil.dart';
 import 'package:gestion_immo_mobile/features/account/presentation/pages/securite_page.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/widgets/avatar_utilisateur.dart';
@@ -134,6 +135,7 @@ class ProfilLocatairePage extends StatelessWidget {
             icon: const Icon(Icons.logout),
             label: const Text('Se déconnecter'),
           ),
+          const VersionApp(),
         ],
       ),
     );

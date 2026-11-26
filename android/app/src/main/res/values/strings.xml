@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Libellés du système Android. L'interface de l'application est en français
+     et ne passe pas par ces ressources : seules les notifications le font. -->
+<resources>
+    <!-- Lu à deux endroits qui doivent concorder : le manifeste
+         (default_notification_channel_id) et MainActivity.kt, qui crée le
+         canal. Une seule définition, donc aucun risque de divergence. -->
+    <string name="canal_push">terangaloc_alertes</string>
+    <string name="canal_push_nom">Alertes de gestion</string>
+    <string name="canal_push_description">Loyers, paiements, incidents, travaux et états des lieux</string>
+</resources>

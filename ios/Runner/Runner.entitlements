@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Notifications push (APNs), relayées par Firebase Cloud Messaging.
+	     Sans cette clé, APNs ne délivre RIEN sur iOS, et rien ne le signale :
+	     `getToken()` renvoie un jeton, le backend l'enregistre, les envois
+	     partent, et aucune notification n'arrive jamais sur l'iPhone.
+
+	     « production » est la bonne valeur pour l'App Store ET pour TestFlight.
+	     Xcode la remplace par « development » toute seule dans les builds
+	     lancés depuis le Mac, grâce à la signature automatique.
+
+	     À faire une fois côté Apple, sinon la signature échoue :
+	     developer.apple.com → Identifiers → sn.gestionimmo.gestionImmoMobile →
+	     cocher « Push Notifications ». Puis créer une clé APNs
+	     (Certificates, Identifiers & Profiles → Keys) et la téléverser dans
+	     la console Firebase → Paramètres du projet → Cloud Messaging. -->
+	<key>aps-environment</key>
+	<string>production</string>
+</dict>
+</plist>

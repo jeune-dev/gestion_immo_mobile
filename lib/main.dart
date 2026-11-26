@@ -14,14 +14,30 @@ import 'package:gestion_immo_mobile/core/routes/app_router.dart';
 import 'package:gestion_immo_mobile/core/services/nettoyage_local.dart';
 import 'package:gestion_immo_mobile/core/services/premiere_ouverture.dart';
 import 'package:gestion_immo_mobile/core/services/referentiels_service.dart';
+import 'package:gestion_immo_mobile/core/services/remontee_erreurs.dart';
 import 'package:gestion_immo_mobile/core/theme/app_theme.dart';
+import 'package:gestion_immo_mobile/core/utils/journal.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_event.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_state.dart';
 import 'package:gestion_immo_mobile/injection_container.dart' as di;
 
 Future<void> main() async {
+  // `runZonedGuarded` est le dernier filet : ce qui échappe à
+  // `PlatformDispatcher.onError` — une erreur levée dans un callback planté
+  // dans une zone — finit ici plutôt que nulle part.
+  runZonedGuarded(_demarrer, (erreur, pile) {
+    journalErreur('erreur non interceptée (zone racine)', erreur, pile);
+  });
+}
+
+Future<void> _demarrer() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Posés AVANT tout ce qui peut lever, Firebase compris.
+  installerRemonteeErreurs();
+  // Lancé maintenant, attendu plus bas : l'aller-retour vers le code natif se
+  // recouvre avec le chargement des formats de date et des dépendances.
+  final firebase = demarrerFirebase();
   // Inter est embarquée (assets/fonts/) : aucun téléchargement depuis Google
   GoogleFonts.config.allowRuntimeFetching = false;
   LicenseRegistry.addLicense(() async* {
@@ -38,6 +54,10 @@ Future<void> main() async {
   await di.sl<PremiereOuverture>().charger();
   // Les référentiels (libellés des statuts) se chargent en arrière-plan, depuis le cache d'abord
   di.sl<ReferentielsService>().charger();
+  // Crashlytics doit être en place avant le premier écran : c'est l'un des
+  // endroits où les choses cassent, et une erreur perdue ici est une erreur
+  // qu'on ne verra jamais.
+  await firebase;
   runApp(const GestionImmoApp());
 
   // Ménage des versions précédentes : APRÈS la première image, jamais avant.
@@ -82,6 +102,9 @@ class _GestionImmoAppState extends State<GestionImmoApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _session = _auth.stream.listen((etat) {
+      // L'identifiant seul : il suffit à rappeler qui a subi l'incident, et
+      // il ne met ni nom, ni e-mail, ni téléphone dans la console Firebase.
+      suivreUtilisateur(etat.compte?.utilisateur.id);
       if (etat.connecte) di.sl<PushService>().demarrer();
     });
   }

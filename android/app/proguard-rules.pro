@@ -34,3 +34,13 @@
 # Signatures génériques et annotations : la sérialisation JSON des plugins
 # natifs les relit à l'exécution.
 -keepattributes Signature,InnerClasses,EnclosingMethod,*Annotation*
+
+# Numéros de ligne conservés, pour que les piles d'appels remontées à
+# Crashlytics soient lisibles. Sans `LineNumberTable`, R8 les retire : la table
+# de correspondance téléversée par le greffon Gradle rend alors les NOMS de
+# classes et de méthodes, mais plus l'endroit exact — et c'est l'endroit exact
+# qu'on vient chercher. `-renamesourcefileattribute` remplace le nom du fichier
+# source par une chaîne fixe : la correspondance suffit à le retrouver, et rien
+# de l'arborescence du projet ne part dans l'APK.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

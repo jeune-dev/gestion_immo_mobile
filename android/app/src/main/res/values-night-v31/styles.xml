@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Même écran de démarrage en thème sombre.
+     Ce fichier est nécessaire : le qualificatif `night` passe AVANT `v31`
+     dans l'ordre de résolution des ressources d'Android. Sans lui, un
+     téléphone en Android 12+ et en thème sombre retomberait sur
+     `values-night/styles.xml`, où les attributs de démarrage n'existent pas.
+     Le fond reste blanc, comme sur `launch_background.xml` : l'écran de
+     démarrage ne change pas avec le thème, et ne doit pas non plus changer
+     avec la version d'Android. -->
+<resources>
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowSplashScreenBackground">@color/fond_demarrage</item>
+        <!-- Toujours utile en Android 12+ : passé l'écran de démarrage du
+             système, c'est ce fond que la fenêtre affiche jusqu'à la première
+             image de Flutter. Sans lui, celui du thème parent apparaît — blanc
+             cassé en thème clair, NOIR en thème sombre, soit un clignotement
+             entre le démarrage blanc et l'application. -->
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+    <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+    </style>
+</resources>

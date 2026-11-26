@@ -22,11 +22,79 @@ téléphone réel, mettez l'adresse IP du Mac (`http://192.168.x.x:3000/api/v1`)
 lancez l'API avec `HOST=0.0.0.0`. En production, `--dart-define=API_URL=https://…`
 est obligatoire : un build de publication sans URL `https` est refusé.
 
-## Publier (Android)
+## Publier
+
+### Android
 
 Copier `android/key.properties.example` en `android/key.properties` et y indiquer
-la clé de publication (jamais versionnée). Sans ce fichier, l'APK de release est
-signée avec la clé de debug, refusée par le Play Store.
+la clé de publication (jamais versionnée). Sans ce fichier, le build de release
+échoue : c'est voulu, un `.aab` signé avec la clé de debug est refusé par le Play
+Store, mais seulement après le temps de construction et de téléversement.
+
+```bash
+flutter build appbundle --release --dart-define-from-file=config/.env
+```
+
+Pour vérifier que la configuration tient sans posséder la clé :
+`ALLOW_DEBUG_SIGNING=true flutter build appbundle --release …` — le `.aab` produit
+n'est alors pas publiable, et un avertissement le dit.
+
+### iOS
+
+```bash
+cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install
+```
+
+Le `LANG` n'est pas décoratif : sans terminal en UTF-8, CocoaPods échoue sur
+`Unicode Normalization not appropriate for ASCII-8BIT`.
+
+Puis, dans Xcode — **l'espace de travail, pas le projet**, sinon les pods ne sont
+pas liés :
+
+```bash
+open ios/Runner.xcworkspace
+```
+
+La configuration Release porte deux phases de build maison : « Contrôles de
+publication » (refus sans `API_URL` en https, retrait des autorisations de
+développement de l'`Info.plist`) et « Crashlytics : envoi des symboles ».
+
+## Notifications push
+
+La chaîne complète : jeton FCM enregistré auprès de l'API (`PushService`), canal
+Android créé par `MainActivity.kt` et nommé dans le manifeste, entitlement
+`aps-environment` côté iOS, et ouverture de l'écran concerné quand l'utilisateur
+appuie sur la notification (`PushService._ouvrir`, par le même chemin que la liste
+interne).
+
+Désactivable pour un build particulier : `--dart-define=PUSH_ACTIVE=false`.
+
+Deux choses se font en dehors du dépôt, et sans elles rien n'arrive :
+
+- **Apple** : developer.apple.com → Identifiers → `sn.gestionimmo.gestionImmoMobile`
+  → cocher « Push Notifications ». Puis créer une clé APNs (Keys) et la téléverser
+  dans la console Firebase → Paramètres du projet → Cloud Messaging.
+- **Android** : rien de plus, `google-services.json` est dans le dépôt.
+
+Une notification reçue **application ouverte** n'affiche pas de bannière : le
+backend envoie une charge `notification`, que ni Android ni iOS ne dessinent dans
+ce cas. La pastille et l'écran de notifications tiennent ce rôle. Dessiner la
+bannière soi-même demanderait `flutter_local_notifications`.
+
+## Remontée des erreurs
+
+`installerRemonteeErreurs()` pose trois filets avant `runApp` (erreurs du
+framework, erreurs asynchrones, écran de remplacement en release) et
+`demarrerFirebase()` démarre Crashlytics. Ce qui part : le libellé, le type de
+l'erreur, la pile d'appels et l'identifiant du compte. Jamais un nom, un e-mail,
+un téléphone, ni le corps d'une requête — d'où `journalErreur('ce qui a échoué',
+e, pile)` plutôt que de jeter l'objet entier.
+
+Rien n'est envoyé en débogage : sinon chaque rechargement à chaud remplirait la
+console d'incidents qui n'existent pas.
+
+À faire une fois dans la console Firebase : activer Crashlytics pour le projet.
+Le tableau de bord n'apparaît qu'au premier incident reçu.
 
 > iOS : le projet est dans `~/Documents`, synchronisé par iCloud, qui ajoute des
 > attributs aux dossiers `.framework` : la signature échoue (« Exited with status

@@ -22,6 +22,10 @@ plugins {
     id("com.android.application") version "9.1.0" apply false
     id("org.jetbrains.kotlin.android") version "2.4.0" apply false
     id("com.google.gms.google-services") version "4.4.4" apply false
+    // Crashlytics : téléverse la table de correspondance de R8. Sans elle, les
+    // piles d'appels Android arrivent dans la console avec les noms obscurcis
+    // (`a.b.c`), puisque `isMinifyEnabled` est actif en release.
+    id("com.google.firebase.crashlytics") version "3.0.6" apply false
 }
 
 include(":app")

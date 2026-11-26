@@ -48,6 +48,30 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Canal par défaut des notifications push.
+             Le backend (push.service.js) envoie une charge `notification` SANS
+             `channel_id` : c'est donc cette valeur qui décide du canal. Il doit
+             exister au moment où la notification arrive, sinon FCM retombe sur
+             son canal « Divers » — d'où sa création dans MainActivity.kt, au
+             démarrage de l'application. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/canal_push" />
+        <!-- PETITE ICÔNE de la barre d'état.
+             Sans cette ligne, FCM prend `android:icon`, c'est-à-dire
+             `ic_launcher` : un carré PLEIN de bleu marine. Or depuis Android 5
+             le système ne garde que le CANAL ALPHA de cette image et la remplit
+             d'une couleur unie — un carré plein devient donc un carré blanc, le
+             « blob » que tout le monde a déjà vu. `ic_launcher_foreground` est
+             le picto sur fond transparent : sa silhouette reste reconnaissable. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_launcher_foreground" />
+        <!-- Teinte appliquée à cette silhouette et au nom de l'application. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/couleur_notification" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

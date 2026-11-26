@@ -56,8 +56,21 @@ dependencies:
   dartz: ^0.10.1
   equatable: ^3.0.0
   video_player: ^2.14.1
-  firebase_core: ^5.1.0
-  firebase_messaging: ^17.0.1
+  # Les trois paquets Firebase épinglent CHACUN une version de `firebase-ios-sdk`
+  # dans leur Package.swift, et Swift Package Manager refuse de résoudre si
+  # elles diffèrent — `firebase_crashlytics 6.1.0` (SDK 13.2.0) avec
+  # `firebase_messaging 17.0.1` (SDK 13.1.1) faisait échouer la build iOS avant
+  # même la compilation. Les minimums ci-dessous visent donc tous le SDK 13.2.0 :
+  # ils ne sont pas cosmétiques, les relâcher casse iOS.
+  firebase_core: ^5.2.0
+  firebase_messaging: ^17.1.0
+  # Remontée des plantages : sans elle, une erreur chez un propriétaire ne
+  # laisse aucune trace — il faut son téléphone en main pour savoir ce qui a
+  # cassé. Inactive en débogage (voir core/utils/journal.dart).
+  firebase_crashlytics: ^6.1.0
+  # Version et numéro de build RÉELS, lus dans le paquet installé. Une
+  # constante écrite à la main finit toujours par mentir sur ce qui tourne.
+  package_info_plus: ^10.2.2
 
 dev_dependencies:
   flutter_test:

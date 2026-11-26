@@ -22,6 +22,21 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Autorise iOS à réveiller l'application en arrière-plan pour traiter
+	     une notification reçue. L'AFFICHAGE de l'alerte par le système n'en a
+	     pas besoin, et un appui dessus lancerait l'application de toute façon ;
+	     ce qui en a besoin, c'est tout traitement au moment de la réception —
+	     ce que firebase_messaging attend sur iOS. Déclaré maintenant : l'ajouter
+	     après coup se verrait au prochain examen d'Apple, pas avant. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<!-- L'application ne contient aucun chiffrement propre : elle n'utilise que
+	     HTTPS, fourni par iOS. Déclaré ici pour qu'App Store Connect ne repose
+	     pas la question de conformité à l'exportation à chaque téléversement. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

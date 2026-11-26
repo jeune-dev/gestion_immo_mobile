@@ -99,6 +99,9 @@ flutter {
 // Notifications push : actives une fois android/app/google-services.json déposé.
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
+    // Crashlytics dépend de Google Services : même condition, sinon le build
+    // échoue sur un projet Firebase absent.
+    apply(plugin = "com.google.firebase.crashlytics")
 }
 
 // URL de l'API compilée dans l'application (`--dart-define=API_URL=…`, transmis

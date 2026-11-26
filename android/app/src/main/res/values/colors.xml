@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#0B2545</color>
+    <!-- Teinte de la petite icône et du titre dans la zone de notification.
+         Le vert du logo se détache sur les deux thèmes d'Android ; le bleu
+         de la charte (#0E56B0) disparaîtrait sur un fond sombre. -->
+    <color name="couleur_notification">#7CC42A</color>
+    <!-- Fond de l'écran de démarrage, le même que `launch_background.xml`
+         pour que l'image ne change pas selon la version d'Android. -->
+    <color name="fond_demarrage">#FFFFFF</color>
 </resources>

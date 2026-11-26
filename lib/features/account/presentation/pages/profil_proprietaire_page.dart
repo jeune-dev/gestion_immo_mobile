@@ -9,6 +9,7 @@ import 'package:gestion_immo_mobile/core/theme/statuts.dart';
 import 'package:gestion_immo_mobile/core/utils/format.dart';
 import 'package:gestion_immo_mobile/core/widgets/base.dart';
 import 'package:gestion_immo_mobile/core/widgets/navigation.dart';
+import 'package:gestion_immo_mobile/core/widgets/version_app.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/widgets/avatar_utilisateur.dart';
 import 'package:gestion_immo_mobile/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:gestion_immo_mobile/features/depense/presentation/pages/categories_page.dart';
@@ -162,6 +163,7 @@ class ProfilProprietairePage extends StatelessWidget {
             icon: const Icon(Icons.logout),
             label: const Text('Se déconnecter'),
           ),
+          const VersionApp(),
         ],
       ),
     );
