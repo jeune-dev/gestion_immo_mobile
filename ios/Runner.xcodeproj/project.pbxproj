@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -54,7 +54,6 @@
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		3BE3517CC234C490906A15BB /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 		448B35DE1537F8E1449A87FD /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1C0DE5E2F00000000000003 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		670711898D2129131155D236 /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		6BD2C71963D96577F0C89B43 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -71,6 +70,7 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1C0DE5E2F00000000000003 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		A35C2DDAC4E065E2D010BD91 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -122,7 +122,6 @@
 				6BD2C71963D96577F0C89B43 /* Pods-RunnerTests.release.xcconfig */,
 				3BE3517CC234C490906A15BB /* Pods-RunnerTests.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -210,7 +209,7 @@
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
-				A1C0DE5E2F00000000000001 /* Contrôles de publication */,
+				A1C0DE5E2F00000000000001 /* Contrôles de publication */,
 				A1C0DE5E2F00000000000002 /* Crashlytics : envoi des symboles */,
 			);
 			buildRules = (
@@ -255,7 +254,7 @@
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (
-				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
+				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */,
 			);
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
@@ -321,22 +320,7 @@
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
 		};
-		A1C0DE5E2F00000000000002 /* Crashlytics : envoi des symboles */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Crashlytics : envoi des symboles";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Table des symboles de la build, envoyée à Crashlytics.\n#\n# Sans elle, une pile d'appels iOS arrive en adresses mémoire dans la console :\n# illisible, donc inutile. C'est la moitié du bénéfice de Crashlytics.\n#\n# Ce projet prend Firebase par CocoaPods : l'outil est dans Pods/. Les deux\n# autres chemins couvrent un passage à Swift Package Manager, où l'outil change\n# d'endroit selon la version du SDK.\n#\n# On NE FAIT PAS ÉCHOUER LA BUILD s'il est introuvable : une archive sans\n# symboles reste livrable, et un avertissement se lit dans le journal de build.\n# Mieux vaut une remontée imparfaite qu'une release bloquée.\nSPM=\"${BUILD_DIR%/Build/*}/SourcePackages\"\nGSP=\"${PROJECT_DIR}/Runner/GoogleService-Info.plist\"\nDSYM=\"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}\"\n\nif [ -f \"${PODS_ROOT}/FirebaseCrashlytics/run\" ]; then\n  \"${PODS_ROOT}/FirebaseCrashlytics/run\"\nelif [ -f \"$SPM/artifacts/firebase-ios-sdk/FirebaseCrashlytics/upload-symbols\" ]; then\n  \"$SPM/artifacts/firebase-ios-sdk/FirebaseCrashlytics/upload-symbols\" -gsp \"$GSP\" -p ios \"$DSYM\"\nelif [ -f \"$SPM/checkouts/firebase-ios-sdk/Crashlytics/run\" ]; then\n  \"$SPM/checkouts/firebase-ios-sdk/Crashlytics/run\"\nelse\n  echo \"warning: outil Crashlytics introuvable — les piles d'appels iOS arriveront sans symboles\"\nfi\n";
-		};
-		A1C0DE5E2F00000000000001 /* Contrôles de publication */ = {
+		A1C0DE5E2F00000000000001 /* Contrôles de publication */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -351,6 +335,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"${SRCROOT}/scripts/controle_publication.sh\"\n";
+		};
+		A1C0DE5E2F00000000000002 /* Crashlytics : envoi des symboles */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Crashlytics : envoi des symboles";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Table des symboles de la build, envoyée à Crashlytics.\n#\n# Sans elle, une pile d'appels iOS arrive en adresses mémoire dans la console :\n# illisible, donc inutile. C'est la moitié du bénéfice de Crashlytics.\n#\n# Ce projet prend Firebase par CocoaPods : l'outil est dans Pods/. Les deux\n# autres chemins couvrent un passage à Swift Package Manager, où l'outil change\n# d'endroit selon la version du SDK.\n#\n# On NE FAIT PAS ÉCHOUER LA BUILD s'il est introuvable : une archive sans\n# symboles reste livrable, et un avertissement se lit dans le journal de build.\n# Mieux vaut une remontée imparfaite qu'une release bloquée.\nSPM=\"${BUILD_DIR%/Build/*}/SourcePackages\"\nGSP=\"${PROJECT_DIR}/Runner/GoogleService-Info.plist\"\nDSYM=\"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}\"\n\nif [ -f \"${PODS_ROOT}/FirebaseCrashlytics/run\" ]; then\n  \"${PODS_ROOT}/FirebaseCrashlytics/run\"\nelif [ -f \"$SPM/artifacts/firebase-ios-sdk/FirebaseCrashlytics/upload-symbols\" ]; then\n  \"$SPM/artifacts/firebase-ios-sdk/FirebaseCrashlytics/upload-symbols\" -gsp \"$GSP\" -p ios \"$DSYM\"\nelif [ -f \"$SPM/checkouts/firebase-ios-sdk/Crashlytics/run\" ]; then\n  \"$SPM/checkouts/firebase-ios-sdk/Crashlytics/run\"\nelse\n  echo \"warning: outil Crashlytics introuvable — les piles d'appels iOS arriveront sans symboles\"\nfi\n";
 		};
 		BC9800E509F243DFB0E087DB /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -506,15 +505,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 7X4D936N3R;
+				DEVELOPMENT_TEAM = DR54MH4Z4J;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				PRODUCT_BUNDLE_IDENTIFIER = sn.gestionimmo.gestionImmoMobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -692,15 +691,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 7X4D936N3R;
+				DEVELOPMENT_TEAM = DR54MH4Z4J;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				PRODUCT_BUNDLE_IDENTIFIER = sn.gestionimmo.gestionImmoMobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -716,15 +715,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 7X4D936N3R;
+				DEVELOPMENT_TEAM = DR54MH4Z4J;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				PRODUCT_BUNDLE_IDENTIFIER = sn.gestionimmo.gestionImmoMobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -769,7 +768,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */ = {
+		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage;
 		};
